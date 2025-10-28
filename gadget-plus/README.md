@@ -1,7 +1,7 @@
 ## DETALLE DEL PROYECTO GADGETPLUS
 
 <details>
-<summary><strong>Clase 20 ->CONFIGURANDO DATASOURCE</strong></summary>
+    <summary><strong>SESSION 3</strong></summary>
 - En pomxml
 
 ```xml
@@ -141,7 +141,7 @@ WHERE table_name = 'orders';
 > CASCADE TYPE SE ACTIVA CUANDO SE REALIZA UNA OPERACION DE ELIMINACION EN LA ENTIDAD PADRE. AQUI SE ELIMINA TODO TANTO ENTIDAD PADRE
 > COMO HIJO
 
-# # CLASE 23 -> CRUD REPOSITORY
+# CLASE 23 -> CRUD REPOSITORY
 
 - public interface OrderRepository extends CrudRepository<OrderEntity, Long> { }
 - Recuerda que CrudRepository ya tiene los metodos basicos para hacer un CRUD
@@ -158,5 +158,53 @@ WHERE table_name = 'orders';
 - count(): Devuelve el numero de entidades.
 - existsById(ID id): Verifica si una entidad existe por su ID.
 
+
+---
+
+## nota :
+
+- Mapeamos solo lo que necesitamos.
+
+```sql
+@Entity
+@Table(name="orders")
+@Data
+public class OrderEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "client_name", length = 32, nullable = false)
+    private String clientName;//no es necesario mapear el guion bajo
+}
+```
+- Hemos agregado un comandLine runner para probar el repositorio
+
+```java
+@SpringBootApplication
+public class GadgetPlusApplication implements CommandLineRunner {
+
+    @Autowired
+    private OrderRepository orderRepository;
+
+    public static void main(String[] args) {
+        SpringApplication.run(GadgetPlusApplication.class, args);
+    }
+
+    @Override
+    public void run(String... args) throws Exception {
+
+        this.orderRepository.findAll().forEach(System.out::println);
+    }
+}
+```
+![imagen](/images/1.png)
+
+# CLASE 24 -> ONETOONE
+> VAMOS A UNIR LA TABLA ORDERS CON LA TABLA BILL A TRAVES DE LO QUE ES EL ID Y EL ID_BILL
+> 
 </details>
 
