@@ -19,6 +19,7 @@ public class GadgetPlusApplication implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
 
-        this.orderRepository.findAll().forEach(System.out::println);
+        //this.orderRepository.findAll().forEach(o -> System.out.println(o.getClientName()));
+        this.orderRepository.findAll().forEach(o -> System.out.println(o.toString()));// aqui te trae todo el objeto order con bill incluido
     }
 }

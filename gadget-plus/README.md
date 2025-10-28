@@ -205,6 +205,102 @@ public class GadgetPlusApplication implements CommandLineRunner {
 
 # CLASE 24 -> ONETOONE
 > VAMOS A UNIR LA TABLA ORDERS CON LA TABLA BILL A TRAVES DE LO QUE ES EL ID Y EL ID_BILL
+
+![imagen](/images/2.png)
+
+- Creamos un BillEntity
+
+```java
+@Entity
+@Table(name = "bill")
+@Data
+public class BillEntity {
+
+    @Id
+    @Column(nullable = false, length = 64)
+    private String id;
+
+    @Column
+    private BigDecimal totalAmount;
+
+    @Column(name = "client_rfc", length = 14, nullable = false)
+    private String rfc;
+
+}
+```
+---
+- En OrderEntity agregamos la relacion one to one
+
+![imagen](/images/3.png)
+
+# CLASE 25 -> FETCH TYPE LAZY
+
+SI PONEMOS FETCH TYPE LAZY EN LA RELACION ONE TO ONE NOS VA A DAR UNA EXCEPCION
+>
+>![imagen](/images/4.png)
 > 
+> LazyInitializationException.Esta excepcion ocurre debido a que en JPA
+> necesita crear un proxy para implementar la carga perezosa, osea LazyLoading y en las relaciones one to one
+> no siempre es posible crear este proxy.Entonces tener cuidado cuando tengas un tipo lazy y una asociacion
+> @OneToOne y @ManyToOne.
+> 
+> ![imagen](/images/5.png)
+> 
+> solucion: cambiar a fetch type eager o usar DTOs para evitar este problema, en este ejemplo hemos accedido solo
+> a los nombres con fetch type lazy
+> 
+> ![imagen](/images/6.png)
+> 
+> ## Resultado en consola
+> ![imagen](/images/7.png)
+> 
+> ## RESUMEN
+> El EAGER trae todo OrderEntity y BillEntity
+> - this.orderRepository.findAll().forEach(o -> System.out.println(o.toString()));// aqui te trae todo el objeto order con bill incluido
+> El LAZY no puede traer el Bill por eso falla si tratas de imprimir todo el objeto order con bill incluido.
+> 
+> - this.orderRepository.findAll().forEach(o -> System.out.println(o.getClientName()));// aqui solo te trae el nombre del cliente y no falla
+>   otra solucion es para que no truene  usamos el metodo de lombok ### @ToString.Exclude() ###
+> - y asi evitamos que se imprima el objeto bill
+> - @ToString.Exclude -> quedaria asi
+```java
+
+    @ToString.Exclude
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "id_bill", nullable = false, unique = true)
+    private BillEntity bill;
+
+```
+---
+La anotación `@ToString.Exclude` excluye el campo `bill` del método `toString()` generado automáticamente por Lombok.
+
+**¿Por qué se usa?**
+
+Cuando tienes relaciones JPA con `FetchType.LAZY`, si intentas imprimir el objeto completo (usando `toString()`), puede causar:
+
+1. **LazyInitializationException** - Si la sesión de Hibernate ya está cerrada
+2. **Consultas SQL no deseadas** - Hibernate intentará cargar la relación lazy cuando acceda al campo `bill` en el `toString()`
+3. **Recursión infinita** - Si `BillEntity` también tiene una referencia de vuelta a `OrderEntity`
+
+**Ejemplo de lo que sucede:**
+
+Sin `@ToString.Exclude`:
+```java
+// Esto podría fallar con LazyInitializationException
+System.out.println(order.toString()); // Intenta acceder a order.bill
+```
+
+Con `@ToString.Exclude`:
+```java
+// Esto funciona sin problemas
+System.out.println(order.toString()); // No accede a order.bill
+```
+
+**Resultado:**
+- El `toString()` generado incluirá `id`, `createdAt` y `clientName`
+- **NO** incluirá el campo `bill`, evitando los problemas mencionados
+
+Es una práctica común usar `@ToString.Exclude` en relaciones JPA, especialmente con `LAZY` loading.
+
 </details>
 
