@@ -20,8 +20,8 @@ public class OrderEntity {
     @Column(name = "client_name", length = 32, nullable = false)
     private String clientName;//no es necesario mapear el guion bajo
 
-    @ToString.Exclude
-    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    //@ToString.Exclude
+    @OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JoinColumn(name = "id_bill", nullable = false, unique = true)
     private BillEntity bill;
 }

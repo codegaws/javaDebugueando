@@ -1,5 +1,6 @@
 package com.debugeandoideas.gadgetplus;
 
+import com.debugeandoideas.gadgetplus.repositories.BillRepository;
 import com.debugeandoideas.gadgetplus.repositories.OrderRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -11,6 +12,8 @@ public class GadgetPlusApplication implements CommandLineRunner {
 
     @Autowired
     private OrderRepository orderRepository;
+    @Autowired
+    private BillRepository billRepository;
 
     public static void main(String[] args) {
         SpringApplication.run(GadgetPlusApplication.class, args);
@@ -20,6 +23,8 @@ public class GadgetPlusApplication implements CommandLineRunner {
     public void run(String... args) throws Exception {
 
         //this.orderRepository.findAll().forEach(o -> System.out.println(o.getClientName()));
-        this.orderRepository.findAll().forEach(o -> System.out.println(o.toString()));// aqui te trae todo el objeto order con bill incluido
+        this.orderRepository.findAll().forEach(OrderEntity -> System.out.println(OrderEntity.toString()));// aqui te trae todo el objeto order con bill incluido
+        this.billRepository.findAll().forEach(bill -> System.out.println(bill.toString()));
+
     }
 }

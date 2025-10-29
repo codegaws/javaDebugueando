@@ -302,5 +302,67 @@ System.out.println(order.toString()); // No accede a order.bill
 
 Es una práctica común usar `@ToString.Exclude` en relaciones JPA, especialmente con `LAZY` loading.
 
+
+# CLASE 27 -> ONETOONE CIRCULAR
+
+## Nota explicacion por que existen estas relaciones
+
+>¡Claro! Las asociaciones que ves en las entidades `OrderEntity` y `BillEntity` son relaciones de **mapeo de objetos a tablas** usando JPA (Jakarta Persistence API) para reflejar cómo los datos se relacionan en la base de datos. Te explico el propósito y motivo de cada parte:
+
+---
+
+## ¿Por qué se usan estas asociaciones?
+
+### 1. **Relación @OneToOne**
+- La anotación `@OneToOne` significa que **cada entidad de un lado de la relación se asocia con exactamente una entidad del otro lado**.
+- En este caso, cada `OrderEntity` está asociada a una sola `BillEntity` y viceversa.
+
+### 2. **¿Por qué existen estas asociaciones?**
+- **Representan reglas del negocio.** Por ejemplo, si en tu sistema **cada orden tiene exactamente un comprobante/factura (bill), y cada factura pertenece a una sola orden**, entonces una relación uno a uno es la forma correcta de modelar esto, tanto en la base de datos como en el modelo de objetos Java.
+- **Facilitan operaciones CRUD y navegación entre entidades.** Puedes acceder fácilmente desde una orden a su factura, y desde una factura a su orden usando los getters/setters generados por Lombok.
+
+---
+
+## ¿Cómo se implementa la relación?
+
+### En `OrderEntity`:
+```java
+@OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+@JoinColumn(name = "id_bill", nullable = false, unique = true)
+private BillEntity bill;
+```
+- `@OneToOne`: Define la relación uno a uno.
+- `fetch = FetchType.LAZY`: No carga la factura (bill) automáticamente, solo cuando la necesitas.
+- `cascade = CascadeType.ALL`: Si guardas/borras una orden, también afecta a su factura asociada.
+- `@JoinColumn(name = "id_bill", ...)`: Especifica la columna en la tabla `orders` que guarda el ID de la factura.
+
+### En `BillEntity`:
+```java
+@OneToOne(mappedBy = "bill", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+private OrderEntity order;
+```
+- `mappedBy = "bill"`: Indica que esta es la parte **inversa** de la relación, y que la clave foránea vive en la otra entidad (`OrderEntity`).
+
+---
+
+## ¿Por qué no usar @OneToMany o @ManyToOne?
+
+- Si una factura pudiera tener **muchas órdenes** asociadas, usarías `@OneToMany` o `@ManyToOne`.
+- Si un pedido pudiera tener **muchas facturas**, también usarías una opción diferente.
+- Pero en tu modelo, la relación es **estrictamente uno a uno**.
+
+---
+
+## Resumen
+
+- **Motivo principal**: Reflejar la realidad del dominio del negocio (una orden solo tiene una factura y viceversa).
+- **Ventaja**: Permite integridad referencial, navegación sencilla entre entidades y un modelo de datos claro y mantenible.
+
+Si tienes un caso de negocio donde esto no se cumple, deberías reconsiderar la relación. Pero si cada orden/factura es única y está emparejada, ¡este es el patrón correcto!
+
+# SI LE METEMOS O COMPLIMOS CON ESTAS RELACIONES PODEMOS TENER PROBLEMAS DE RECUSION INFINITA AL MOMENTO DE IMPRIMIR LOS OBJETOS
+
+![imagen](/images/8.png)
+
 </details>
 
