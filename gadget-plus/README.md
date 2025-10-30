@@ -307,7 +307,7 @@ Es una práctica común usar `@ToString.Exclude` en relaciones JPA, especialment
 
 ## Nota explicacion por que existen estas relaciones
 
->¡Claro! Las asociaciones que ves en las entidades `OrderEntity` y `BillEntity` son relaciones de **mapeo de objetos a tablas** usando JPA (Jakarta Persistence API) para reflejar cómo los datos se relacionan en la base de datos. Te explico el propósito y motivo de cada parte:
+>Las asociaciones que ves en las entidades `OrderEntity` y `BillEntity` son relaciones de **mapeo de objetos a tablas** usando JPA (Jakarta Persistence API) para reflejar cómo los datos se relacionan en la base de datos. Te explico el propósito y motivo de cada parte:
 
 ---
 
