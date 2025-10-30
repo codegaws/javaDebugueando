@@ -440,5 +440,150 @@ Si tienes un caso de negocio donde esto no se cumple, deberías reconsiderar la 
 
 ![imagen](/images/8.png)
 
+# EN RESUMEN POR ESTO ES QUE USAMOS @ToString.Exclude PARA EVITAR ESTOS PROBLEMAS DE RECUSION INFINITA
+
+¡Excelente pregunta! El problema de **recursividad infinita** en JPA es muy común cuando trabajas con relaciones bidireccionales. Te lo explico con tu caso específico:
+
+## 🔄 ¿Por qué ocurre la recursividad infinita?
+
+Tienes una relación **bidireccional** `@OneToOne` entre `OrderEntity` y `BillEntity`:
+
+```
+OrderEntity → bill (tiene referencia a BillEntity)
+     ↓
+BillEntity → order (tiene referencia de vuelta a OrderEntity)
+```
+
+### El problema ocurre cuando llamas a `toString()`:
+
+1. **OrderEntity.toString()** → imprime sus campos + llama a `bill.toString()`
+2. **BillEntity.toString()** → imprime sus campos + llama a `order.toString()`
+3. **OrderEntity.toString()** → imprime sus campos + llama a `bill.toString()`
+4. ... ♾️ **CICLO INFINITO** → StackOverflowError
+
+## ✅ Soluciones
+
+### 1. **Usar `@ToString.Exclude` en AMBOS lados** (Recomendado)
+
+Ya lo tienes en `BillEntity`, pero debes asegurarte de tenerlo también en `OrderEntity`:
+
+```java
+// En OrderEntity
+@ToString.Exclude
+@OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+@JoinColumn(name = "id_bill", nullable = false, unique = true)
+private BillEntity bill;
+
+// En BillEntity (ya lo tienes)
+@ToString.Exclude
+@OneToOne(mappedBy = "bill", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+private OrderEntity order;
+```
+
+### 2. **Usar `@JsonIgnore` o `@JsonBackReference`** (para serialización JSON)
+
+Si además trabajas con APIs REST, también necesitas evitar la recursividad al serializar a JSON:
+
+```java
+// En BillEntity (lado NO dueño)
+@JsonBackReference
+@ToString.Exclude
+@OneToOne(mappedBy = "bill", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+private OrderEntity order;
+```
+
+## 🎯 Análisis de tu esquema SQL
+
+Según tu tabla, **OrderEntity es el dueño** de la relación porque:
+
+```sql
+CREATE TABLE orders (
+    ...
+    id_bill VARCHAR(64) UNIQUE NOT NULL,
+    FOREIGN KEY (id_bill) REFERENCES bill(id) ON DELETE CASCADE
+);
+```
+
+La columna `id_bill` está en la tabla `orders`, por eso en JPA:
+- ✅ **OrderEntity** usa `@JoinColumn` (dueño de la relación)
+- ✅ **BillEntity** usa `mappedBy = "bill"` (lado inverso)
+
+## ⚠️ Advertencias adicionales
+
+### 1. **EAGER fetching bidireccional es peligroso**
+```java
+// Ambos tienen FetchType.EAGER
+fetch = FetchType.EAGER
+```
+
+Esto puede causar problemas de rendimiento. Considera usar `LAZY`:
+
+```java
+// En OrderEntity
+@OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+@JoinColumn(name = "id_bill", nullable = false, unique = true)
+private BillEntity bill;
+
+// En BillEntity
+@ToString.Exclude
+@OneToOne(mappedBy = "bill", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+private OrderEntity order;
+```
+
+### 2. **CascadeType.ALL puede ser peligroso**
+Con `CascadeType.ALL` en ambos lados, cualquier operación se propaga. Ten cuidado con operaciones de borrado.
+
+## 📝 Ejemplo completo corregido
+
+```java
+// OrderEntity (dueño de la relación)
+@Entity
+@Table(name = "orders")
+@Data
+public class OrderEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt;
+    
+    @Column(name = "client_name", nullable = false, length = 32)
+    private String clientName;
+    
+    @ToString.Exclude // 👈 IMPORTANTE
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "id_bill", nullable = false, unique = true)
+    private BillEntity bill;
+}
+
+// BillEntity (lado inverso)
+@Entity
+@Table(name = "bill")
+@Data
+public class BillEntity {
+    @Id
+    @Column(length = 64)
+    private String id;
+    
+    @Column(name = "total_amount")
+    private BigDecimal totalAmount;
+    
+    @Column(name = "client_rfc", nullable = false, length = 14)
+    private String clientRfc;
+    
+    @JsonBackReference // 👈 Para APIs REST
+    @ToString.Exclude  // 👈 IMPORTANTE
+    @OneToOne(mappedBy = "bill", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private OrderEntity order;
+}
+```
+¡Con estos cambios ya no tendrás recursividad infinita! 🎉
+
+---
+
+## #️ ⃣📚**Clase 28: CASCADE PERSIST`**
+
+
 </details>
 

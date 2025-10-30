@@ -26,6 +26,7 @@ public class BillEntity {
     @ToString.Exclude
     @OneToOne(mappedBy = "bill", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private OrderEntity order;
-
-
 }
+
+
+
