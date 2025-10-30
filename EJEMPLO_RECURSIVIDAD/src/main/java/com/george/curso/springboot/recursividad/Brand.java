@@ -1,6 +1,5 @@
 package com.george.curso.springboot.recursividad;
 
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
