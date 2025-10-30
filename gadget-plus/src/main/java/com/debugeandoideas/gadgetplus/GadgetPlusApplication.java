@@ -1,11 +1,16 @@
 package com.debugeandoideas.gadgetplus;
 
+import com.debugeandoideas.gadgetplus.entities.BillEntity;
+import com.debugeandoideas.gadgetplus.entities.OrderEntity;
 import com.debugeandoideas.gadgetplus.repositories.BillRepository;
 import com.debugeandoideas.gadgetplus.repositories.OrderRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @SpringBootApplication
 public class GadgetPlusApplication implements CommandLineRunner {
@@ -22,11 +27,33 @@ public class GadgetPlusApplication implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-
-        //this.orderRepository.findAll().forEach(o -> System.out.println(o.getClientName()));
-        this.orderRepository.findAll().forEach(OrderEntity -> System.out.println(OrderEntity.toString()));// aqui te trae todo el objeto order con bill incluido
+       /* this.orderRepository.findAll().forEach(OrderEntity -> System.out.println(OrderEntity.toString()));
         this.billRepository.findAll().forEach(bill -> System.out.println(bill.toString()));
-        //this.billRepository.findAll().forEach(bill -> System.out.println(bill.getRfc()));
+
+        // SETEAMOS
+        var bill = BillEntity.builder()
+                .rfc("AS537GD7X")
+                .totalAmount(BigDecimal.TEN)
+                .id("b-18")
+                .build();
+
+
+        var order = OrderEntity.builder()
+                .createdAt(LocalDateTime.now())
+                .clientName("Alex Martinez")
+                .bill(bill)
+                .build();
+        this.orderRepository.save(order);*/
+
+        var order = this.orderRepository.findById(17L).get();
+        System.out.println("PRE PERSISTENCE: " + order.getClientName());
+        order.setClientName("GEORGE MARTINEZ2");
+
+        order.getBill().setRfc("AAAA1111");
+        this.orderRepository.save(order);
+
+        var order2 = this.orderRepository.findById(17L).get();
+        System.out.println("POST PERSISTENCE: " + order2.getClientName());
 
     }
 }

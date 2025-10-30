@@ -2,14 +2,16 @@ package com.debugeandoideas.gadgetplus.entities;
 
 
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.ToString;
+import lombok.*;
 
 import java.math.BigDecimal;
 
 @Entity
 @Table(name = "bill")
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 public class BillEntity {
 
     @Id

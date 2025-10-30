@@ -584,6 +584,67 @@ public class BillEntity {
 
 ## #️ ⃣📚**Clase 28: CASCADE PERSIST`**
 
+### SI TIENES DUDAS DE POR QUE BIGDECIMAL 
+La diferencia es por el tipo de dato que espera cada atributo:
+
+- Los atributos `String` (como `id` o `rfc`) esperan cadenas de texto, por eso les asignas valores entre comillas, por ejemplo: `"AS537GD7D"`.
+- El atributo `totalAmount` es de tipo `BigDecimal`, que es una clase especial de Java para manejar números decimales con precisión (ideal para dinero).
+
+Cuando escribes `.totalAmount(BigDecimal.TEN)`, no estás poniendo un número directamente, sino que le estás pasando un objeto `BigDecimal` que representa el número 10.  
+No puedes poner simplemente `.totalAmount(10.0)` porque eso sería un `double`, y Java no lo convierte automáticamente a `BigDecimal` (por precisión y seguridad).
+
+Si quieres asignar otro valor, puedes hacerlo así:
+
+```java
+.totalAmount(new BigDecimal("8101.76"))
+```
+
+Esto crea un objeto `BigDecimal` con el valor exacto que necesitas, igual que el que tienes en tu base de datos.  
+En resumen: usas `BigDecimal` para mantener la precisión en los valores decimales, no números primitivos ni cadenas.
+
+---
+## EXCEPTION CUANDO QUIERES GENERAR DATOS NUEVOS EXCEPTION TRANSIENT
+
+Si no pones el cascade = CascadeType.ALL te va a salir ese error por que recuerda que estas usando 
+```java
+@OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.PERSIST)
+@JoinColumn(name = "id_bill", nullable = false, unique = true)
+private BillEntity bill;
+```
+- El detalle es que estas tratando de persistir un bill que aun no esta creado en la base de datos y por eso te sale el error
+`org.hibernate.TransientObjectException: object references an unsaved transient instance - save the transient instance before flushing: com.debuggeandoideas.gadgetplus.entity.BillEntity`
+- La solucion es usar cascade = CascadeType.ALL para que cuando guardes la orden tambien se guarde el bill asociado
+- 
+```java
+// SETEAMOS
+        var bill = BillEntity.builder()
+                .rfc("AS537GD7X")
+                .totalAmount(BigDecimal.TEN)
+                .id("b-18")
+                .build();
+
+        var order = OrderEntity.builder()
+                .createdAt(LocalDateTime.now())
+                .clientName("Alex Martinez")
+                .bill(bill)
+                .build();
+        this.orderRepository.save(order);
+```
+## Se agrego dos nuevos registros a la bd
+
+![images](/images/10.png)
+---
+
+## #️ ⃣📚**Clase 29: CASCADE MERGE`**
+
+cascade : 
+
+CascadeType.PERSIST,CascadeType.MERGE -> PERSIST PARA EL SAVE Y MERGE PARA EL UPDATE
+
+@OneToOne(fetch = FetchType.EAGER,cascade = {CascadeType.PERSIST,CascadeType.MERGE})
+@JoinColumn(name = "id_bill", nullable = false, unique = true)
+private BillEntity bill;
+
 
 </details>
 
