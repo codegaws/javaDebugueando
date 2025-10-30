@@ -136,9 +136,11 @@ WHERE table_name = 'orders';
 ---
 
 ## ¿DIFERENCIA ENTRE EL ORPHAN REMOVAL Y EL CASCADETYPE?:
+
 >
 > ORPHAN REMOVAL SE ACTIVA CUANDO SE ELIMINA LA REFERENCIA A LA LLAVE FORANEA DE LA ENTIDAD HIJA EN LA ENTIDAD PADRE.
-> CASCADE TYPE SE ACTIVA CUANDO SE REALIZA UNA OPERACION DE ELIMINACION EN LA ENTIDAD PADRE. AQUI SE ELIMINA TODO TANTO ENTIDAD PADRE
+> CASCADE TYPE SE ACTIVA CUANDO SE REALIZA UNA OPERACION DE ELIMINACION EN LA ENTIDAD PADRE. AQUI SE ELIMINA TODO TANTO
+> ENTIDAD PADRE
 > COMO HIJO
 
 # CLASE 23 -> CRUD REPOSITORY
@@ -158,7 +160,6 @@ WHERE table_name = 'orders';
 - count(): Devuelve el numero de entidades.
 - existsById(ID id): Verifica si una entidad existe por su ID.
 
-
 ---
 
 ## nota :
@@ -166,7 +167,8 @@ WHERE table_name = 'orders';
 - Mapeamos solo lo que necesitamos.
 
 ```sql
-@Entity
+@
+Entity
 @Table(name="orders")
 @Data
 public class OrderEntity {
@@ -174,16 +176,21 @@ public class OrderEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "created_at", nullable = false)
+    @Column
+(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "client_name", length = 32, nullable = false)
-    private String clientName;//no es necesario mapear el guion bajo
+    @Column
+(name = "client_name", length = 32, nullable = false)
+    private String clientName;
+//no es necesario mapear el guion bajo
 }
 ```
+
 - Hemos agregado un comandLine runner para probar el repositorio
 
 ```java
+
 @SpringBootApplication
 public class GadgetPlusApplication implements CommandLineRunner {
 
@@ -201,9 +208,11 @@ public class GadgetPlusApplication implements CommandLineRunner {
     }
 }
 ```
+
 ![imagen](/images/1.png)
 
 # CLASE 24 -> ONETOONE
+
 > VAMOS A UNIR LA TABLA ORDERS CON LA TABLA BILL A TRAVES DE LO QUE ES EL ID Y EL ID_BILL
 
 ![imagen](/images/2.png)
@@ -211,6 +220,7 @@ public class GadgetPlusApplication implements CommandLineRunner {
 - Creamos un BillEntity
 
 ```java
+
 @Entity
 @Table(name = "bill")
 @Data
@@ -228,7 +238,9 @@ public class BillEntity {
 
 }
 ```
+
 ---
+
 - En OrderEntity agregamos la relacion one to one
 
 ![imagen](/images/3.png)
@@ -238,112 +250,174 @@ public class BillEntity {
 SI PONEMOS FETCH TYPE LAZY EN LA RELACION ONE TO ONE NOS VA A DAR UNA EXCEPCION
 >
 >![imagen](/images/4.png)
-> 
+>
 > LazyInitializationException.Esta excepcion ocurre debido a que en JPA
 > necesita crear un proxy para implementar la carga perezosa, osea LazyLoading y en las relaciones one to one
 > no siempre es posible crear este proxy.Entonces tener cuidado cuando tengas un tipo lazy y una asociacion
 > @OneToOne y @ManyToOne.
-> 
+>
 > ![imagen](/images/5.png)
-> 
+>
 > solucion: cambiar a fetch type eager o usar DTOs para evitar este problema, en este ejemplo hemos accedido solo
 > a los nombres con fetch type lazy
-> 
+>
 > ![imagen](/images/6.png)
-> 
+>
 > ## Resultado en consola
 > ![imagen](/images/7.png)
-> 
+>
 > ## RESUMEN
 > El EAGER trae todo OrderEntity y BillEntity
-> - this.orderRepository.findAll().forEach(o -> System.out.println(o.toString()));// aqui te trae todo el objeto order con bill incluido
-> El LAZY no puede traer el Bill por eso falla si tratas de imprimir todo el objeto order con bill incluido.
-> 
-> - this.orderRepository.findAll().forEach(o -> System.out.println(o.getClientName()));// aqui solo te trae el nombre del cliente y no falla
->   otra solucion es para que no truene  usamos el metodo de lombok ### @ToString.Exclude() ###
+> - this.orderRepository.findAll().forEach(o -> System.out.println(o.toString()));// aqui te trae todo el objeto order
+    con bill incluido
+    > El LAZY no puede traer el Bill por eso falla si tratas de imprimir todo el objeto order con bill incluido.
+>
+> - this.orderRepository.findAll().forEach(o -> System.out.println(o.getClientName()));// aqui solo te trae el nombre
+    del cliente y no falla
+    > otra solucion es para que no truene usamos el metodo de lombok ### @ToString.Exclude() ###
 > - y asi evitamos que se imprima el objeto bill
 > - @ToString.Exclude -> quedaria asi
+
 ```java
 
-    @ToString.Exclude
-    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JoinColumn(name = "id_bill", nullable = false, unique = true)
-    private BillEntity bill;
+@ToString.Exclude
+@OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+@JoinColumn(name = "id_bill", nullable = false, unique = true)
+private BillEntity bill;
 
 ```
+
 ---
 La anotación `@ToString.Exclude` excluye el campo `bill` del método `toString()` generado automáticamente por Lombok.
 
 **¿Por qué se usa?**
 
-Cuando tienes relaciones JPA con `FetchType.LAZY`, si intentas imprimir el objeto completo (usando `toString()`), puede causar:
+Cuando tienes relaciones JPA con `FetchType.LAZY`, si intentas imprimir el objeto completo (usando `toString()`), puede
+causar:
 
 1. **LazyInitializationException** - Si la sesión de Hibernate ya está cerrada
-2. **Consultas SQL no deseadas** - Hibernate intentará cargar la relación lazy cuando acceda al campo `bill` en el `toString()`
+2. **Consultas SQL no deseadas** - Hibernate intentará cargar la relación lazy cuando acceda al campo `bill` en el
+   `toString()`
 3. **Recursión infinita** - Si `BillEntity` también tiene una referencia de vuelta a `OrderEntity`
 
 **Ejemplo de lo que sucede:**
 
 Sin `@ToString.Exclude`:
+
 ```java
 // Esto podría fallar con LazyInitializationException
 System.out.println(order.toString()); // Intenta acceder a order.bill
 ```
 
 Con `@ToString.Exclude`:
+
 ```java
 // Esto funciona sin problemas
 System.out.println(order.toString()); // No accede a order.bill
 ```
 
 **Resultado:**
+
 - El `toString()` generado incluirá `id`, `createdAt` y `clientName`
 - **NO** incluirá el campo `bill`, evitando los problemas mencionados
 
 Es una práctica común usar `@ToString.Exclude` en relaciones JPA, especialmente con `LAZY` loading.
 
-
 # CLASE 27 -> ONETOONE CIRCULAR
+
+## LO QUE SE DESEA HACER ES UN JOIN orders y bill
+
+![image](/images/9.png)
+
+```sql
+
+SELECT *
+FROM orders o
+         join bill b on b.id = o.id_bill;
+
+```
+
+### En Order Entity se mapea el Bill este esta realizando el JOIN y en BillEntity se mapea la orden pero esta es la parte inversa de la relacion
+
+### no es necesario hacer el JOIN desde BillEntity es redundante.
+
+### En `OrderEntity`:
+
+```java
+
+@OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+@JoinColumn(name = "id_bill", nullable = false, unique = true)
+private BillEntity bill;
+
+```
+
+- `@OneToOne`: Define la relación uno a uno.
+- `fetch = FetchType.LAZY`: No carga la factura (bill) automáticamente, solo cuando la necesitas.
+- `cascade = CascadeType.ALL`: Si guardas/borras una orden, también afecta a su factura asociada.
+- `@JoinColumn(name = "id_bill", ...)`: Especifica la columna en la tabla `orders` que guarda el ID de la factura.
+
+---
+
+### En `BillEntity`:
+
+```java
+
+@OneToOne(mappedBy = "bill", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+private OrderEntity order;
+```
+
+- `mappedBy = "bill"`: Indica que esta es la parte **inversa** de la relación, y que la clave foránea vive en la otra
+  entidad (`OrderEntity`).
+
+---
+
+> Le vamos a dar a la entidad OrderEntity mas importancia y vamos a excluir la relacion inversa en BillEntity
+> para evitar que no me aparezca en el toString de BillEntity la relacion con OrderEntity y evitar problemas de
+> recursividad infinita
+> StackOverflowError
+
+```java
+
+@ToString.Exclude
+@OneToOne(mappedBy = "bill", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+private OrderEntity order;
+
+```
+
+- Con esto se soluciona todo e imprime correctamente el JOIN con la entidad OrderEntity
+
+```java
+
+OrderEntity(id=1, createdAt=2025-10-28T02:20:18.193608, clientName=Ronda Rousey, bill=BillEntity(id=b-1, totalAmount=8101.76, rfc=ERT655687JHY))
+
+OrderEntity(id=2, createdAt=2025-10-28T02:20:18.193608, clientName=Amanda Nunes, bill=BillEntity(id=b-2, totalAmount=4301.88, rfc=AZ45NM78BC79))
+
+```
+---
 
 ## Nota explicacion por que existen estas relaciones
 
->Las asociaciones que ves en las entidades `OrderEntity` y `BillEntity` son relaciones de **mapeo de objetos a tablas** usando JPA (Jakarta Persistence API) para reflejar cómo los datos se relacionan en la base de datos. Te explico el propósito y motivo de cada parte:
+> Las asociaciones que ves en las entidades `OrderEntity` y `BillEntity` son relaciones de **mapeo de objetos a tablas**
+> usando JPA (Jakarta Persistence API) para reflejar cómo los datos se relacionan en la base de datos. Te explico el
+> propósito y motivo de cada parte:
 
 ---
 
 ## ¿Por qué se usan estas asociaciones?
 
 ### 1. **Relación @OneToOne**
-- La anotación `@OneToOne` significa que **cada entidad de un lado de la relación se asocia con exactamente una entidad del otro lado**.
+
+- La anotación `@OneToOne` significa que **cada entidad de un lado de la relación se asocia con exactamente una entidad
+  del otro lado**.
 - En este caso, cada `OrderEntity` está asociada a una sola `BillEntity` y viceversa.
 
 ### 2. **¿Por qué existen estas asociaciones?**
-- **Representan reglas del negocio.** Por ejemplo, si en tu sistema **cada orden tiene exactamente un comprobante/factura (bill), y cada factura pertenece a una sola orden**, entonces una relación uno a uno es la forma correcta de modelar esto, tanto en la base de datos como en el modelo de objetos Java.
-- **Facilitan operaciones CRUD y navegación entre entidades.** Puedes acceder fácilmente desde una orden a su factura, y desde una factura a su orden usando los getters/setters generados por Lombok.
 
----
-
-## ¿Cómo se implementa la relación?
-
-### En `OrderEntity`:
-```java
-@OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-@JoinColumn(name = "id_bill", nullable = false, unique = true)
-private BillEntity bill;
-```
-- `@OneToOne`: Define la relación uno a uno.
-- `fetch = FetchType.LAZY`: No carga la factura (bill) automáticamente, solo cuando la necesitas.
-- `cascade = CascadeType.ALL`: Si guardas/borras una orden, también afecta a su factura asociada.
-- `@JoinColumn(name = "id_bill", ...)`: Especifica la columna en la tabla `orders` que guarda el ID de la factura.
-
-### En `BillEntity`:
-```java
-@OneToOne(mappedBy = "bill", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-private OrderEntity order;
-```
-- `mappedBy = "bill"`: Indica que esta es la parte **inversa** de la relación, y que la clave foránea vive en la otra entidad (`OrderEntity`).
-
----
+- **Representan reglas del negocio.** Por ejemplo, si en tu sistema **cada orden tiene exactamente un
+  comprobante/factura (bill), y cada factura pertenece a una sola orden**, entonces una relación uno a uno es la forma
+  correcta de modelar esto, tanto en la base de datos como en el modelo de objetos Java.
+- **Facilitan operaciones CRUD y navegación entre entidades.** Puedes acceder fácilmente desde una orden a su factura, y
+  desde una factura a su orden usando los getters/setters generados por Lombok.
 
 ## ¿Por qué no usar @OneToMany o @ManyToOne?
 
@@ -356,9 +430,11 @@ private OrderEntity order;
 ## Resumen
 
 - **Motivo principal**: Reflejar la realidad del dominio del negocio (una orden solo tiene una factura y viceversa).
-- **Ventaja**: Permite integridad referencial, navegación sencilla entre entidades y un modelo de datos claro y mantenible.
+- **Ventaja**: Permite integridad referencial, navegación sencilla entre entidades y un modelo de datos claro y
+  mantenible.
 
-Si tienes un caso de negocio donde esto no se cumple, deberías reconsiderar la relación. Pero si cada orden/factura es única y está emparejada, ¡este es el patrón correcto!
+Si tienes un caso de negocio donde esto no se cumple, deberías reconsiderar la relación. Pero si cada orden/factura es
+única y está emparejada, ¡este es el patrón correcto!
 
 # SI LE METEMOS O COMPLIMOS CON ESTAS RELACIONES PODEMOS TENER PROBLEMAS DE RECUSION INFINITA AL MOMENTO DE IMPRIMIR LOS OBJETOS
 

@@ -12,6 +12,7 @@ public class GadgetPlusApplication implements CommandLineRunner {
 
     @Autowired
     private OrderRepository orderRepository;
+
     @Autowired
     private BillRepository billRepository;
 
@@ -25,6 +26,7 @@ public class GadgetPlusApplication implements CommandLineRunner {
         //this.orderRepository.findAll().forEach(o -> System.out.println(o.getClientName()));
         this.orderRepository.findAll().forEach(OrderEntity -> System.out.println(OrderEntity.toString()));// aqui te trae todo el objeto order con bill incluido
         this.billRepository.findAll().forEach(bill -> System.out.println(bill.toString()));
+        //this.billRepository.findAll().forEach(bill -> System.out.println(bill.getRfc()));
 
     }
 }
