@@ -648,6 +648,29 @@ cascade : Si no pusiera cascade type merge me va a salir la exception, o no actu
  private BillEntity bill;
 
 ```
+---
+## #️ ⃣📚**Clase 30: CASCADE DELETE-DETACH`**
 
+```java
+//EN MAIN ->
+// ************* Ejercicio CASCADE.DELETE AUNQUE MEJOR ES CASCADE.ALL *************
+        var order = this.orderRepository.findById(17L).get();
+        this.orderRepository.delete(order);
+        //borramos el order y el bill asociado con cascade delete con id 17L
+//********************************************************************************************************************************************
+//EN ORDER ->
+// Relación uno a uno con BillEntity DELETE.TYPE.MERGE y PERSIST
+//con DETACH BORRAMOS TANTO EL HIJO COMO EL PADRE OSEA DEL ORDER Y DEL BILL
+@OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)// lo menos comun es ver esto -> cascade = {CascadeType.DETACH, CascadeType.REMOVE}
+@JoinColumn(name = "id_bill", nullable = false, unique = true)
+private BillEntity bill;
+
+```
+---
+## #️ ⃣📚**Clase 31: LOMBOK DATA EN ENTIDADES`**
+
+
+---
+## #️ ⃣📚**Clase 32: MANYTOONE Y ONETOMANY`**
 </details>
 
