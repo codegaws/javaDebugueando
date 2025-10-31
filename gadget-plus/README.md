@@ -637,14 +637,17 @@ private BillEntity bill;
 
 ## #️ ⃣📚**Clase 29: CASCADE MERGE`**
 
-cascade : 
+cascade : Si no pusiera cascade type merge me va a salir la exception, o no actualiza el bill asociado a la orden
 
-CascadeType.PERSIST,CascadeType.MERGE -> PERSIST PARA EL SAVE Y MERGE PARA EL UPDATE
+```java
 
-@OneToOne(fetch = FetchType.EAGER,cascade = {CascadeType.PERSIST,CascadeType.MERGE})
-@JoinColumn(name = "id_bill", nullable = false, unique = true)
-private BillEntity bill;
+ CascadeType.PERSIST,CascadeType.MERGE -> PERSIST PARA EL SAVE Y MERGE PARA EL UPDATE
 
+ @OneToOne(fetch = FetchType.EAGER,cascade = {CascadeType.PERSIST,CascadeType.MERGE})
+ @JoinColumn(name = "id_bill", nullable = false, unique = true)
+ private BillEntity bill;
+
+```
 
 </details>
 

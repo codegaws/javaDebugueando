@@ -27,14 +27,14 @@ public class GadgetPlusApplication implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-       /* this.orderRepository.findAll().forEach(OrderEntity -> System.out.println(OrderEntity.toString()));
-        this.billRepository.findAll().forEach(bill -> System.out.println(bill.toString()));
+      /* this.orderRepository.findAll().forEach(OrderEntity -> System.out.println(OrderEntity.toString()));
+        this.billRepository.findAll().forEach(bill -> System.out.println(bill.toString()));*/
 
         // SETEAMOS
-        var bill = BillEntity.builder()
+        /*var bill = BillEntity.builder()
                 .rfc("AS537GD7X")
                 .totalAmount(BigDecimal.TEN)
-                .id("b-18")
+                .id("b-17")
                 .build();
 
 
@@ -45,9 +45,10 @@ public class GadgetPlusApplication implements CommandLineRunner {
                 .build();
         this.orderRepository.save(order);*/
 
+
         var order = this.orderRepository.findById(17L).get();
         System.out.println("PRE PERSISTENCE: " + order.getClientName());
-        order.setClientName("GEORGE MARTINEZ2");
+        order.setClientName("GEORGE MARTINEZ");
 
         order.getBill().setRfc("AAAA1111");
         this.orderRepository.save(order);
