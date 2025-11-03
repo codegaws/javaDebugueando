@@ -4,10 +4,14 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 @Entity
 @Table(name = "orders")
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
@@ -31,8 +35,29 @@ public class OrderEntity {
 
     // Relación uno a uno con BillEntity DELETE.TYPE.MERGE y PERSIST
     //con DETACH BORRAMOS TANTO EL HIJO COMO EL PADRE OSEA DEL ORDER Y DEL BILL
-    @OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)// lo menos comun es ver esto -> cascade = {CascadeType.DETACH, CascadeType.REMOVE}
+    @OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+// lo menos comun es ver esto -> cascade = {CascadeType.DETACH, CascadeType.REMOVE}
     @JoinColumn(name = "id_bill", nullable = false, unique = true)
+    @ToString.Exclude
     private BillEntity bill;
 
+    // Relación uno a muchos con ProductEntity
+    @OneToMany(mappedBy = "order",
+            fetch = FetchType.EAGER,
+            cascade = CascadeType.ALL)
+    private List<ProductEntity> products = new ArrayList<>();
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        OrderEntity that = (OrderEntity) o;
+        return Objects.equals(id, that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(id);
+    }
 }
+
+

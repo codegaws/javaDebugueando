@@ -2,6 +2,7 @@ package com.debugeandoideas.gadgetplus;
 
 import com.debugeandoideas.gadgetplus.entities.BillEntity;
 import com.debugeandoideas.gadgetplus.entities.OrderEntity;
+import com.debugeandoideas.gadgetplus.entities.ProductEntity;
 import com.debugeandoideas.gadgetplus.repositories.BillRepository;
 import com.debugeandoideas.gadgetplus.repositories.OrderRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,7 +11,9 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @SpringBootApplication
 public class GadgetPlusApplication implements CommandLineRunner {
@@ -58,10 +61,26 @@ public class GadgetPlusApplication implements CommandLineRunner {
         */
 
         // ************* Ejercicio CASCADE.DELETE AUNQUE MEJOR ES CASCADE.ALL *************
-        var order = this.orderRepository.findById(17L).get();
-        this.orderRepository.delete(order);
+       /* var order = this.orderRepository.findById(17L).get();
+        this.orderRepository.delete(order);*/
         //borramos el order y el bill asociado con cascade delete con id 17L
 
+        // ************* PROBANDO RELACIONES OneToMany *************
+        var order = this.orderRepository.findById(1L).orElseThrow();
 
+        var product1 = ProductEntity.builder()
+                .quantity(BigInteger.ONE)
+                .build();
+        var product2 = ProductEntity.builder()
+                .quantity(BigInteger.TWO)
+                .build();
+
+        var products = List.of(product1, product2);
+
+        order.setProducts(products);
+
+        products.forEach(product -> product.setOrder(order));
+
+        this.orderRepository.save(order);
     }
 }

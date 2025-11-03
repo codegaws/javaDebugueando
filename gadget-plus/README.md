@@ -160,6 +160,50 @@ WHERE table_name = 'orders';
 - count(): Devuelve el numero de entidades.
 - existsById(ID id): Verifica si una entidad existe por su ID.
 
+# ¿consulta mis repositorios BillRepository y OrderRepository son 
+# llamados en mi clase main como @Autowired entonces por que en mis 
+# repositorios no estan como @component o @Repository???
+
+ **No necesitas** `@Component` o `@Repository` en tus interfaces de repositorio porque:
+
+## Spring Data JPA maneja automáticamente los repositorios
+
+Cuando una interface extiende `CrudRepository` (o cualquier repositorio de Spring Data):
+
+1. **Spring Boot detecta automáticamente** todas las interfaces que extienden repositorios de Spring Data
+2. **Crea implementaciones proxy** en tiempo de ejecución
+3. **Los registra como beans** en el contenedor de Spring automáticamente
+
+## ¿Por qué funciona el @Autowired?
+
+```java
+@Autowired
+private BillRepository billRepository;
+
+@Autowired  
+private OrderRepository orderRepository;
+```
+
+Funciona porque Spring ya creó e inyectó estos beans automáticamente, **sin necesidad de anotaciones**.
+
+## ¿Cuándo usar @Repository?
+
+Solo necesitas `@Repository` cuando:
+- Implementas tu propio repositorio personalizado
+- Usas clases concretas en lugar de interfaces de Spring Data
+
+```java
+// Esto SÍ necesitaría @Repository
+@Repository
+public class CustomBillRepositoryImpl {
+    // implementación manual
+}
+```
+
+## Resumen
+
+Tus repositorios están **correctamente configurados**. Spring Data JPA se encarga de todo automáticamente cuando detecta las interfaces que extienden `CrudRepository`.
+
 ---
 
 ## nota :
@@ -669,8 +713,233 @@ private BillEntity bill;
 ---
 ## #️ ⃣📚**Clase 31: LOMBOK DATA EN ENTIDADES`**
 
+- agregamos @setter , @Getter y hashcode equals en BillEntity y OrderEntity
+
+```java
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        BillEntity that = (BillEntity) o;
+        return Objects.equals(id, that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(id);
+    }
+    
+    //--------------------------------------------------------
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        OrderEntity that = (OrderEntity) o;
+        return Objects.equals(id, that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(id);
+    }
+    
+
+```
+---
+## #️ ⃣📚**Clase 32: MANYTOONE ONETOMANY`**
+
+Tu entendimiento es **correcto**. La relación está bien configurada:
+
+## Relación Many-to-One
+- **Muchos productos** pueden pertenecer a **una sola orden**
+- Desde la perspectiva de `ProductEntity`: `@ManyToOne` hacia `OrderEntity`
+- Es la entidad "propietaria" de la relación porque tiene la clave foránea
+
+## JoinColumn
+```java
+@JoinColumn(name = "id_order")
+```
+- Crea la columna `id_order` en la tabla `products`
+- Esta columna almacena el `id` de la orden a la que pertenece cada producto
+
+## Cascade = CascadeType.ALL
+**Cuidado aquí**: Esta configuración puede ser problemática porque:
+- Si guardas un `ProductEntity`, también guardará/actualizará la `OrderEntity`
+- Si eliminas un `ProductEntity`, también eliminará la `OrderEntity` asociada
+
+## Recomendación
+Para esta relación, considera usar:
+```java
+@ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+@JoinColumn(name = "id_order")
+private OrderEntity order;
+```
+
+Esto evita que eliminar un producto elimine accidentalmente toda la orden y sus otros productos.
+
+## Flujo típico
+1. Una orden puede tener múltiples productos
+2. Cada producto pertenece a una sola orden
+3. La clave foránea `id_order` en `products` referencia el `id` en `orders`
 
 ---
-## #️ ⃣📚**Clase 32: MANYTOONE Y ONETOMANY`**
+
+### Del lado de order hacemos el mapeo inverso desde OrderEntity mandamos al mappedBy ->
+
+```java
+   // Relación uno a muchos con ProductEntity
+    @OneToMany(mappedBy = "order", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    private List<ProductEntity> products = new ArrayList<>();
+```
+
+---
+
+## #️ ⃣📚**Clase 33: PROBANDO RELACIONES ONETOMANY**
+
+# ¿PORQUE BUILDER?
+
+```java
+ var product1 = ProductEntity.builder()
+                .quantity(BigInteger.ONE)
+                .build();
+
+```
+El patrón **Builder** se usa aquí por varias razones prácticas:
+
+## Ventajas del patrón Builder
+
+### 1. **Flexibilidad en la construcción**
+```java
+// Con Builder - puedes omitir campos opcionales
+var product1 = ProductEntity.builder()
+    .quantity(BigInteger.ONE)
+    .build();
+
+// Sin Builder - necesitarías constructor con todos los parámetros
+var product2 = new ProductEntity(null, BigInteger.ONE, null, null, null);
+```
+
+### 2. **Legibilidad del código**
+El Builder hace el código **más legible** porque:
+- Especificas explícitamente qué campo estás asignando
+- No dependes del orden de los parámetros del constructor
+- Evitas constructores con muchos parámetros
+
+### 3. **Inmutabilidad parcial**
+```java
+// Puedes crear objetos paso a paso
+var productBuilder = ProductEntity.builder()
+    .quantity(BigInteger.ONE);
+
+// Agregar más campos según condiciones
+if (someCondition) {
+    productBuilder.name("Producto especial");
+}
+
+var product = productBuilder.build();
+```
+
+### 4. **Integración con Lombok**
+Tu entidad probablemente usa `@Builder` de Lombok:
+```java
+@Entity
+@Builder
+public class ProductEntity {
+    // campos...
+}
+```
+
+## Alternativas sin Builder
+```java
+// Constructor tradicional (menos legible)
+var product = new ProductEntity();
+product.setQuantity(BigInteger.ONE);
+
+// O constructor con parámetros (menos flexible)
+var product = new ProductEntity(BigInteger.ONE);
+```
+
+El Builder es especialmente útil cuando tienes **entidades con muchos campos** y solo necesitas inicializar algunos de ellos.
+
+---
+## explicacion del codigo
+
+```java
+// ************* PROBANDO RELACIONES OneToMany *************
+        var order = this.orderRepository.findById(1L).orElseThrow();
+
+        var product1 = ProductEntity.builder()
+                .quantity(BigInteger.ONE)
+                .build();
+        var product2 = ProductEntity.builder()
+                .quantity(BigInteger.TWO)
+                .build();
+
+        var products = List.of(product1, product2);
+
+        order.setProducts(products);
+
+        products.forEach(product -> product.setOrder(order));
+
+        this.orderRepository.save(order);
+```
+
+---
+
+## Explicación del código
+El código muestra cómo trabajar con una relación **OneToMany bidireccional** entre `OrderEntity` y `ProductEntity`. Aquí está la explicación paso a paso:
+
+## 1. **Buscar la orden existente**
+```java
+var order = this.orderRepository.findById(1L).orElseThrow();
+```
+- Busca una orden con ID = 1 en la base de datos
+- `orElseThrow()` lanza excepción si no la encuentra
+
+## 2. **Crear productos usando Builder**
+```java
+var product1 = ProductEntity.builder()
+        .quantity(BigInteger.ONE)
+        .build();
+var product2 = ProductEntity.builder()
+        .quantity(BigInteger.TWO)
+        .build();
+```
+- Crea dos productos con cantidades 1 y 2 respectivamente
+- Solo se especifica `quantity`, otros campos quedan por defecto
+
+## 3. **Crear lista de productos**
+```java
+var products = List.of(product1, product2);
+```
+- Agrupa los productos en una lista inmutable
+
+## 4. **Establecer relación bidireccional**
+```java
+order.setProducts(products);  // Lado OrderEntity (OneToMany)
+products.forEach(product -> product.setOrder(order));  // Lado ProductEntity (ManyToOne)
+```
+
+**Es crucial hacer ambas asignaciones** porque:
+- `order.setProducts(products)` → Establece la relación desde la orden hacia los productos
+- `product.setOrder(order)` → Establece la relación desde cada producto hacia la orden
+
+## 5. **Persistir cambios**
+```java
+this.orderRepository.save(order);
+```
+- Guarda la orden y, debido a `CascadeType.ALL`, también persiste los productos automáticamente
+
+## ⚠️ Punto importante
+Sin el paso 4 completo, la relación bidireccional no funcionaría correctamente y podrías tener inconsistencias entre el modelo de objetos y la base de datos.
+
+## Resultado
+- La orden ID=1 ahora tendrá 2 productos asociados
+- En la tabla `products` se crearán registros con `id_order = 1`
+
+![image](/images/11.png)
+
+## #️ ⃣📚**Clase 34: `**
+
+
 </details>
 
