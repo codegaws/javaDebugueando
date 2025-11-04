@@ -71,6 +71,7 @@ public class GadgetPlusApplication implements CommandLineRunner {
         var product1 = ProductEntity.builder()
                 .quantity(BigInteger.ONE)
                 .build();
+
         var product2 = ProductEntity.builder()
                 .quantity(BigInteger.TWO)
                 .build();

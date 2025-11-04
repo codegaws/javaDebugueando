@@ -22,6 +22,8 @@ public class ProductEntity {
     private BigInteger quantity;
 
     @ManyToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "id_order")
+    @JoinColumn(name = "id_order")//LLAVE FORANEA HACIA ORDER
     private OrderEntity order;
+
+
 }
