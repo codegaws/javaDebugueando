@@ -47,6 +47,11 @@ public class OrderEntity {
             cascade = CascadeType.ALL)
     private List<ProductEntity> products = new ArrayList<>();
 
+    public void addProduct(ProductEntity product){
+        products.add(product);
+        product.setOrder(this);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;

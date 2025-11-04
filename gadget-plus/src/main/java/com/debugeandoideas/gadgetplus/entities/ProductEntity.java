@@ -21,9 +21,15 @@ public class ProductEntity {
 
     private BigInteger quantity;
 
+    // RELACION MUCHOS A UNO HACIA ORDER LADO PROPIETARIO LLEVA JOINCOLUMN Y LLAVE FORANEA.
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "id_order")//LLAVE FORANEA HACIA ORDER
     private OrderEntity order;
-
-
 }
+
+
+
+
+
+
+

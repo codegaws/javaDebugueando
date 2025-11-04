@@ -68,6 +68,7 @@ public class GadgetPlusApplication implements CommandLineRunner {
         // ************* PROBANDO RELACIONES OneToMany *************
         var order = this.orderRepository.findById(1L).orElseThrow();
 
+        //CREO PRODUCTOS
         var product1 = ProductEntity.builder()
                 .quantity(BigInteger.ONE)
                 .build();
@@ -77,11 +78,10 @@ public class GadgetPlusApplication implements CommandLineRunner {
                 .build();
 
         var products = List.of(product1, product2);
-
-        order.setProducts(products);
-
-        products.forEach(product -> product.setOrder(order));
-
+        //order.setProducts(products);
+        //products.forEach(product -> product.setOrder(order));
+        order.addProduct(product1);
+        order.addProduct(product2);
         this.orderRepository.save(order);
     }
 }
