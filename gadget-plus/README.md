@@ -1688,8 +1688,22 @@ spring.jpa.format-sql=true
 ```
 
 Así verás exactamente qué SQL genera JPA cuando guardas las entidades. ¡Tu comprensión es totalmente correcta!
-## #️ ⃣📚**Clase 34: `**
+## #️ ⃣📚**Clase 34: OREPHAN REMOVAL`**
 
+- Hemos actualizado la tabla products y en id_order pusimos null donde el id de tabla product  es 2.
+
+![image](/images/or.png)
+
+## #️ ⃣📚**Clase 35: OREPHAN REMOVAL Y CASCADE DELETE`**
+
+## ¿POR QUE USAR OREPHAN REMOVAL?
+PARA EVITAR LOS REGISTROS HUERFANOS EN LA BASE DE DATOS
+
+
+
+
+
+    
 
 </details>
 

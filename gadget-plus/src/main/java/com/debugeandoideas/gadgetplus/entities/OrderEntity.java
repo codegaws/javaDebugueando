@@ -44,7 +44,7 @@ public class OrderEntity {
     // Relación uno a muchos con ProductEntity ONETOMANY
     @OneToMany(mappedBy = "order",
             fetch = FetchType.EAGER,
-            cascade = CascadeType.ALL)
+            cascade = CascadeType.ALL,orphanRemoval = true)
     private List<ProductEntity> products = new ArrayList<>();
 
     public void addProduct(ProductEntity product){

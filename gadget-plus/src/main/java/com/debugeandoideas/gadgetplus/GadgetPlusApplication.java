@@ -77,11 +77,18 @@ public class GadgetPlusApplication implements CommandLineRunner {
                 .quantity(BigInteger.TWO)
                 .build();
 
-        var products = List.of(product1, product2);
+        var product3 = ProductEntity.builder()
+                .quantity(BigInteger.TEN)
+                .build();
+
+        var products = List.of(product1, product2, product3);
         //order.setProducts(products);
         //products.forEach(product -> product.setOrder(order));
-        order.addProduct(product1);
+       /* order.addProduct(product1);
         order.addProduct(product2);
+        order.addProduct(product3);*/
+
+        order.getProducts().removeFirst();
         this.orderRepository.save(order);
     }
 }
