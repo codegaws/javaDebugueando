@@ -2350,7 +2350,7 @@ Cuando no quieres exponer la cantidad de registros (por seguridad).
 Para evitar colisiones de IDs entre diferentes bases de datos o servicios.
 Si tu aplicación es simple y no requiere estas características, puedes seguir usando Long o int. Usa UUID cuando la unicidad global y la descentralización sean importantes.
 >
-## #️ ⃣📚**Clase 38:REPOSITORIO DE PRODUCTOS`**
+## #️ ⃣📚**Clase 38:REPOSITORIO DE PRODUCTOS`**5
 
 </details>
 
