@@ -1,0 +1,33 @@
+package com.debugeandoideas.gadgetplus.entities;
+
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.UUID;
+
+@Entity
+@Table(name = "products_catalog")
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+public class ProductCatalogEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
+    @Column(name = "product_name", length = 64)
+    private String name;
+    @Column(name = "brand_name", length = 64)
+    private String brad;
+    private String description;//por reflexion el campo se va a mapear al campo description que tiene 255 por eso no ponemos @Column(length=255)
+    private BigDecimal price;
+    @Column(name = "launching_date")
+    private LocalDate launchDate;
+    @Column(name = "isdiscount")
+    private Boolean isDiscount;
+    private Short rating;
+}

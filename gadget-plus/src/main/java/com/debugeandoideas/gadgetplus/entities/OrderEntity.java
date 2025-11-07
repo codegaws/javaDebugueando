@@ -44,10 +44,10 @@ public class OrderEntity {
     // Relación uno a muchos con ProductEntity ONETOMANY
     @OneToMany(mappedBy = "order",
             fetch = FetchType.EAGER,
-            cascade = CascadeType.ALL,orphanRemoval = true)
+            cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProductEntity> products = new ArrayList<>();
 
-    public void addProduct(ProductEntity product){
+    public void addProduct(ProductEntity product) {
         products.add(product);
         product.setOrder(this);
     }
@@ -63,8 +63,6 @@ public class OrderEntity {
     public int hashCode() {
         return Objects.hashCode(id);
     }
-
-
 
 }
 

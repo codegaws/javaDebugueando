@@ -160,11 +160,13 @@ WHERE table_name = 'orders';
 - count(): Devuelve el numero de entidades.
 - existsById(ID id): Verifica si una entidad existe por su ID.
 
-# ¿consulta mis repositorios BillRepository y OrderRepository son 
-# llamados en mi clase main como @Autowired entonces por que en mis 
+# ¿consulta mis repositorios BillRepository y OrderRepository son
+
+# llamados en mi clase main como @Autowired entonces por que en mis
+
 # repositorios no estan como @component o @Repository???
 
- **No necesitas** `@Component` o `@Repository` en tus interfaces de repositorio porque:
+**No necesitas** `@Component` o `@Repository` en tus interfaces de repositorio porque:
 
 ## Spring Data JPA maneja automáticamente los repositorios
 
@@ -177,10 +179,11 @@ Cuando una interface extiende `CrudRepository` (o cualquier repositorio de Sprin
 ## ¿Por qué funciona el @Autowired?
 
 ```java
+
 @Autowired
 private BillRepository billRepository;
 
-@Autowired  
+@Autowired
 private OrderRepository orderRepository;
 ```
 
@@ -189,6 +192,7 @@ Funciona porque Spring ya creó e inyectó estos beans automáticamente, **sin n
 ## ¿Cuándo usar @Repository?
 
 Solo necesitas `@Repository` cuando:
+
 - Implementas tu propio repositorio personalizado
 - Usas clases concretas en lugar de interfaces de Spring Data
 
@@ -202,7 +206,8 @@ public class CustomBillRepositoryImpl {
 
 ## Resumen
 
-Tus repositorios están **correctamente configurados**. Spring Data JPA se encarga de todo automáticamente cuando detecta las interfaces que extienden `CrudRepository`.
+Tus repositorios están **correctamente configurados**. Spring Data JPA se encarga de todo automáticamente cuando detecta
+las interfaces que extienden `CrudRepository`.
 
 ---
 
@@ -437,6 +442,7 @@ OrderEntity(id=1, createdAt=2025-10-28T02:20:18.193608, clientName=Ronda Rousey,
 OrderEntity(id=2, createdAt=2025-10-28T02:20:18.193608, clientName=Amanda Nunes, bill=BillEntity(id=b-2, totalAmount=4301.88, rfc=AZ45NM78BC79))
 
 ```
+
 ---
 
 ## Nota explicacion por que existen estas relaciones
@@ -486,7 +492,8 @@ Si tienes un caso de negocio donde esto no se cumple, deberías reconsiderar la 
 
 # EN RESUMEN POR ESTO ES QUE USAMOS @ToString.Exclude PARA EVITAR ESTOS PROBLEMAS DE RECUSION INFINITA
 
-¡Excelente pregunta! El problema de **recursividad infinita** en JPA es muy común cuando trabajas con relaciones bidireccionales. Te lo explico con tu caso específico:
+¡Excelente pregunta! El problema de **recursividad infinita** en JPA es muy común cuando trabajas con relaciones
+bidireccionales. Te lo explico con tu caso específico:
 
 ## 🔄 ¿Por qué ocurre la recursividad infinita?
 
@@ -541,23 +548,32 @@ private OrderEntity order;
 Según tu tabla, **OrderEntity es el dueño** de la relación porque:
 
 ```sql
-CREATE TABLE orders (
-    ...
-    id_bill VARCHAR(64) UNIQUE NOT NULL,
-    FOREIGN KEY (id_bill) REFERENCES bill(id) ON DELETE CASCADE
-);
+CREATE TABLE orders
+(
+    .
+    .
+    .
+    id_bill
+    VARCHAR
+(
+    64
+) UNIQUE NOT NULL,
+    FOREIGN KEY (id_bill) REFERENCES bill (id) ON DELETE CASCADE
+    );
 ```
 
 La columna `id_bill` está en la tabla `orders`, por eso en JPA:
+
 - ✅ **OrderEntity** usa `@JoinColumn` (dueño de la relación)
 - ✅ **BillEntity** usa `mappedBy = "bill"` (lado inverso)
 
 ## ⚠️ Advertencias adicionales
 
 ### 1. **EAGER fetching bidireccional es peligroso**
+
 ```java
 // Ambos tienen FetchType.EAGER
-fetch = FetchType.EAGER
+fetch =FetchType.EAGER
 ```
 
 Esto puede causar problemas de rendimiento. Considera usar `LAZY`:
@@ -575,6 +591,7 @@ private OrderEntity order;
 ```
 
 ### 2. **CascadeType.ALL puede ser peligroso**
+
 Con `CascadeType.ALL` en ambos lados, cualquier operación se propaga. Ten cuidado con operaciones de borrado.
 
 ## 📝 Ejemplo completo corregido
@@ -588,13 +605,13 @@ public class OrderEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
-    
+
     @Column(name = "client_name", nullable = false, length = 32)
     private String clientName;
-    
+
     @ToString.Exclude // 👈 IMPORTANTE
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "id_bill", nullable = false, unique = true)
@@ -609,33 +626,39 @@ public class BillEntity {
     @Id
     @Column(length = 64)
     private String id;
-    
+
     @Column(name = "total_amount")
     private BigDecimal totalAmount;
-    
+
     @Column(name = "client_rfc", nullable = false, length = 14)
     private String clientRfc;
-    
+
     @JsonBackReference // 👈 Para APIs REST
     @ToString.Exclude  // 👈 IMPORTANTE
     @OneToOne(mappedBy = "bill", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private OrderEntity order;
 }
 ```
+
 ¡Con estos cambios ya no tendrás recursividad infinita! 🎉
 
 ---
 
 ## #️ ⃣📚**Clase 28: CASCADE PERSIST`**
 
-### SI TIENES DUDAS DE POR QUE BIGDECIMAL 
+### SI TIENES DUDAS DE POR QUE BIGDECIMAL
+
 La diferencia es por el tipo de dato que espera cada atributo:
 
-- Los atributos `String` (como `id` o `rfc`) esperan cadenas de texto, por eso les asignas valores entre comillas, por ejemplo: `"AS537GD7D"`.
-- El atributo `totalAmount` es de tipo `BigDecimal`, que es una clase especial de Java para manejar números decimales con precisión (ideal para dinero).
+- Los atributos `String` (como `id` o `rfc`) esperan cadenas de texto, por eso les asignas valores entre comillas, por
+  ejemplo: `"AS537GD7D"`.
+- El atributo `totalAmount` es de tipo `BigDecimal`, que es una clase especial de Java para manejar números decimales
+  con precisión (ideal para dinero).
 
-Cuando escribes `.totalAmount(BigDecimal.TEN)`, no estás poniendo un número directamente, sino que le estás pasando un objeto `BigDecimal` que representa el número 10.  
-No puedes poner simplemente `.totalAmount(10.0)` porque eso sería un `double`, y Java no lo convierte automáticamente a `BigDecimal` (por precisión y seguridad).
+Cuando escribes `.totalAmount(BigDecimal.TEN)`, no estás poniendo un número directamente, sino que le estás pasando un
+objeto `BigDecimal` que representa el número 10.  
+No puedes poner simplemente `.totalAmount(10.0)` porque eso sería un `double`, y Java no lo convierte automáticamente a
+`BigDecimal` (por precisión y seguridad).
 
 Si quieres asignar otro valor, puedes hacerlo así:
 
@@ -647,33 +670,42 @@ Esto crea un objeto `BigDecimal` con el valor exacto que necesitas, igual que el
 En resumen: usas `BigDecimal` para mantener la precisión en los valores decimales, no números primitivos ni cadenas.
 
 ---
+
 ## EXCEPTION CUANDO QUIERES GENERAR DATOS NUEVOS EXCEPTION TRANSIENT
 
-Si no pones el cascade = CascadeType.ALL te va a salir ese error por que recuerda que estas usando 
+Si no pones el cascade = CascadeType.ALL te va a salir ese error por que recuerda que estas usando
+
 ```java
+
 @OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.PERSIST)
 @JoinColumn(name = "id_bill", nullable = false, unique = true)
 private BillEntity bill;
 ```
-- El detalle es que estas tratando de persistir un bill que aun no esta creado en la base de datos y por eso te sale el error
-`org.hibernate.TransientObjectException: object references an unsaved transient instance - save the transient instance before flushing: com.debuggeandoideas.gadgetplus.entity.BillEntity`
+
+- El detalle es que estas tratando de persistir un bill que aun no esta creado en la base de datos y por eso te sale el
+  error
+  `org.hibernate.TransientObjectException: object references an unsaved transient instance - save the transient instance before flushing: com.debuggeandoideas.gadgetplus.entity.BillEntity`
 - La solucion es usar cascade = CascadeType.ALL para que cuando guardes la orden tambien se guarde el bill asociado
-- 
+-
+
 ```java
 // SETEAMOS
-        var bill = BillEntity.builder()
+var bill = BillEntity.builder()
                 .rfc("AS537GD7X")
                 .totalAmount(BigDecimal.TEN)
                 .id("b-18")
                 .build();
 
-        var order = OrderEntity.builder()
-                .createdAt(LocalDateTime.now())
-                .clientName("Alex Martinez")
-                .bill(bill)
-                .build();
-        this.orderRepository.save(order);
+var order = OrderEntity.builder()
+        .createdAt(LocalDateTime.now())
+        .clientName("Alex Martinez")
+        .bill(bill)
+        .build();
+        this.orderRepository.
+
+save(order);
 ```
+
 ## Se agrego dos nuevos registros a la bd
 
 ![images](/images/10.png)
@@ -685,100 +717,129 @@ cascade : Si no pusiera cascade type merge me va a salir la exception, o no actu
 
 ```java
 
- CascadeType.PERSIST,CascadeType.MERGE -> PERSIST PARA EL SAVE Y MERGE PARA EL UPDATE
+CascadeType.PERSIST,CascadeType.MERGE ->
+PERSIST PARA
+EL SAVE
+Y MERGE
+PARA EL
+UPDATE
 
- @OneToOne(fetch = FetchType.EAGER,cascade = {CascadeType.PERSIST,CascadeType.MERGE})
- @JoinColumn(name = "id_bill", nullable = false, unique = true)
- private BillEntity bill;
+@OneToOne(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+@JoinColumn(name = "id_bill", nullable = false, unique = true)
+private BillEntity bill;
 
 ```
+
 ---
+
 ## #️ ⃣📚**Clase 30: CASCADE DELETE-DETACH`**
 
 ```java
 //EN MAIN ->
 // ************* Ejercicio CASCADE.DELETE AUNQUE MEJOR ES CASCADE.ALL *************
-        var order = this.orderRepository.findById(17L).get();
-        this.orderRepository.delete(order);
-        //borramos el order y el bill asociado con cascade delete con id 17L
+var order = this.orderRepository.findById(17L).get();
+        this.orderRepository.
+
+delete(order);
+
+//borramos el order y el bill asociado con cascade delete con id 17L
 //********************************************************************************************************************************************
 //EN ORDER ->
 // Relación uno a uno con BillEntity DELETE.TYPE.MERGE y PERSIST
 //con DETACH BORRAMOS TANTO EL HIJO COMO EL PADRE OSEA DEL ORDER Y DEL BILL
-@OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)// lo menos comun es ver esto -> cascade = {CascadeType.DETACH, CascadeType.REMOVE}
+@OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+// lo menos comun es ver esto -> cascade = {CascadeType.DETACH, CascadeType.REMOVE}
 @JoinColumn(name = "id_bill", nullable = false, unique = true)
 private BillEntity bill;
 
 ```
+
 ---
+
 ## #️ ⃣📚**Clase 31: LOMBOK DATA EN ENTIDADES`**
 
 - agregamos @setter , @Getter y hashcode equals en BillEntity y OrderEntity
 
 ### NOTA ¿POR QUE ES NECESARIO?
-Agregar los métodos `equals` y `hashCode` en las entidades JPA como `OrderEntity` y `BillEntity` es importante por estas razones:
 
-- 🟢 **Identidad de entidad:** Permite comparar correctamente si dos instancias representan el mismo registro en la base de datos (usualmente por el campo `id`).
-- 🔄 **Colecciones:** Es necesario para que funcionen bien en colecciones como `Set` o como claves en un `Map`, evitando duplicados y asegurando búsquedas correctas.
-- 🛡️ **Integridad en JPA:** Hibernate y JPA usan estos métodos internamente para gestionar el estado de las entidades (persistencia, caché, sincronización).
+Agregar los métodos `equals` y `hashCode` en las entidades JPA como `OrderEntity` y `BillEntity` es importante por estas
+razones:
+
+- 🟢 **Identidad de entidad:** Permite comparar correctamente si dos instancias representan el mismo registro en la base
+  de datos (usualmente por el campo `id`).
+- 🔄 **Colecciones:** Es necesario para que funcionen bien en colecciones como `Set` o como claves en un `Map`, evitando
+  duplicados y asegurando búsquedas correctas.
+- 🛡️ **Integridad en JPA:** Hibernate y JPA usan estos métodos internamente para gestionar el estado de las entidades (
+  persistencia, caché, sincronización).
 
 **Resumen:**  
-Implementar `equals` y `hashCode` garantiza que las entidades se comporten correctamente al ser comparadas, almacenadas o gestionadas por JPA y colecciones de Java.
+Implementar `equals` y `hashCode` garantiza que las entidades se comporten correctamente al ser comparadas, almacenadas
+o gestionadas por JPA y colecciones de Java.
 
 ```java
 
-    @Override
-    public boolean equals(Object o) {
-        if (o == null || getClass() != o.getClass()) return false;
-        BillEntity that = (BillEntity) o;
-        return Objects.equals(id, that.id);
-    }
+@Override
+public boolean equals(Object o) {
+    if (o == null || getClass() != o.getClass()) return false;
+    BillEntity that = (BillEntity) o;
+    return Objects.equals(id, that.id);
+}
 
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(id);
-    }
-    
-    //--------------------------------------------------------
-    @Override
-    public boolean equals(Object o) {
-        if (o == null || getClass() != o.getClass()) return false;
-        OrderEntity that = (OrderEntity) o;
-        return Objects.equals(id, that.id);
-    }
+@Override
+public int hashCode() {
+    return Objects.hashCode(id);
+}
 
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(id);
-    }
-    
+//--------------------------------------------------------
+@Override
+public boolean equals(Object o) {
+    if (o == null || getClass() != o.getClass()) return false;
+    OrderEntity that = (OrderEntity) o;
+    return Objects.equals(id, that.id);
+}
+
+@Override
+public int hashCode() {
+    return Objects.hashCode(id);
+}
+
 
 ```
+
 ---
+
 ## #️ ⃣📚**Clase 32: MANYTOONE ONETOMANY`**
 
 La relación está bien configurada:
 
 ## Relación Many-to-One
+
 - **Muchos productos** pueden pertenecer a **una sola orden**
 - Desde la perspectiva de `ProductEntity`: `@ManyToOne` hacia `OrderEntity`
 - Es la entidad "propietaria" de la relación porque tiene la clave foránea
 
 ## JoinColumn
+
 ```java
 @JoinColumn(name = "id_order")
 ```
+
 - Crea la columna `id_order` en la tabla `products`
 - Esta columna almacena el `id` de la orden a la que pertenece cada producto
 
 ## Cascade = CascadeType.ALL
+
 **Cuidado aquí**: Esta configuración puede ser problemática porque:
+
 - Si guardas un `ProductEntity`, también guardará/actualizará la `OrderEntity`
 - Si eliminas un `ProductEntity`, también eliminará la `OrderEntity` asociada
 
 ## Recomendación
+
 Para esta relación, considera usar:
+
 ```java
+
 @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
 @JoinColumn(name = "id_order")
 private OrderEntity order;
@@ -787,6 +848,7 @@ private OrderEntity order;
 Esto evita que eliminar un producto elimine accidentalmente toda la orden y sus otros productos.
 
 ## Flujo típico
+
 1. Una orden puede tener múltiples productos
 2. Cada producto pertenece a una sola orden
 3. La clave foránea `id_order` en `products` referencia el `id` en `orders`
@@ -797,11 +859,13 @@ Esto evita que eliminar un producto elimine accidentalmente toda la orden y sus 
 
 ```java
    // Relación uno a muchos con ProductEntity
-    @OneToMany(mappedBy = "order", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    private List<ProductEntity> products = new ArrayList<>();
+@OneToMany(mappedBy = "order", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+private List<ProductEntity> products = new ArrayList<>();
 ```
+
 ---
-El `mappedBy` en JPA **NO** se refiere al nombre de la tabla, sino al **nombre del atributo** en la entidad del lado opuesto de la relación.
+El `mappedBy` en JPA **NO** se refiere al nombre de la tabla, sino al **nombre del atributo** en la entidad del lado
+opuesto de la relación.
 
 ## 🔍 Explicación del `mappedBy = "order"`
 
@@ -815,6 +879,7 @@ private List<ProductEntity> products = new ArrayList<>();
 El `"order"` se refiere al atributo `order` que está definido en la clase `ProductEntity`:
 
 ```java
+
 @ManyToOne(cascade = CascadeType.ALL)
 @JoinColumn(name = "id_order")
 private OrderEntity order; // ← Este es el atributo referenciado
@@ -828,6 +893,7 @@ private OrderEntity order; // ← Este es el atributo referenciado
 - **`name = "id_order"`**: Este sí es el nombre de la columna en la tabla `products`
 
 ## 🎯 Flujo de la relación:
+
 1. `OrderEntity` tiene muchos `ProductEntity`
 2. Cada `ProductEntity` pertenece a un `OrderEntity`
 3. La columna `id_order` en la tabla `products` almacena la clave foránea
@@ -836,11 +902,13 @@ private OrderEntity order; // ← Este es el atributo referenciado
 --- 
 
 ## ¿COMO SE QUIEN ES EL LADO PROPIETARIO?
+
 Excelente pregunta. Te explico cómo identificar el **lado propietario** de una relación JPA:
 
 ## 🔍 **Cómo identificar el lado propietario**
 
 ### 1. **El lado SIN `mappedBy` es el PROPIETARIO**
+
 ```java
 // ✅ PROPIETARIO - NO tiene mappedBy
 @ManyToOne(cascade = CascadeType.ALL)
@@ -853,6 +921,7 @@ private List<ProductEntity> products;
 ```
 
 ### 2. **El lado con `@JoinColumn` es el PROPIETARIO**
+
 ```java
 // ✅ PROPIETARIO - tiene @JoinColumn
 @OneToOne(cascade = CascadeType.ALL)
@@ -866,12 +935,12 @@ private OrderEntity order;
 
 ## 📋 **Reglas para identificar el propietario**
 
-| Anotación | Lado Propietario | Lado NO Propietario |
-|-----------|------------------|---------------------|
-| `@OneToOne` | Tiene `@JoinColumn` | Tiene `mappedBy` |
-| `@OneToMany` | N/A (raro caso) | Tiene `mappedBy` |
-| `@ManyToOne` | **Siempre propietario** | N/A |
-| `@ManyToMany` | Sin `mappedBy` | Con `mappedBy` |
+| Anotación     | Lado Propietario        | Lado NO Propietario |
+|---------------|-------------------------|---------------------|
+| `@OneToOne`   | Tiene `@JoinColumn`     | Tiene `mappedBy`    |
+| `@OneToMany`  | N/A (raro caso)         | Tiene `mappedBy`    |
+| `@ManyToOne`  | **Siempre propietario** | N/A                 |
+| `@ManyToMany` | Sin `mappedBy`          | Con `mappedBy`      |
 
 ## 🎯 **En tu caso específico:**
 
@@ -887,10 +956,12 @@ private List<ProductEntity> products;
 ```
 
 ## 💡 **Lógica simple:**
+
 - **PROPIETARIO** = Quien tiene la **clave foránea física** en su tabla
 - **NO PROPIETARIO** = Quien solo **referencia** la relación usando `mappedBy`
 
 ## ⚡ **Truco rápido:**
+
 Si ves `mappedBy = "..."` → Ese lado **NO es propietario**
 Si ves `@JoinColumn` → Ese lado **SÍ es propietario**
 
@@ -899,7 +970,9 @@ En relaciones `@ManyToOne`, siempre el lado "Many" es el propietario (tiene la c
 ---
 
 ## ¿POR QUE USAR LIST EN ORDERENTITY?
-Excelente pregunta. Se usa una **Lista** (`List<ProductEntity>`) en `OrderEntity` porque estamos modelando una relación **uno a muchos** (`@OneToMany`):
+
+Excelente pregunta. Se usa una **Lista** (`List<ProductEntity>`) en `OrderEntity` porque estamos modelando una relación
+**uno a muchos** (`@OneToMany`):
 
 ## 🔍 **Razón principal:**
 
@@ -918,6 +991,7 @@ private List<ProductEntity> products = new ArrayList<>();
 ## 🎯 **¿Por qué `List` y no otras colecciones?**
 
 ### ✅ **Ventajas de `List`:**
+
 - Permite **duplicados** (si necesitas el mismo producto múltiples veces)
 - Mantiene el **orden** de inserción
 - **Indexado** por posición
@@ -938,18 +1012,19 @@ private List<ProductEntity> products = new ArrayList<>();
 ```java
 // ProductEntity tiene quantity, entonces List es perfecto
 var product1 = ProductEntity.builder()
-    .quantity(BigInteger.ONE)  // ← Cantidad controlada aquí
-    .build();
+                .quantity(BigInteger.ONE)  // ← Cantidad controlada aquí
+                .build();
 var product2 = ProductEntity.builder()
-    .quantity(BigInteger.TWO)  // ← No en la colección
-    .build();
+        .quantity(BigInteger.TWO)  // ← No en la colección
+        .build();
 
 var products = List.of(product1, product2); // ← Lista de productos
 ```
 
 ## 🎯 **Resumen:**
+
 Se usa `List` porque una orden puede tener **múltiples productos**,
-cada uno con su propia cantidad, y queremos mantener el orden y permitir 
+cada uno con su propia cantidad, y queremos mantener el orden y permitir
 flexibilidad en el manejo de los productos asociados a la orden.
 
 ---
@@ -960,48 +1035,58 @@ flexibilidad en el manejo de los productos asociados a la orden.
 
 ```java
  var product1 = ProductEntity.builder()
-                .quantity(BigInteger.ONE)
-                .build();
+        .quantity(BigInteger.ONE)
+        .build();
 
 ```
+
 El patrón **Builder** se usa aquí por varias razones prácticas:
 
 ## Ventajas del patrón Builder
 
 ### 1. **Flexibilidad en la construcción**
+
 ```java
 // Con Builder - puedes omitir campos opcionales
 var product1 = ProductEntity.builder()
-    .quantity(BigInteger.ONE)
-    .build();
+                .quantity(BigInteger.ONE)
+                .build();
 
 // Sin Builder - necesitarías constructor con todos los parámetros
 var product2 = new ProductEntity(null, BigInteger.ONE, null, null, null);
 ```
 
 ### 2. **Legibilidad del código**
+
 El Builder hace el código **más legible** porque:
+
 - Especificas explícitamente qué campo estás asignando
 - No dependes del orden de los parámetros del constructor
 - Evitas constructores con muchos parámetros
 
 ### 3. **Inmutabilidad parcial**
+
 ```java
 // Puedes crear objetos paso a paso
 var productBuilder = ProductEntity.builder()
-    .quantity(BigInteger.ONE);
+                .quantity(BigInteger.ONE);
 
 // Agregar más campos según condiciones
-if (someCondition) {
-    productBuilder.name("Producto especial");
+if(someCondition){
+        productBuilder.
+
+name("Producto especial");
 }
 
 var product = productBuilder.build();
 ```
 
 ### 4. **Integración con Lombok**
+
 Tu entidad probablemente usa `@Builder` de Lombok:
+
 ```java
+
 @Entity
 @Builder
 public class ProductEntity {
@@ -1010,53 +1095,71 @@ public class ProductEntity {
 ```
 
 ## Alternativas sin Builder
+
 ```java
 // Constructor tradicional (menos legible)
 var product = new ProductEntity();
-product.setQuantity(BigInteger.ONE);
+product.
+
+setQuantity(BigInteger.ONE);
 
 // O constructor con parámetros (menos flexible)
 var product = new ProductEntity(BigInteger.ONE);
 ```
 
-El Builder es especialmente útil cuando tienes **entidades con muchos campos** y solo necesitas inicializar algunos de ellos.
+El Builder es especialmente útil cuando tienes **entidades con muchos campos** y solo necesitas inicializar algunos de
+ellos.
 
 ---
+
 ## explicacion del codigo  PROBANDO RELACIONES OneToMany
 
 ```java
 // ************* PROBANDO RELACIONES OneToMany *************
-        var order = this.orderRepository.findById(1L).orElseThrow();
+var order = this.orderRepository.findById(1L).orElseThrow();
 
-        var product1 = ProductEntity.builder()
-                .quantity(BigInteger.ONE)
-                .build();
-        var product2 = ProductEntity.builder()
-                .quantity(BigInteger.TWO)
-                .build();
+var product1 = ProductEntity.builder()
+        .quantity(BigInteger.ONE)
+        .build();
+var product2 = ProductEntity.builder()
+        .quantity(BigInteger.TWO)
+        .build();
 
-        var products = List.of(product1, product2);
+var products = List.of(product1, product2);
 
-        order.setProducts(products);
+        order.
 
-        products.forEach(product -> product.setOrder(order));
+setProducts(products);
 
-        this.orderRepository.save(order);
+        products.
+
+forEach(product ->product.
+
+setOrder(order));
+
+        this.orderRepository.
+
+save(order);
 ```
 
 ---
 
 ## Explicación del código
-El código muestra cómo trabajar con una relación **OneToMany bidireccional** entre `OrderEntity` y `ProductEntity`. Aquí está la explicación paso a paso:
+
+El código muestra cómo trabajar con una relación **OneToMany bidireccional** entre `OrderEntity` y `ProductEntity`. Aquí
+está la explicación paso a paso:
 
 ## 1. **Buscar la orden existente**
+
 ```java
 var order = this.orderRepository.findById(1L).orElseThrow();
 ```
+
 - Busca una orden con ID = 1 en la base de datos
 - `orElseThrow()` lanza excepción si no la encuentra
 
 ## 2. **Crear productos usando Builder**
+
 ```java
 var product1 = ProductEntity.builder()
         .quantity(BigInteger.ONE)
@@ -1065,52 +1168,66 @@ var product2 = ProductEntity.builder()
         .quantity(BigInteger.TWO)
         .build();
 ```
+
 - Crea dos productos con cantidades 1 y 2 respectivamente
 - Solo se especifica `quantity`, otros campos quedan por defecto
 
 ## 3. **Crear lista de productos**
+
 ```java
 var products = List.of(product1, product2);
 ```
+
 - Agrupa los productos en una lista inmutable
 
 ## 4. **Establecer relación bidireccional**
+
 ```java
 order.setProducts(products);  // Lado OrderEntity (OneToMany)
-products.forEach(product -> product.setOrder(order));  // Lado ProductEntity (ManyToOne)
+products.
+
+forEach(product ->product.
+
+setOrder(order));  // Lado ProductEntity (ManyToOne)
 ```
 
 **Es crucial hacer ambas asignaciones** porque:
+
 - `order.setProducts(products)` → Establece la relación desde la orden hacia los productos
 - `product.setOrder(order)` → Establece la relación desde cada producto hacia la orden
 
 ### IMPORTANTE COMO ES QUE TIENE setProducts SI NO TENEMOS SETTER EN ORDERENTITY
+
 - Aunque no veas explícitamente un método `setProducts` en `OrderEntity`, es
-- porque  utilizando **Lombok** en tu proyecto. Lombok es una biblioteca que genera 
-- automáticamente métodos como getters, setters, constructores, etc., en tiempo de 
+- porque utilizando **Lombok** en tu proyecto. Lombok es una biblioteca que genera
+- automáticamente métodos como getters, setters, constructores, etc., en tiempo de
 - compilación mediante anotaciones.
 
 ### es como si tuvieras esto implicitamente pero como estamos usando @Setter y @Getter de lombok no es necesario escribirlo manualmente
 
 ```java
  public void setProducts(List<ProductEntity> products) {
-        this.products = products;
-    }
+    this.products = products;
+}
 ```
+
 ### Explicacion desde Claud
 
-¡Exacto! Has entendido perfectamente cómo funciona la **generación automática de métodos** con **Lombok** y los principios de **POO**.
+¡Exacto! Has entendido perfectamente cómo funciona la **generación automática de métodos** con **Lombok** y los
+principios de **POO**.
 
 ## 🔍 **Explicación detallada:**
 
 ### 1. **Lombok genera automáticamente los métodos**
 
 ```java
+
 @Setter  // ← Esta anotación genera todos los setters
 private List<ProductEntity> products = new ArrayList<>();
 ```
 
 **Lombok automáticamente crea:**
+
 ```java
 public void setProducts(List<ProductEntity> products) {
     this.products = products;
@@ -1120,6 +1237,7 @@ public void setProducts(List<ProductEntity> products) {
 ### 2. **Convención de nombres Java**
 
 La convención de **JavaBeans** dice:
+
 - Campo: `products` → Método: `setProducts()`
 - Campo: `clientName` → Método: `setClientName()`
 - Campo: `id` → Método: `setId()`
@@ -1131,21 +1249,25 @@ La convención de **JavaBeans** dice:
 private List<ProductEntity> products = new ArrayList<>();
 
 // Lombok genera automáticamente (invisible para ti)
-public void setProducts(List<ProductEntity> products) { ... }
+public void setProducts(List<ProductEntity> products) { ...}
 
 // Por eso puedes usar:
-order.setProducts(products); // ✅ Funciona perfectamente
+order.
+
+setProducts(products); // ✅ Funciona perfectamente
 ```
 
 ## 🎯 **Otros métodos que Lombok genera automáticamente:**
 
 ### Con `@Setter`:
+
 - `setId(Long id)`
 - `setClientName(String clientName)`
 - `setProducts(List<ProductEntity> products)`
 - `setBill(BillEntity bill)`
 
 ### Con `@Getter`:
+
 - `getId()`
 - `getClientName()`
 - `getProducts()`
@@ -1157,12 +1279,15 @@ Cuando escribes `order.set` y presionas **Ctrl+Espacio**, el IDE te muestra todo
 **set** que Lombok generó automáticamente basándose en tus campos privados.
 
 ## 🎯 **Resumen:**
-Sí, **`setProducts()`** existe porque **Lombok** lo generó automáticamente a partir del campo 
-**`private List<ProductEntity> products`** usando la anotación **`@Setter`**. Es pura **magia de Lombok** + **convenciones Java**.
+
+Sí, **`setProducts()`** existe porque **Lombok** lo generó automáticamente a partir del campo
+**`private List<ProductEntity> products`** usando la anotación **`@Setter`**. Es pura **magia de Lombok** + *
+*convenciones Java**.
 
 ### Explicacion de por que usar el forEach para setear la orden en cada producto
 
-Excelente pregunta. Necesitas el `forEach` porque estás trabajando con una **relación bidireccional** y debes **sincronizar ambos lados** de la relación.
+Excelente pregunta. Necesitas el `forEach` porque estás trabajando con una **relación bidireccional** y debes *
+*sincronizar ambos lados** de la relación.
 
 ## 🔍 **¿Por qué es necesario el forEach?**
 
@@ -1173,7 +1298,11 @@ Excelente pregunta. Necesitas el `forEach` porque estás trabajando con una **re
 order.setProducts(products);
 
 // ✅ LADO 2: ProductEntity → OrderEntity (ManyToOne) 
-products.forEach(product -> product.setOrder(order));
+products.
+
+forEach(product ->product.
+
+setOrder(order));
 ```
 
 ### 2. **Sin el forEach, la relación queda incompleta**
@@ -1184,14 +1313,22 @@ order.setProducts(products);
 // Los products NO saben que pertenecen a esta order
 
 // ✅ SOLUCIÓN: Ambos lados conocen la relación
-order.setProducts(products);
-products.forEach(product -> product.setOrder(order));
+order.
+
+setProducts(products);
+products.
+
+forEach(product ->product.
+
+setOrder(order));
 ```
+
 ¡Excelente observación! Vamos a analizar qué contiene exactamente el objeto `order` en ese momento:
 
 ## 🔍 **Estado del objeto `order` paso a paso:**
 
 ### 1. **Al inicio (después del findById):**
+
 ```java
 var order = this.orderRepository.findById(1L).orElseThrow();
 // order contiene:
@@ -1203,6 +1340,7 @@ var order = this.orderRepository.findById(1L).orElseThrow();
 ```
 
 ### 2. **Después de `order.setProducts(products)`:**
+
 ```java
 order.setProducts(products);
 // order ahora contiene:
@@ -1218,8 +1356,11 @@ order.setProducts(products);
 ```
 
 ### 3. **Durante el forEach:**
+
 ```java
-products.forEach(product -> product.setOrder(order));
+products.forEach(product ->product.
+
+setOrder(order));
 
 // Cuando se ejecuta product.setOrder(order):
 // - product recibe el objeto order COMPLETO
@@ -1233,7 +1374,7 @@ products.forEach(product -> product.setOrder(order));
 
 ```java
 // En el momento del forEach:
-product1.setOrder(order); 
+product1.setOrder(order);
 // order = {
 //   id: 1,
 //   clientName: "Ronda Rousey",
@@ -1246,28 +1387,53 @@ product1.setOrder(order);
 
 ```java
 // Después del forEach:
-order.getProducts().get(0) == product1 ✅
-product1.getOrder().getProducts().get(0) == product1 ✅
+order.getProducts().
+
+get(0) ==product1 ✅
+        product1.
+
+getOrder().
+
+getProducts().
+
+get(0) ==product1 ✅
 // ¡product1 puede acceder a sí mismo a través de order!
 ```
 
 ## 💡 **Implicaciones prácticas:**
 
 ### 1. **Navegación completa:**
+
 ```java
 // Desde cualquier producto puedes acceder a:
-product1.getOrder().getClientName(); // → "Ronda Rousey"
-product1.getOrder().getProducts().size(); // → 2
-product1.getOrder().getBill().getRfc(); // → "ERT655687JHY"
+product1.getOrder().
+
+getClientName(); // → "Ronda Rousey"
+product1.
+
+getOrder().
+
+getProducts().
+
+size(); // → 2
+product1.
+
+getOrder().
+
+getBill().
+
+getRfc(); // → "ERT655687JHY"
 ```
 
 ### 2. **Acceso a productos hermanos:**
+
 ```java
 // Desde product1, puedes acceder a product2:
 ProductEntity product2 = product1.getOrder().getProducts().get(1);
 ```
 
 ### 3. **Cuidado con recursividad infinita:**
+
 ```java
 // Por eso usas @ToString.Exclude para evitar:
 // order.toString() → products.toString() → order.toString() → ♾️
@@ -1275,16 +1441,17 @@ ProductEntity product2 = product1.getOrder().getProducts().get(1);
 
 ## 🎯 **Resumen:**
 
-**SÍ**, cuando ejecutas `product.setOrder(order)`, ese `order` **YA CONTIENE** la lista completa de productos porque 
+**SÍ**, cuando ejecutas `product.setOrder(order)`, ese `order` **YA CONTIENE** la lista completa de productos porque
 se ejecutó `order.setProducts(products)` antes del `forEach`.
 
-Esto crea una **red de navegación bidireccional completa** donde desde cualquier objeto puedes navegar hacia cualquier 
+Esto crea una **red de navegación bidireccional completa** donde desde cualquier objeto puedes navegar hacia cualquier
 otro objeto de la relación.
 ---
 
 ## 🎯 **¿Por qué JPA/Hibernate necesita esto?**
 
 ### Sin sincronización:
+
 ```java
 order.setProducts(products);
 // products[0].getOrder() = null ❌
@@ -1292,9 +1459,14 @@ order.setProducts(products);
 ```
 
 ### Con sincronización:
+
 ```java
 order.setProducts(products);
-products.forEach(product -> product.setOrder(order));
+products.
+
+forEach(product ->product.
+
+setOrder(order));
 // products[0].getOrder() = order ✅
 // products[1].getOrder() = order ✅
 ```
@@ -1315,66 +1487,107 @@ public void addProduct(ProductEntity product) {
 }
 
 // Uso:
-order.addProduct(product1);
-order.addProduct(product2);
+order.
+
+addProduct(product1);
+order.
+
+addProduct(product2);
 ```
 
 ## 🎯 **Resumen:**
+
 El `forEach` es necesario porque **JPA requiere que el lado propietario
-** (`ProductEntity`) **tenga la referencia completa** (`order`) para crear correctamente 
-las claves foráneas en la base de datos. Sin esto, la relación existe solo en un lado y 
+** (`ProductEntity`) **tenga la referencia completa** (`order`) para crear correctamente
+las claves foráneas en la base de datos. Sin esto, la relación existe solo en un lado y
 JPA no puede persistirla correctamente.
 
 ---
-¡Exactamente! Has captado perfectamente el problema. Sin el `forEach`, tendrías que hacer el mapeo **manualmente uno por uno**, lo cual es muy tedioso y propenso a errores.
+¡Exactamente! Has captado perfectamente el problema. Sin el `forEach`, tendrías que hacer el mapeo **manualmente uno por
+uno**, lo cual es muy tedioso y propenso a errores.
 
 ## 🔍 **Comparación práctica:**
 
 ### ❌ **Sin forEach (manual y tedioso):**
+
 ```java
 // Con 2 productos - ya es molesto
 order.setProducts(products);
-product1.setOrder(order);  // ← Manual
-product2.setOrder(order);  // ← Manual
+product1.
+
+setOrder(order);  // ← Manual
+product2.
+
+setOrder(order);  // ← Manual
 
 // Con 1000 productos - ¡IMPOSIBLE de mantener!
-order.setProducts(products);
-product1.setOrder(order);
-product2.setOrder(order);
-product3.setOrder(order);
+order.
+
+setProducts(products);
+product1.
+
+setOrder(order);
+product2.
+
+setOrder(order);
+product3.
+
+setOrder(order);
 // ... 997 líneas más 😱
-product1000.setOrder(order);
+product1000.
+
+setOrder(order);
 ```
 
 ### ✅ **Con forEach (automático y escalable):**
+
 ```java
 // Funciona igual para 2, 100 o 1000 productos
 order.setProducts(products);
-products.forEach(product -> product.setOrder(order)); // ← Una sola línea
+products.
+
+forEach(product ->product.
+
+setOrder(order)); // ← Una sola línea
 ```
 
 ## 🎯 **Ventajas del forEach:**
 
 ### 1. **Escalabilidad automática**
+
 ```java
 // No importa si son 10 o 10,000 productos
 var products = createThousandsOfProducts();
-order.setProducts(products);
-products.forEach(product -> product.setOrder(order)); // ← Siempre una línea
+order.
+
+setProducts(products);
+products.
+
+forEach(product ->product.
+
+setOrder(order)); // ← Siempre una línea
 ```
 
 ### 2. **Menos propenso a errores**
+
 ```java
 // ❌ Fácil olvidar algún producto manualmente
 product1.setOrder(order);
-product2.setOrder(order);
+product2.
+
+setOrder(order);
 // ¿Olvidaste product3? ← Bug silencioso
 
 // ✅ El forEach nunca se olvida de ninguno
-products.forEach(product -> product.setOrder(order)); // ← Garantizado
+products.
+
+forEach(product ->product.
+
+setOrder(order)); // ← Garantizado
 ```
 
 ### 3. **Código más limpio y mantenible**
+
 ```java
 // Una línea vs. N líneas
 // Fácil de leer y entender
@@ -1393,29 +1606,37 @@ public void addProducts(List<ProductEntity> products) {
 }
 
 // Uso súper limpio:
-order.addProducts(products); // ← Una sola línea hace todo
+order.
+
+addProducts(products); // ← Una sola línea hace todo
 ```
 
 ## 🎯 **Resumen:**
+
 Sí, sin el `forEach` tendrías que setear **cada producto individualmente**, lo cual es:
+
 - ⛔ Tedioso para muchos productos
 - 🐛 Propenso a errores (olvidar algunos)
 - 📝 Código repetitivo e imposible de mantener
 
-El `forEach` es la **solución elegante y escalable** para relaciones bidireccionales 
+El `forEach` es la **solución elegante y escalable** para relaciones bidireccionales
 con muchos elementos.
 
 ## 5. **Persistir cambios**
+
 ```java
 this.orderRepository.save(order);
 ```
+
 - Guarda la orden y, debido a `CascadeType.ALL`, también persiste los productos automáticamente
 
 ## ⚠️ Punto importante
-Sin el paso 4 completo, la relación bidireccional no funcionaría correctamente y podrías tener 
+
+Sin el paso 4 completo, la relación bidireccional no funcionaría correctamente y podrías tener
 inconsistencias entre el modelo de objetos y la base de datos.
 
 ## Resultado
+
 - La orden ID=1 ahora tendrá 2 productos asociados
 - En la tabla `products` se crearán registros con `id_order = 1`
 
@@ -1423,18 +1644,21 @@ inconsistencias entre el modelo de objetos y la base de datos.
 
 # ¿THIS?
 
-El `this` en `this.orderRepository.save(order)` se refiere a la **instancia actual de la clase `GadgetPlusApplication`**.
+El `this` en `this.orderRepository.save(order)` se refiere a la **instancia actual de la clase `GadgetPlusApplication`
+**.
 
 ## 🔍 **Explicación detallada:**
 
 ### 1. **Contexto de la clase:**
+
 ```java
+
 @SpringBootApplication
 public class GadgetPlusApplication implements CommandLineRunner {
-    
+
     @Autowired
     private OrderRepository orderRepository; // ← Campo de esta clase
-    
+
     @Override
     public void run(String... args) throws Exception {
         // this = instancia de GadgetPlusApplication
@@ -1444,30 +1668,40 @@ public class GadgetPlusApplication implements CommandLineRunner {
 ```
 
 ### 2. **`this` = instancia de `GadgetPlusApplication`:**
+
 ```java
 // Equivalencia:
 this.orderRepository.save(order);
 // Es lo mismo que:
-GadgetPlusApplication.this.orderRepository.save(order);
+GadgetPlusApplication .this.orderRepository.
+
+save(order);
 ```
 
 ### 3. **Podrías omitir el `this`:**
+
 ```java
 // Ambas líneas son equivalentes:
 this.orderRepository.save(order); // ✅ Explícito
-orderRepository.save(order);      // ✅ Implícito (this se asume)
+orderRepository.
+
+save(order);      // ✅ Implícito (this se asume)
 ```
 
 ## 🎯 **¿Por qué usar `this` aquí?**
 
 ### 1. **Claridad y buenas prácticas:**
+
 ```java
 // Más claro que estás accediendo a un campo de la clase
 this.orderRepository.save(order);
-this.billRepository.findAll();
+this.billRepository.
+
+findAll();
 ```
 
 ### 2. **Evita ambigüedad:**
+
 ```java
 // Si tuvieras un parámetro con el mismo nombre
 public void someMethod(OrderRepository orderRepository) {
@@ -1479,11 +1713,13 @@ public void someMethod(OrderRepository orderRepository) {
 ## 💡 **Comparación con otros `this`:**
 
 ### En `GadgetPlusApplication`:
+
 ```java
 this.orderRepository // ← this = GadgetPlusApplication
 ```
 
 ### En método helper de `OrderEntity` (si existiera):
+
 ```java
 // Dentro de OrderEntity
 public void addProducts(List<ProductEntity> products) {
@@ -1492,13 +1728,15 @@ public void addProducts(List<ProductEntity> products) {
 ```
 
 ## 🎯 **Resumen:**
-El `this` en `this.orderRepository.save(order)` se refiere a la **instancia actual 
-de `GadgetPlusApplication`** y está accediendo al campo `orderRepository` que fue inyectado 
+
+El `this` en `this.orderRepository.save(order)` se refiere a la **instancia actual
+de `GadgetPlusApplication`** y está accediendo al campo `orderRepository` que fue inyectado
 por Spring con `@Autowired`.
 
 ---
 
 ### 🎯 EXPLICACION MAS DETALLADA ¿POR QUE SE NECESITA UNA LISTA EN OrderEntity?
+
 No es **obligatorio** hacer la relación inversa, pero es una **buena práctica** para la navegación bidireccional.
 
 Respondiendo a tu pregunta específica: pones `List<ProductEntity>` porque:
@@ -1510,33 +1748,40 @@ Respondiendo a tu pregunta específica: pones `List<ProductEntity>` porque:
    ```
 3. **Navegación**: Desde `OrderEntity` puedes acceder directamente a `order.getProducts()` sin hacer consultas manuales
 
-La información **NO** se almacena en la tabla `orders`. La llave foránea `id_order` sigue estando solo en la tabla `products`. La lista es solo una representación en Java para facilitar el acceso a los datos relacionados.
+La información **NO** se almacena en la tabla `orders`. La llave foránea `id_order` sigue estando solo en la tabla
+`products`. La lista es solo una representación en Java para facilitar el acceso a los datos relacionados.
 
 **Ejemplo práctico**:
+
 - Tabla `orders`: `id=1, client_name="Juan"`
 - Tabla `products`:
     - `id=1, quantity=5, id_order=1`
     - `id=2, quantity=3, id_order=1`
 
-Cuando cargas `OrderEntity` con `id=1`, JPA automáticamente llena la lista `products` con los 2 productos que tienen `id_order=1`.
+Cuando cargas `OrderEntity` con `id=1`, JPA automáticamente llena la lista `products` con los 2 productos que tienen
+`id_order=1`.
 
 Es una **conveniencia** de JPA, no un requisito de base de datos.
 
+## ¿QUE PASA EN ESTA LINEA  this.orderRepository.save(order); ?
 
-##  ¿QUE PASA EN ESTA LINEA  this.orderRepository.save(order); ?
-
-¡Excelente pregunta! 🎯 **SÍ**, cuando ejecutas `this.orderRepository.save(order)`, JPA automáticamente **genera los IDs** para los productos nuevos.
+¡Excelente pregunta! 🎯 **SÍ**, cuando ejecutas `this.orderRepository.save(order)`, JPA automáticamente **genera los IDs
+** para los productos nuevos.
 
 ## 🔍 **Qué pasa durante el save:**
 
 ### 1. **Antes del save:**
+
 ```java
 // Los productos tienen:
-product1.getId() = null ❌
-product2.getId() = null ❌
+product1.getId() =null ❌
+        product2.
+
+getId() =null ❌
 ```
 
 ### 2. **Durante el save:**
+
 ```java
 this.orderRepository.save(order);
 // JPA detecta que hay productos nuevos (id = null)
@@ -1546,24 +1791,31 @@ this.orderRepository.save(order);
 ```
 
 ### 3. **Después del save:**
+
 ```java
 // Los productos ahora tienen:
-product1.getId() = 8L ✅ (auto-generado)
-product2.getId() = 9L ✅ (auto-generado)
+product1.getId() =8L ✅ (auto-generado)
+        product2.
+
+getId() =9L ✅ (auto-generado)
 ```
 
 ## 🎯 **¿Por qué funciona automáticamente?**
 
 ### **Cascade.ALL** en la relación:
+
 ```java
+
 @OneToMany(mappedBy = "order",
-           fetch = FetchType.EAGER,
-           cascade = CascadeType.ALL) // ← ¡ESTO ES LA CLAVE!
+        fetch = FetchType.EAGER,
+        cascade = CascadeType.ALL) // ← ¡ESTO ES LA CLAVE!
 private List<ProductEntity> products = new ArrayList<>();
 ```
 
 ### **GenerationType.IDENTITY** en ProductEntity:
+
 ```java
+
 @Id
 @GeneratedValue(strategy = GenerationType.IDENTITY) // ← Auto-increment
 private Long id;
@@ -1572,27 +1824,38 @@ private Long id;
 ## 🔧 **Para verificar esto en el debugger:**
 
 ### **Breakpoint ANTES del save:**
+
 ```java
 // Examina:
 product1.getId()    // → null
-product2.getId()    // → null
+product2.
 
-this.orderRepository.save(order); // ← BREAKPOINT AQUÍ
+getId()    // → null
+
+this.orderRepository.
+
+save(order); // ← BREAKPOINT AQUÍ
 ```
 
 ### **Breakpoint DESPUÉS del save:**
+
 ```java
 this.orderRepository.save(order);
 // ← BREAKPOINT AQUÍ
 
 // Examina:
-product1.getId()    // → 8L (o el siguiente disponible)
-product2.getId()    // → 9L
+product1.
+
+getId()    // → 8L (o el siguiente disponible)
+product2.
+
+getId()    // → 9L
 ```
 
 ## 📊 **Lo que verás en la base de datos:**
 
 ### Tabla `products` después del save:
+
 ```sql
 | id | quantity | id_order |
 |----|----------|----------|
@@ -1609,11 +1872,13 @@ product2.getId()    // → 9L
 3. ✅ **Establece** la llave foránea `id_order = 1`
 4. ✅ **Actualiza** los objetos Java con los IDs generados
 
-Todo esto gracias a `cascade = CascadeType.ALL` que propaga la operación `save` desde `OrderEntity` hacia sus `ProductEntity` relacionados.
+Todo esto gracias a `cascade = CascadeType.ALL` que propaga la operación `save` desde `OrderEntity` hacia sus
+`ProductEntity` relacionados.
 
 ¡Debuggea antes y después del `save()` para verlo en acción! 🔍
 
-## NOTA : POCO DE LA LOGICA DE QUE HACE JPA 
+## NOTA : POCO DE LA LOGICA DE QUE HACE JPA
+
 Tu lógica está muy bien! Tienes razón en varios puntos:
 
 ## Cómo funciona `@OneToMany` con `mappedBy`:
@@ -1627,17 +1892,24 @@ Tu lógica está muy bien! Tienes razón en varios puntos:
 Tienes razón, **NO necesitas un forEach** porque:
 
 1. **Agregar a la colección**: `products.add(product)` añade el producto a la lista en memoria
-2. **Sincronizar la relación**: `product.setOrder(this)` establece la referencia inversa, asignando la orden actual al producto
-3. **Persistencia automática**: Cuando guardes la orden, `CascadeType.ALL` automáticamente persiste todos los productos de la lista
+2. **Sincronizar la relación**: `product.setOrder(this)` establece la referencia inversa, asignando la orden actual al
+   producto
+3. **Persistencia automática**: Cuando guardes la orden, `CascadeType.ALL` automáticamente persiste todos los productos
+   de la lista
 
 ## Flujo completo:
+
 ```java
 // Al agregar productos
 order.addProduct(product1);  // product1 queda asociado a order
-order.addProduct(product2);  // product2 queda asociado a order
+order.
+
+addProduct(product2);  // product2 queda asociado a order
 
 // Al guardar la orden
-orderRepository.save(order);  // Guarda order y automáticamente todos sus products
+orderRepository.
+
+save(order);  // Guarda order y automáticamente todos sus products
 ```
 
 Tu comprensión es correcta: JPA abstrae la complejidad y el método `addProduct()`
@@ -1649,6 +1921,7 @@ Cómo funciona JPA con las entidades.
 ## Cómo JPA mapea las entidades a tablas:
 
 **Sí, las entidades son representaciones de tablas en la base de datos**:
+
 - `OrderEntity` → tabla `orders`
 - `ProductEntity` → tabla `products`
 - `BillEntity` → tabla `bills`
@@ -1656,20 +1929,27 @@ Cómo funciona JPA con las entidades.
 ## Lo que sucede con `order.addProduct(product1)`:
 
 Cuando ejecutas:
+
 ```java
 order.addProduct(product1);
-order.addProduct(product2);
-this.orderRepository.save(order);
+order.
+
+addProduct(product2);
+this.orderRepository.
+
+save(order);
 ```
 
 **JPA internamente genera y ejecuta queries SQL como estas:**
 
 ```sql
 -- Para product1
-INSERT INTO products (quantity, order_id) VALUES (1, 1);
+INSERT INTO products (quantity, order_id)
+VALUES (1, 1);
 
 -- Para product2  
-INSERT INTO products (quantity, order_id) VALUES (2, 1);
+INSERT INTO products (quantity, order_id)
+VALUES (2, 1);
 ```
 
 ## El proceso completo:
@@ -1688,22 +1968,389 @@ spring.jpa.format-sql=true
 ```
 
 Así verás exactamente qué SQL genera JPA cuando guardas las entidades. ¡Tu comprensión es totalmente correcta!
+
 ## #️ ⃣📚**Clase 34: OREPHAN REMOVAL`**
 
-- Hemos actualizado la tabla products y en id_order pusimos null donde el id de tabla product  es 2.
+# ANTES -> tenemos los id de productos en relacion de las ordenes
+
+### Aplicacimos ->
+
+```sql 
+    SELECT p.id, p.id_order
+    from products p;
+
+```
+
+![img](/images/12.png)
+
+### Aplicacimos -> JOIN
+
+```sql 
+    SELECT *
+    FROM orders o
+             JOIN products p on p.id_order = o.id;
+
+```
+
+![img](/images/13.png)
+
+> #### Ahora vamos a dejar huerfano a un registro quitandole la referencia de id_order poniendo Null
+> #### UPDATE products SET id_order = null WHERE id = 2; -- actualizamos
+
+```sql
+
+SELECT *
+FROM orders o;
+SELECT p.id, p.id_order
+from products p;
+SELECT *
+FROM orders o
+         JOIN products p on p.id_order = o.id;
+DELETE
+FROM products;
+UPDATE products
+SET id_order = 1
+WHERE id_order is null;
+UPDATE products
+SET id_order = null
+WHERE id = 2;
+```
+
+# Despues :
+
+- Hemos actualizado la tabla products y en id_order pusimos null donde el id de tabla product es 2.
+- el producto con id 2 ahora es huérfano porque no tiene una orden asociada oreferencia.
 
 ![image](/images/or.png)
 
+- si hacemos JOIN -> SELECT * FROM orders o JOIN products p on p.id_order = o.id;
+- Como veras ya no sale el id 2 por que es huerfano ya no lo toma en el JOIN no hay forma
+- de acceder a el, la unica forma es accediendo mediante la tabla producto. pero no haciendo JOIN
+  !
+- [image](/images/14.png)
+
+- si accedo seria mdiante la tabla producto. -> SELECT * FROM products;
+
+![image](/images/14.png)
+
+### Nota : Aplicando a tratar huerfanos en base de datos.
+---
+
 ## #️ ⃣📚**Clase 35: OREPHAN REMOVAL Y CASCADE DELETE`**
 
-## ¿POR QUE USAR OREPHAN REMOVAL?
-PARA EVITAR LOS REGISTROS HUERFANOS EN LA BASE DE DATOS
+> ### HACEMOS UN DELETE -> DELETE FROM products;
+> AGREGAMOS 3 PRODUCTOS NO OLVIDAR QUE LO HEMOS HECHO CON UN METODO HELPER ADD PARA AGREGAR
+> PRODUCTOS.
 
+![image](/images/15.png)
 
+![image](/images/16.png)
 
+---
+> ## AHORA QUE HACEMOS ->
+> ### order.getProducts().removeFirst();
+> Removemos el primer elemento de la lista de productos osea pone al primer elemento de la tabla productos con
+> referencia
+> a id_order como null entonces si lo seteamos como nulo es dejar huerfano a ese producto.
+> RECUERDA DEBEMOS EVITAR TENER REGISTROS HUERFANOS EN NUESTRA TABLA.POR QUE PUEDE GENERAR BASURA
+> PARA HACER ESTO TENEMOS LA PROPIEDAD O ANOTACION 'orphanRemoval = true'
+> APLICANDO EN OrderEntity:
 
+```java
+    // Relación uno a muchos con ProductEntity ONETOMANY
+@OneToMany(mappedBy = "order",
+        fetch = FetchType.EAGER,
+        cascade = CascadeType.ALL, orphanRemoval = true)
+private List<ProductEntity> products = new ArrayList<>();
 
-    
+public void addProduct(ProductEntity product) {
+    products.add(product);
+    product.setOrder(this);
+}
+```
+
+> EN MAIN
+
+```java> 
+        order.getProducts().removeFirst();
+        this.orderRepository.save(order);
+```
+### ¿QUE PASA AHORA APLICANDO orphanRemoval = true?
+> AL HACER ESTO ELIMINA EL REGISTRO HUERFANO DE LA TABLA PRODUCTOS Y TAMBIEN TODOS LOS DEMAS
+> CUANDO HACEMOS EL SELECT * FROM products; o el JOIN 
+![image](/images/17.png)
+
+> y si hacemos el select * from orders o; vemos que se borro la orden con el id 1
+> 
+![image](/images/18.png)
+
+### ¿POR QUE BORRO TODO A QUE SE DE ESTO?
+> ## RPTA -> POR ESTA COMBINACION : cascade = CascadeType.ALL, orphanRemoval = true
+> Por que en ProductEntity tienes 
+> ManyToOne tienes el 
+> cascade = CascadeType.ALL -> hace que todas las operaciones de persistencia (guardar, actualizar, eliminar)
+> Cuando le mandas a remover el primer producto de la lista de productos le estas haciendo el delete a la orden
+> este es el fliujo :
+> order hace delete al producto -> el producto al tener el cascade de tipo ALL hace delete a la orden padre(orden relacionada)
+> -> y la orden
+> al tener orphanRemoval = true hace delete a todos los productos que esten huerfanos.
+
+# otra explicacion de CLAUD
+Tienes razón, esa explicación es el **problema exacto**. Es un **ciclo destructivo** causado por la combinación peligrosa de configuraciones. Te explico paso a paso:
+¡No exactamente! Te explico mejor el flujo paso a paso:
+
+## 🔍 **Flujo detallado del problema:**
+
+### **Estado inicial:**
+```
+ORDER id=1 → tiene 3 productos: [producto_id=1, producto_id=2, producto_id=3]
+```
+
+### **Paso 1: removeFirst()**
+```java
+order.getProducts().removeFirst(); // Remueve producto_id=1 de la lista
+```
+- El `producto_id=1` queda sin referencia en la lista
+- `orphanRemoval = true` detecta esto como "huérfano"
+- **JPA elimina producto_id=1 de la BD**
+
+### **Paso 2: Cascade.ALL propaga DELETE**
+```java
+@ManyToOne(cascade = CascadeType.ALL)  // ← AQUÍ está el problema
+private OrderEntity order;
+```
+- Al eliminar `producto_id=1`, `CascadeType.ALL` dice: "Si elimino este producto, también elimino su orden"
+- **JPA elimina ORDER id=1 de la BD**
+
+### **Paso 3: orphanRemoval elimina productos restantes**
+```java
+@OneToMany(mappedBy = "order", orphanRemoval = true)
+```
+- Al eliminar `ORDER id=1`, los productos restantes (`producto_id=2` y `producto_id=3`) quedan huérfanos
+- `orphanRemoval = true` dice: "Si quedan productos sin orden, elimínalos"
+- **JPA elimina producto_id=2 y producto_id=3**
+
+## 🎯 **Resultado final:**
+```
+✅ Estado inicial: ORDER id=1 + 3 productos
+❌ Estado final:   TODO ELIMINADO (orden + todos los productos)
+```
+
+## 📊 **Lo que se elimina en cada paso:**
+
+| Paso | Qué se elimina | Por qué |
+|------|----------------|---------|
+| 1 | `producto_id=1` | `orphanRemoval = true` |
+| 2 | `ORDER id=1` | `CascadeType.ALL` en ProductEntity |
+| 3 | `producto_id=2, producto_id=3` | `orphanRemoval = true` (quedan huérfanos) |
+
+## ⚠️ **El problema clave:**
+
+No es que JPA elimine "la orden padre junto con sus productos". Es que:
+
+1. **Elimina UN producto** (por orphanRemoval)
+2. **Esa eliminación propaga y elimina la ORDEN** (por CascadeType.ALL)
+3. **Al eliminarse la orden, los productos restantes quedan huérfanos y también se eliminan** (por orphanRemoval)
+
+Es un **efecto dominó destructivo** donde eliminar 1 producto termina eliminando TODO.---
+---
+## poco mas de explicacion al respecto
+¡Exactamente! Has entendido perfectamente el concepto. Te lo confirmo paso a paso:
+
+## 🎯 **Tu entendimiento es CORRECTO:**
+
+### **Estado inicial:**
+```sql
+-- Tabla orders
+| id | client_name |
+|----|-------------|
+| 2  | Juan Pérez  |
+
+-- Tabla products
+| id | quantity | id_order |
+|----|----------|----------|
+| 10 | 1        | 2        |
+| 11 | 3        | 2        |
+| 12 | 2        | 2        |
+```
+
+### **Paso 1: removeFirst() elimina producto_id=10**
+```java
+order.getProducts().removeFirst(); // Elimina producto con id=10
+```
+- `orphanRemoval = true` elimina el producto_id=10 de la BD
+
+### **Paso 2: CascadeType.ALL propaga desde producto_id=10**
+```java
+@ManyToOne(cascade = CascadeType.ALL)  // ← En ProductEntity
+private OrderEntity order;
+```
+- Al eliminar producto_id=10, `CascadeType.ALL` elimina **ORDER id=2 COMPLETA**
+- **Se borra toda la fila de la tabla orders**
+
+### **Paso 3: orphanRemoval elimina productos restantes**
+```sql
+-- Ahora la tabla orders está vacía:
+| id | client_name |
+|----|-------------|
+-- (vacía)
+
+-- Pero quedan productos "huérfanos" en products:
+| id | quantity | id_order |
+|----|----------|----------|
+| 11 | 3        | 2        | ← ¡Ya no existe ORDER id=2!
+| 12 | 2        | 2        | ← ¡Ya no existe ORDER id=2!
+```
+
+- `orphanRemoval = true` detecta que productos 11 y 12 están huérfanos
+- **JPA elimina producto_id=11 y producto_id=12**
+
+## ✅ **Resultado final:**
+```sql
+-- Tabla orders (vacía)
+| id | client_name |
+|----|-------------|
+
+-- Tabla products (vacía)
+| id | quantity | id_order |
+|----|----------|----------|
+```
+
+## 🎯 **Tu pregunta específica:**
+
+> "¿Si los dos productos tienen relacionado id_order = 2, estos son eliminados porque estarían huérfanos ya que la orden padre se elimina?"
+
+**¡EXACTAMENTE! SÍ:**
+
+1. ✅ Los productos 11 y 12 **SÍ tenían** `id_order = 2`
+2. ✅ Al eliminar ORDER id=2, **quedan huérfanos**
+3. ✅ `orphanRemoval = true` los elimina **porque ya no tienen padre**
+
+## 💡 **La clave del problema:**
+
+El problema no es eliminar huérfanos (eso está bien), sino que `CascadeType.ALL` en el lado `@ManyToOne` hace que eliminar UN producto elimine TODA la orden, dejando huérfanos al resto.
+
+## ⚠️ **Solución:**
+
+```java
+@ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})  // ✅ Solo estas
+private OrderEntity order;
+```
+
+Así eliminas productos individuales sin afectar la orden ni los demás productos.
+
+¡Tu comprensión del flujo es perfecta! 🎉
+# MAS EXPLICACION
+
+¡Exacto! Has visualizado perfectamente el momento crítico donde los productos quedan huérfanos. Te explico ese momento específico:
+
+## 🕐 **El momento exacto donde quedan huérfanos:**
+
+### **Después del Paso 2 (ORDER eliminada) pero antes del Paso 3:**
+
+```sql
+-- Tabla orders (YA ELIMINADA)
+| id | client_name |
+|----|-------------|
+-- (completamente vacía)
+
+-- Tabla products (AÚN EXISTEN pero huérfanos)
+| id | quantity | id_order |
+|----|----------|----------|
+| 11 | 3        | 2        | ← ¡Referencia a ORDER que YA NO EXISTE!
+| 12 | 2        | 2        | ← ¡Referencia a ORDER que YA NO EXISTE!
+```
+
+## 🎯 **¿Por qué están "huérfanos"?**
+
+Los productos 11 y 12:
+- ✅ **Todavía existen** en la tabla `products`
+- ✅ **Todavía tienen** `id_order = 2`
+- ❌ **PERO** la `ORDER id=2` **YA NO EXISTE**
+- ❌ Sus referencias apuntan a **"la nada"**
+
+## 🔍 **Si hicieras una consulta en ese momento:**
+
+```sql
+-- Esto no retorna nada porque ORDER id=2 no existe
+SELECT * FROM orders WHERE id = 2;
+-- Resultado: (vacío)
+
+-- Pero esto sí retorna los productos huérfanos
+SELECT * FROM products WHERE id_order = 2;
+-- Resultado: productos 11 y 12 (¡huérfanos!)
+
+-- JOIN fallaría para estos productos
+SELECT * FROM products p 
+JOIN orders o ON p.id_order = o.id;
+-- Resultado: (vacío) - no hay ORDER para hacer JOIN
+```
+
+## ⚡ **Lo que detecta `orphanRemoval = true`:**
+
+```java
+// JPA internamente hace algo como:
+"¿Existen productos con id_order que no corresponde a ninguna ORDER existente?"
+"SÍ: productos 11 y 12 tienen id_order = 2, pero ORDER id=2 no existe"
+"Acción: ELIMINAR productos huérfanos 11 y 12"
+```
+
+## 📊 **Secuencia temporal completa:**
+
+| Momento | orders | products | Estado |
+|---------|--------|----------|---------|
+| Inicial | ORDER id=2 existe | 3 productos con id_order=2 | ✅ Todo OK |
+| Paso 1 | ORDER id=2 existe | 2 productos con id_order=2 | ✅ Producto 10 eliminado |
+| Paso 2 | **ORDER id=2 ELIMINADA** | 2 productos con id_order=2 | ❌ **HUÉRFANOS** |
+| Paso 3 | (vacía) | (vacía) | ✅ Huérfanos eliminados |
+
+## 🎯 **Tu visualización es PERFECTA:**
+
+```
+| 11 | 3        | 2 (apunta a nada) | ← HUÉRFANO
+| 12 | 2        | 2 (apunta a nada) | ← HUÉRFANO
+```
+
+Esos productos **técnicamente existen** pero sus referencias `id_order = 2` apuntan a una orden que **ya fue eliminada**. Por eso `orphanRemoval = true` los detecta y elimina.
+
+¡Has entendido perfectamente el concepto de "productos huérfanos"! 🎉
+
+#  ⃣📚 ** SOLUCION **
+## EN PRODUCTENTITY SOLO USA @ManyToOne SIN CASCADE.
+
+ahora si eliminas solo un producto no se elimina la orden ni los demas productos.
+
+```java
+    @ManyToOne
+    @JoinColumn(name = "id_order", nullable = false)
+    private OrderEntity order;
+```
+![image](/images/19.png)
+
+## #️ ⃣📚**Clase 37: UUID`**
+> En esta leccion vamos a mapear el productCatalog 
+> Se crea una entidad ProductCatalogEntity
+ ```sql
+ /*VAMOS A VER EL SQUEMA*/
+SELECT column_name,
+       data_type,
+       is_nullable,
+       character_maximum_length,
+       column_default
+FROM information_schema.columns
+WHERE table_name = 'products_catalog';
+
+```
+> 
+> ![imagen](/images/20.png)
+> 
+> Se usa UUID en vez de Long o int cuando necesitas identificadores únicos a nivel global, por ejemplo:
+Sistemas distribuidos donde varias instancias pueden generar IDs al mismo tiempo.
+Cuando no quieres exponer la cantidad de registros (por seguridad).
+Para evitar colisiones de IDs entre diferentes bases de datos o servicios.
+Si tu aplicación es simple y no requiere estas características, puedes seguir usando Long o int. Usa UUID cuando la unicidad global y la descentralización sean importantes.
+>
+## #️ ⃣📚**Clase 38:REPOSITORIO DE PRODUCTOS`**
 
 </details>
 
