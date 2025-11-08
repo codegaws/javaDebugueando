@@ -9,6 +9,7 @@ import java.math.BigInteger;
 @Table(name = "products")
 @Getter
 @Setter
+@ToString
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder

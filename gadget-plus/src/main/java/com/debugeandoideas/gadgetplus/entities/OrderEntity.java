@@ -12,6 +12,7 @@ import java.util.Objects;
 @Table(name = "orders")
 @Getter
 @Setter
+@ToString
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder

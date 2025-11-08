@@ -11,6 +11,7 @@ import java.util.UUID;
 @Table(name = "products_catalog")
 @Getter
 @Setter
+@ToString
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
@@ -18,7 +19,7 @@ public class ProductCatalogEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    private UUID id;// el UUID se mapea a un campo de tipo CHAR(36) en la base de datos es de JPA 3.1 en adelante
     @Column(name = "product_name", length = 64)
     private String name;
     @Column(name = "brand_name", length = 64)
@@ -30,4 +31,5 @@ public class ProductCatalogEntity {
     @Column(name = "isdiscount")
     private Boolean isDiscount;
     private Short rating;
+
 }

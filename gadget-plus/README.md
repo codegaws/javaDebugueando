@@ -2349,7 +2349,52 @@ Sistemas distribuidos donde varias instancias pueden generar IDs al mismo tiempo
 Cuando no quieres exponer la cantidad de registros (por seguridad).
 Para evitar colisiones de IDs entre diferentes bases de datos o servicios.
 Si tu aplicación es simple y no requiere estas características, puedes seguir usando Long o int. Usa UUID cuando la unicidad global y la descentralización sean importantes.
->
+
+Sí, así es como se ve un UUID (Universally Unique Identifier). Es una cadena de 36 caracteres que incluye números, letras y guiones, con el siguiente formato estándar:
+
+```
+xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+```
+
+Donde cada `x` es un dígito hexadecimal. Por ejemplo, `2c79a13e-b243-4959-a062-71ced3c7e184` es un UUID válido.
+
+![imagen](/images/21.png)
+
+![imagen](/images/tabla.png)
+
+
+## Entidad ProductCatalogEntity
+
+```java
+@Entity
+@Table(name = "products_catalog")
+@Getter
+@Setter
+@ToString
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+public class ProductCatalogEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;// el UUID se mapea a un campo de tipo CHAR(36) en la base de datos es de JPA 3.1 en adelante
+    @Column(name = "product_name", length = 64)
+    private String name;
+    @Column(name = "brand_name", length = 64)
+    private String brad;
+    private String description;//por reflexion el campo se va a mapear al campo description que tiene 255 por eso no ponemos @Column(length=255)
+    private BigDecimal price;
+    @Column(name = "launching_date")
+    private LocalDate launchDate;
+    @Column(name = "isdiscount")
+    private Boolean isDiscount;
+    private Short rating;
+
+}
+
+```
+---
 ## #️ ⃣📚**Clase 38:REPOSITORIO DE PRODUCTOS`**5
 
 </details>
