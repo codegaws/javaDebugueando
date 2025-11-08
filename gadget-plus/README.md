@@ -2395,7 +2395,11 @@ public class ProductCatalogEntity {
 
 ```
 ---
-## #️ ⃣📚**Clase 38:REPOSITORIO DE PRODUCTOS`**5
+## #️ ⃣📚**Clase 38:REPOSITORIO DE PRODUCTOS`**
+
+- 
+
+
 
 </details>
 
