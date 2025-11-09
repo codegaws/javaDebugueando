@@ -3419,7 +3419,47 @@ En @ManyToMany, JPA **automáticamente**:
 ## #️ ⃣📚**Clase 44 : PROBANDO MANYTOMANY 💡**
 
 - TRAEMOS TODAS LAS ENTIDADES TRAEMOS LAS 2 CATEGORIAS HOME Y OFFICE PARA PODER RELACIONARLO CON TODOS LOS PRODUCTOS
-- 
+
+```java
+//***************************CLASE 44 probando @ManyToMany**************
+
+        final var HOME = this.categoryRepository.findById(1L).orElseThrow();//traemos el home
+        final var OFFICE = this.categoryRepository.findById(2L).orElseThrow();//traemos el home
+
+        //traemos todos los productos catalogos
+        this.productCatalogRepository.findAll().forEach(product -> {
+            //si contiene alguna palabra "home" le asignamos la categoria HOME
+            if (product.getDescription().contains("home")) {
+                //añadimos la categoria home
+                product.addCategory(HOME);
+            }
+            if (product.getDescription().contains("office")) {
+                //añadimos la categoria home
+                product.addCategory(OFFICE);
+            }
+            this.productCatalogRepository.save(product);
+        });
+```
+
+## 💡PROBANDO 
+```sql
+
+SELECT *
+FROM product_join_category;
+```
+![image](/images/29.png)
+
+```sql
+
+SELECT *
+FROM products_catalog p
+         join product_join_category pc on pc.id_product = p.id
+         join categories c on pc.id_category = c.id
+WHERE p.id = '7f27ae67-8545-448d-a871-a9c9c207f066';
+
+```
+
+![image](/images/30.png)
 
 </details>
 
