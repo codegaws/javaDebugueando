@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigInteger;
+import java.util.LinkedList;
+import java.util.List;
 
 @Entity
 @Table(name = "products")
@@ -30,9 +32,10 @@ public class ProductEntity {
 
     // CREAMOS OTRA INSTANCIA DE PRODUCTCATALOGENTITY PARA HACER LA RELACION UNO A UNO
 
-    @OneToOne(cascade =  CascadeType.ALL)
+    @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "id_product_catalog")
     private ProductCatalogEntity catalog;
+
 }
 
 

@@ -1,10 +1,7 @@
 package com.debugeandoideas.gadgetplus;
 
 import com.debugeandoideas.gadgetplus.entities.ProductEntity;
-import com.debugeandoideas.gadgetplus.repositories.BillRepository;
-import com.debugeandoideas.gadgetplus.repositories.OrderRepository;
-import com.debugeandoideas.gadgetplus.repositories.ProductRepository;
-import com.debugeandoideas.gadgetplus.repositories.ProductCatalogRepository;
+import com.debugeandoideas.gadgetplus.repositories.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -16,6 +13,7 @@ import java.util.List;
 @SpringBootApplication
 public class GadgetPlusApplication implements CommandLineRunner {
 
+    //CREACION DE ATRIBUTOS REPOSITORYS Y VARIABLES CONSTANTES
     @Autowired
     private OrderRepository orderRepository;
 
@@ -28,10 +26,17 @@ public class GadgetPlusApplication implements CommandLineRunner {
     @Autowired
     private ProductCatalogRepository productCatalogRepository;
 
+    @Autowired
+    private CategoryRepository categoryRepository;
+
+
+    //*************************************************************
+
     public static void main(String[] args) {
         SpringApplication.run(GadgetPlusApplication.class, args);
     }
 
+    //*************************************************************
     @Override
     public void run(String... args) throws Exception {
       /* this.orderRepository.findAll().forEach(OrderEntity -> System.out.println(OrderEntity.toString()));
@@ -95,7 +100,7 @@ public class GadgetPlusApplication implements CommandLineRunner {
 
         // SELECT * FROM PRODUCTS_CATALOG
         // *************CLASE 39 PROBANDO RELACIONES PRODUCTOS - ORDENES - CATALOGOS *************
-        var productCatalog1 = this.productCatalogRepository.findAll().get(0);
+        /*var productCatalog1 = this.productCatalogRepository.findAll().get(0);
         var productCatalog2 = this.productCatalogRepository.findAll().get(4);
         var productCatalog3 = this.productCatalogRepository.findAll().get(7);
 
@@ -113,6 +118,25 @@ public class GadgetPlusApplication implements CommandLineRunner {
         order.addProduct(product1);
         order.addProduct(product2);
         order.addProduct(product3);
-        this.orderRepository.save(order);
+        this.orderRepository.save(order);*/
+
+        //***************************CLASE 44 probando @ManyToMany**************
+
+        final var HOME = this.categoryRepository.findById(1L).orElseThrow();//traemos el home
+        final var OFFICE = this.categoryRepository.findById(2L).orElseThrow();//traemos el home
+
+        //traemos todos los productos catalogos
+        this.productCatalogRepository.findAll().forEach(product -> {
+            //si contiene alguna palabra "home" le asignamos la categoria HOME
+            if (product.getDescription().contains("home")) {
+                //añadimos la categoria home
+                product.addCategory(HOME);
+            }
+            if (product.getDescription().contains("office")) {
+                //añadimos la categoria home
+                product.addCategory(OFFICE);
+            }
+            this.productCatalogRepository.save(product);
+        });
     }
 }
