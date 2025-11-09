@@ -3461,5 +3461,357 @@ WHERE p.id = '7f27ae67-8545-448d-a871-a9c9c207f066';
 
 ![image](/images/30.png)
 
+## #️ ⃣📚**Clase 45 : invaliddataAccesApiUsageException Solucion 💡**
+
+![image](/images/31.png)
+
+## #️ ⃣📚**Clase 46-47 : INSERTANDO REGISTROS ALEATORIOS **
+
+Te explico paso a paso como si fueras un estudiante que empieza en Java:
+
+## 🎯 **¿Qué hace este código?**
+
+Este código está **asignando productos del catálogo a órdenes aleatorias**. Es como repartir productos entre diferentes clientes de forma aleatoria.
+
+## 📝 **Línea por línea:**
+
+### **1. Crear generador de números aleatorios**
+```java
+var random = new Random();
+```
+- `Random` es una clase que genera números aleatorios
+- Como un dado virtual que puedes lanzar cuando quieras
+
+### **2. Obtener todos los productos**
+```java
+var productsCatalog = new LinkedList<>(this.productCatalogRepository.findAll());
+```
+- `findAll()` trae **TODOS** los productos de la base de datos
+- Los convierte a `LinkedList` para poder trabajar con ellos
+- **¿Por qué en constructor?** Para evitar llamar a la BD múltiples veces
+
+### **3. La parte complicada: IntStream.range**
+```java
+IntStream.range(0, productsCatalog.size()).forEach(i -> {
+```
+
+**¿Qué hace `IntStream.range(0, productsCatalog.size())`?**
+- Si tienes 10 productos, genera números: 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
+- Es como decir: "Para cada producto (usando su posición en la lista)..."
+
+## 🎲 **¿Por qué `random.nextLong(16) + 1`?**
+
+```java
+var idOrderRandom = random.nextLong(16) + 1;
+```
+
+Veo en tu screenshot que tienes **16 órdenes** (IDs del 1 al 16):
+
+| ID | Cliente |
+|----|---------|
+| 1 | Ronda Rousey |
+| 2 | Amanda Nunes |
+| ... | ... |
+| 16 | Tony Ferguson |
+
+**Explicación:**
+- `random.nextLong(16)` → genera números del 0 al 15
+- `+ 1` → los convierte en números del 1 al 16
+- **Exactamente los IDs que existen en tu tabla ORDERS**
+
+## 🔄 **¿Qué hace el forEach completo?**
+
+```java
+IntStream.range(0, productsCatalog.size()).forEach(i -> {
+    var idOrderRandom = random.nextLong(16) + 1;        // Elige orden aleatoria (1-16)
+    var orderRandom = this.orderRepository.findById(idOrderRandom).orElseThrow();  // Busca la orden
+    System.out.println(orderRandom.getClientName());    // Imprime el cliente
+});
+```
+
+## 🎯 **Ejemplo práctico:**
+
+Si tienes 5 productos, esto pasaría:
+
+```
+Iteración 0: Producto 0 → Orden aleatoria 7 → Cliente: "Demetrious Johnson"
+Iteración 1: Producto 1 → Orden aleatoria 3 → Cliente: "Conor McGregor"  
+Iteración 2: Producto 2 → Orden aleatoria 12 → Cliente: "Kamaru Usman"
+Iteración 3: Producto 3 → Orden aleatoria 8 → Cliente: "Daniel Cormier"
+Iteración 4: Producto 4 → Orden aleatoria 15 → Cliente: "Robert Whittaker"
+```
+
+## 💡 **¿Por qué en el constructor?**
+
+```java
+// ❌ Malo: llama a BD en cada iteración
+IntStream.range(0, productsCatalog.size()).forEach(i -> {
+    var products = productCatalogRepository.findAll(); // ¡Muchas llamadas a BD!
+});
+
+// ✅ Bueno: una sola llamada a BD
+var productsCatalog = new LinkedList<>(this.productCatalogRepository.findAll());
+```
+
+## 🎯 **Propósito del código:**
+
+Este código parece estar **asignando productos a órdenes aleatorias**, probablemente para:
+- Llenar datos de prueba
+- Simular compras
+- Crear relaciones entre productos y órdenes
+
+¡Es como repartir productos entre diferentes clientes de forma aleatoria! 🎲
+
+---
+¡Perfecto! Ahora veo el código completo. Te explico paso a paso lo que hace este código como si fueras principiante:
+
+## 🎯 **¿Qué hace este código completo?**
+
+Este código **crea productos aleatorios y los asigna a órdenes aleatorias**. Es como simular que diferentes clientes compran productos del catálogo.
+
+## 📝 **Paso a paso detallado:**
+
+### **1. Preparación inicial**
+```java
+var random = new Random();
+var productsCatalog = new LinkedList<>(this.productCatalogRepository.findAll());
+```
+- `Random`: Para generar números aleatorios
+- `LinkedList`: **Lista especial** que permite usar `poll()` (lo explico abajo)
+
+### **2. Para cada producto del catálogo**
+```java
+IntStream.range(0, productsCatalog.size()).forEach(i -> {
+```
+Si tienes 10 productos en el catálogo, este loop se ejecuta 10 veces (una por cada producto).
+
+### **3. Elegir orden aleatoria**
+```java
+var idOrderRandom = random.nextLong(16) + 1;
+var orderRandom = this.orderRepository.findById(idOrderRandom).orElseThrow();
+```
+- Elige un ID aleatorio del 1 al 16 (como viste, tienes 16 órdenes)
+- Busca esa orden en la base de datos
+
+### **4. Crear producto con datos aleatorios**
+```java
+var product = ProductEntity.builder()
+    .quantity(BigInteger.valueOf(random.nextLong(5) + 1))  // Cantidad 1-5
+    .catalog(productsCatalog.poll())                       // Toma UN producto del catálogo
+    .build();
+```
+
+## 🔑 **¿Qué es `poll()`?**
+
+`poll()` es un método de `LinkedList` que:
+- **Toma** el primer elemento de la lista
+- **Lo remueve** de la lista automáticamente
+- **Lo devuelve** para usarlo
+
+```java
+LinkedList<String> lista = new LinkedList<>();
+lista.add("Producto A");
+lista.add("Producto B");
+lista.add("Producto C");
+
+String primero = lista.poll();  // primero = "Producto A"
+// Ahora la lista solo tiene: ["Producto B", "Producto C"]
+
+String segundo = lista.poll();  // segundo = "Producto B"
+// Ahora la lista solo tiene: ["Producto C"]
+```
+
+## 🎯 **¿Por qué usar `poll()`?**
+
+Para **evitar duplicados**. Cada producto del catálogo se usa **exactamente una vez**:
+
+```
+Iteración 1: poll() → iPhone 15     (se remueve de la lista)
+Iteración 2: poll() → Samsung TV     (se remueve de la lista)
+Iteración 3: poll() → Nike Shoes     (se remueve de la lista)
+```
+
+### **5. Asignar producto a la orden**
+```java
+orderRandom.addProduct(product);
+product.setOrder(orderRandom);
+this.orderRepository.save(orderRandom);
+```
+- Agrega el producto a la orden elegida
+- Sincroniza la relación bidireccional
+- Guarda en la base de datos
+
+## 📊 **Ejemplo práctico completo:**
+
+```
+Catálogo inicial: [iPhone, Samsung TV, Nike Shoes]
+
+Iteración 1:
+├── Orden aleatoria: #3 (Conor McGregor)
+├── poll() → iPhone (queda: [Samsung TV, Nike Shoes])
+├── Cantidad aleatoria: 2
+└── Resultado: Conor McGregor compra 2 iPhones
+
+Iteración 2:
+├── Orden aleatoria: #7 (Demetrious Johnson)
+├── poll() → Samsung TV (queda: [Nike Shoes])
+├── Cantidad aleatoria: 1
+└── Resultado: Demetrious Johnson compra 1 Samsung TV
+
+Iteración 3:
+├── Orden aleatoria: #12 (Kamaru Usman)
+├── poll() → Nike Shoes (queda: [])
+├── Cantidad aleatoria: 3
+└── Resultado: Kamaru Usman compra 3 Nike Shoes
+```
+
+## 🎯 **Resultado en la BD:**
+
+Después de ejecutar, tu query mostrará algo como:
+
+| client_name | product_name | quantity |
+|-------------|--------------|----------|
+| Conor McGregor | iPhone 15 | 2 |
+| Demetrious Johnson | Samsung TV | 1 |
+| Kamaru Usman | Nike Shoes | 3 |
+
+## 💡 **Resumen:**
+
+Este código **simula ventas aleatorias** donde:
+- ✅ Cada producto del catálogo se vende exactamente una vez
+- ✅ Los clientes se eligen aleatoriamente
+- ✅ Las cantidades son aleatorias (1-5)
+
+¡Es como llenar tu sistema con datos de prueba realistas! 🎲
+---
+¡Perfecto! Ahora con tu screenshot veo exactamente lo que está pasando. Te explico el código con **TUS DATOS REALES**:
+
+## 🎯 **Lo que hace el código con tu BD:**
+
+Tu tabla `orders` tiene **16 clientes** (IDs del 1 al 16) como vemos en tu screenshot, desde Ronda Rousey hasta Tony Ferguson.
+
+## 📝 **Paso a paso con tus datos:**
+
+### **1. Preparación**
+```java
+var random = new Random();
+var productsCatalog = new LinkedList<>(this.productCatalogRepository.findAll());
+```
+- Toma **TODOS** los productos de `products_catalog` (tu catálogo de productos)
+- Los pone en una `LinkedList` para usar `poll()`
+
+### **2. El loop principal**
+```java
+IntStream.range(0, productsCatalog.size()).forEach(i -> {
+```
+**Ejemplo:** Si tienes 20 productos en `products_catalog`, este loop se ejecuta **20 veces**.
+
+La expresión `IntStream.range(0, productsCatalog.size()).forEach(i -> { ... })` hace lo siguiente:
+
+- `IntStream.range(0, productsCatalog.size())` genera una secuencia de números desde 0 hasta (size - 1).
+- Si `productsCatalog.size()` es 20, genera los números 0, 1, 2, ..., 19 (20 vueltas).
+- El `forEach(i -> { ... })` ejecuta el bloque de código una vez por cada número, o sea, una vez por cada producto del catálogo.
+
+En resumen:  
+Si tienes 20 productos, el ciclo se repite 20 veces, una por cada producto.
+
+### **3. Elegir cliente aleatorio**
+```java
+var idOrderRandom = random.nextLong(16) + 1;  // Genera números del 1 al 16
+var orderRandom = this.orderRepository.findById(idOrderRandom).orElseThrow();
+```
+
+**Con tus datos reales:**
+- Puede elegir ID 1 → Ronda Rousey
+- Puede elegir ID 7 → Demetrious Johnson
+- Puede elegir ID 16 → Tony Ferguson
+- Etc.
+
+### **4. Crear producto usando `poll()`**
+```java
+var product = ProductEntity.builder()
+    .quantity(BigInteger.valueOf(random.nextLong(5) + 1))  // Cantidad 1-5
+    .catalog(productsCatalog.poll())                       // ¡CLAVE!
+    .build();
+```
+
+## 🔑 **¿Qué hace `poll()` exactamente?**
+
+`poll()` **toma y REMUEVE** el primer producto del catálogo:
+
+```java
+// Al inicio: productsCatalog = [iPhone, Samsung TV, Nike Shoes, MacBook, ...]
+
+// Iteración 1:
+var producto1 = productsCatalog.poll();  // toma "iPhone"
+// Ahora: productsCatalog = [Samsung TV, Nike Shoes, MacBook, ...]
+
+// Iteración 2:  
+var producto2 = productsCatalog.poll();  // toma "Samsung TV"
+// Ahora: productsCatalog = [Nike Shoes, MacBook, ...]
+
+// Iteración 3:
+var producto3 = productsCatalog.poll();  // toma "Nike Shoes"
+// Ahora: productsCatalog = [MacBook, ...]
+```
+
+## 🎯 **Ejemplo práctico con tus clientes:**
+
+```
+ANTES de ejecutar:
+- Tabla products: VACÍA
+- Tabla orders: 16 clientes (Ronda, Amanda, Conor, etc.)
+- Tabla products_catalog: 20 productos disponibles
+
+DESPUÉS de ejecutar (ejemplo):
+```
+
+| client_name | product_name | quantity |
+|-------------|--------------|----------|
+| Conor McGregor | iPhone 15 Pro | 3 |
+| Demetrious Johnson | Samsung Galaxy S24 | 1 |
+| Ronda Rousey | MacBook Air | 2 |
+| Amanda Nunes | Nike Air Force 1 | 4 |
+| Tony Ferguson | PlayStation 5 | 1 |
+| Khabib Nurmagomedov | Apple Watch | 2 |
+| ... | ... | ... |
+
+## 📊 **¿Por qué usar `poll()`?**
+
+**Para evitar duplicados:**
+- ✅ Cada producto del catálogo se asigna **exactamente una vez**
+- ✅ No hay dos clientes comprando el mismo producto del catálogo
+- ✅ Simula un inventario real donde cada item se vende una sola vez
+
+## 💾 **Lo que sucede en la BD:**
+
+1. **Tabla `products`**: Se llena con nuevos registros
+2. **Cada registro tiene:**
+    - `id_order`: Apunta a uno de tus 16 clientes
+    - `id_product_catalog`: Apunta a un producto del catálogo
+    - `quantity`: Cantidad aleatoria (1-5)
+
+## 🎯 **Tu query después de ejecutar:**
+
+```sql
+SELECT o.client_name, pc.product_name, p.quantity 
+FROM products p          
+JOIN orders o ON p.id_order = o.id          
+JOIN products_catalog pc ON pc.id = p.id_product_catalog;
+```
+
+**Mostrará algo como:**
+- Ronda Rousey compró 2 iPhones
+- Conor McGregor compró 1 Samsung TV
+- Tony Ferguson compró 4 Nike Shoes
+- etc.
+
+## 💡 **Resumen:**
+
+Este código **simula ventas realistas** donde cada producto del catálogo se vende exactamente una vez a uno de tus 16 luchadores/clientes, ¡creando datos de prueba perfectos para tu sistema! 🥊📱
+
+## #️ ⃣📚**Clase 48 : CREANDO LLAVE PRIMARIA COMPUESTA **
+
+
 </details>
 

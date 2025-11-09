@@ -35,7 +35,7 @@ public class ProductCatalogEntity {
 
     @ManyToMany(fetch = FetchType.EAGER,
             cascade = {CascadeType.DETACH,
-                    CascadeType.MERGE,
+                    //CascadeType.MERGE, puede salir un error se estan creando 2 entidades iguales y hacen referencia a la misma tabla
                     CascadeType.PERSIST,
                     CascadeType.REFRESH})
     @JoinTable(

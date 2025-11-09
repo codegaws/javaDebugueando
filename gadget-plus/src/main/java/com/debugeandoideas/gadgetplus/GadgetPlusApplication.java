@@ -8,7 +8,10 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import java.math.BigInteger;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Random;
+import java.util.stream.IntStream;
 
 @SpringBootApplication
 public class GadgetPlusApplication implements CommandLineRunner {
@@ -122,7 +125,7 @@ public class GadgetPlusApplication implements CommandLineRunner {
 
         //***************************CLASE 44 probando @ManyToMany**************
 
-        final var HOME = this.categoryRepository.findById(1L).orElseThrow();//traemos el home
+        /*final var HOME = this.categoryRepository.findById(1L).orElseThrow();//traemos el home
         final var OFFICE = this.categoryRepository.findById(2L).orElseThrow();//traemos el home
 
         //traemos todos los productos catalogos
@@ -137,6 +140,30 @@ public class GadgetPlusApplication implements CommandLineRunner {
                 product.addCategory(OFFICE);
             }
             this.productCatalogRepository.save(product);
+        });*/
+
+        //***************************CLASE 46-47 Insertando Registros Aleatorios**************
+
+        var random = new Random();
+
+        var productsCatalog = new LinkedList<>(this.productCatalogRepository.findAll());//aqui puedo inicializar en el constructor.
+
+        // EN RANGE CREAMOS TANTOS PRODUCTOS COMO HAY EN EL CATALOGO
+        IntStream.range(0, productsCatalog.size()).forEach(i -> {
+            //ELEGIMOS ORDEN ALEATORIA
+            var idOrderRandom = random.nextLong(16) + 1;
+            var orderRandom = this.orderRepository.findById(idOrderRandom).orElseThrow();
+
+            //CREAMOS PRODUCTOS CON DATOS ALEATORIOS
+            var product = ProductEntity.builder()
+                    .quantity(BigInteger.valueOf(random.nextLong(5) + 1))
+                    .catalog(productsCatalog.poll())
+                    .build();
+
+            orderRandom.addProduct(product);
+            product.setOrder(orderRandom);
+            this.orderRepository.save(orderRandom);
+
         });
     }
 }
