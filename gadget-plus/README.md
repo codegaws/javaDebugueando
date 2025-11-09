@@ -2397,8 +2397,115 @@ public class ProductCatalogEntity {
 ---
 ## #️ ⃣📚**Clase 38:REPOSITORIO DE PRODUCTOS`**
 
-- 
+- EL PODER DE DOCKER COMPOSE HICIMOS UN BORRADO DE LA IMAGEN CON 
+```bash
+docker compose down
 
+docker compose up
+
+```
+> ### Creamos la instancia en ProdudtEntity 
+> 
+
+```java
+
+    @OneToOne
+    @JoinColumn(name = "id_product_catalog")
+    private ProductCatalogEntity catalog;
+    
+```
+> ### Creamos repositorios :
+> 
+> - Las interfaces 
+
+```java
+
+public interface ProductcatalogRepository extends JpaRepository<ProductEntity, UUID> {
+}
+public interface ProductRepository extends JpaRepository<ProductEntity, Long> {
+}
+
+```
+
+> - En la clase Main
+```java
+
+@Autowired
+private ProductRepository productRepository;
+
+@Autowired
+private ProductCatalogRepository productCatalogRepository;
+
+```
+- AL correr el programa en Main me trae con este codigo este resultado :
+
+```java
+
+this.productCatalogRepository.findAll().forEach(product -> System.out.println(product));
+
+```
+### RESULTADO EN CONSOLA CLARO HAY MAS FILAS DEBAJO
+
+```sql
+ProductCatalogEntity
+(id=7f27ae67-8545-448d-a871-a9c9c207f066,
+name=Guitarra electrica - home, brad=ESP, 
+description=Is a guitar for home,
+price=3400.99,
+launching_date=2019-05-08,
+isDiscount=false,
+rating=10)
+
+
+```
+
+## #️ ⃣📚**Clase 39: PROBANDO RELACIONES ENTRE PRODUCTOS ORDENES Y CATALOGOS**
+
+
+```java
+// *************CLASE 39 PROBANDO RELACIONES PRODUCTOS - ORDENES - CATALOGOS *************
+        var productCatalog1 = this.productCatalogRepository.findAll().get(0);
+        var productCatalog2 = this.productCatalogRepository.findAll().get(4);
+        var productCatalog3 = this.productCatalogRepository.findAll().get(7);
+
+        var order = this.orderRepository.findById(1L).get();
+
+        var product1 = ProductEntity.builder().quantity(BigInteger.ONE).build();
+        var product2 = ProductEntity.builder().quantity(BigInteger.TWO).build();
+        var product3 = ProductEntity.builder().quantity(BigInteger.TEN).build();
+
+        var products = List.of(product1, product2, product3);
+        product1.setCatalog(productCatalog1);
+        product2.setCatalog(productCatalog2);
+        product3.setCatalog(productCatalog3);
+
+        order.addProduct(product1);
+        order.addProduct(product2);
+        order.addProduct(product3);
+        this.orderRepository.save(order);
+```
+```sql
+ // CREAMOS OTRA INSTANCIA DE PRODUCTCATALOGENTITY PARA HACER LA RELACION UNO A UNO
+
+    @OneToOne(cascade =  CascadeType.ALL)
+    @JoinColumn(name = "id_product_catalog")
+    private ProductCatalogEntity catalog;
+```
+### DIVIDI LA TABLA PARA QUE VEAS COMO ES QUE HICE EL JOIN CON TRES TABLAS
+
+```sql
+SELECT *
+FROM products p
+         join products_catalog pc on pc.id = p.id_product_catalog
+         join orders o on o.id = p.id_order;
+```
+
+
+![image](/images/22.png)
+
+![image](/images/23.png)
+
+![image](/images/24.png)
 
 
 </details>

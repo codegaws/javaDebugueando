@@ -27,6 +27,12 @@ public class ProductEntity {
     @ManyToOne
     @JoinColumn(name = "id_order")//LLAVE FORANEA HACIA ORDER
     private OrderEntity order;
+
+    // CREAMOS OTRA INSTANCIA DE PRODUCTCATALOGENTITY PARA HACER LA RELACION UNO A UNO
+
+    @OneToOne(cascade =  CascadeType.ALL)
+    @JoinColumn(name = "id_product_catalog")
+    private ProductCatalogEntity catalog;
 }
 
 

@@ -26,9 +26,8 @@ public class ProductCatalogEntity {
     private String brad;
     private String description;//por reflexion el campo se va a mapear al campo description que tiene 255 por eso no ponemos @Column(length=255)
     private BigDecimal price;
-    @Column(name = "launching_date")
-    private LocalDate launchDate;
-    @Column(name = "isdiscount")
+    private LocalDate launching_date;
+    @Column(name = "is_discount")
     private Boolean isDiscount;
     private Short rating;
 

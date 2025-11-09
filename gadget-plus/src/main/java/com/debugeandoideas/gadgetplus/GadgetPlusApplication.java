@@ -1,18 +1,16 @@
 package com.debugeandoideas.gadgetplus;
 
-import com.debugeandoideas.gadgetplus.entities.BillEntity;
-import com.debugeandoideas.gadgetplus.entities.OrderEntity;
 import com.debugeandoideas.gadgetplus.entities.ProductEntity;
 import com.debugeandoideas.gadgetplus.repositories.BillRepository;
 import com.debugeandoideas.gadgetplus.repositories.OrderRepository;
+import com.debugeandoideas.gadgetplus.repositories.ProductRepository;
+import com.debugeandoideas.gadgetplus.repositories.ProductCatalogRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @SpringBootApplication
@@ -23,6 +21,12 @@ public class GadgetPlusApplication implements CommandLineRunner {
 
     @Autowired
     private BillRepository billRepository;
+
+    @Autowired
+    private ProductRepository productRepository;
+
+    @Autowired
+    private ProductCatalogRepository productCatalogRepository;
 
     public static void main(String[] args) {
         SpringApplication.run(GadgetPlusApplication.class, args);
@@ -65,8 +69,8 @@ public class GadgetPlusApplication implements CommandLineRunner {
         this.orderRepository.delete(order);*/
         //borramos el order y el bill asociado con cascade delete con id 17L
 
-        // ************* PROBANDO RELACIONES OneToMany *************
-        var order = this.orderRepository.findById(2L).orElseThrow();
+        // *************CLASE 37 PROBANDO RELACIONES OneToMany *************
+        //var order = this.orderRepository.findById(2L).orElseThrow();
 
         //CREO PRODUCTOS
         /*
@@ -81,7 +85,34 @@ public class GadgetPlusApplication implements CommandLineRunner {
         order.addProduct(product2);
         order.addProduct(product3);
         */
-        order.getProducts().removeFirst();// removemos el primer elemento de la lista de productos
+        //order.getProducts().removeFirst();// removemos el primer elemento de la lista de productos
+        //this.orderRepository.save(order);
+
+        // *************CLASE 38 PROBANDO RELACIONES OneToMany *************
+
+        // SELECT * FROM PRODUCTS_CATALOG ME ITERA Y LO IMPRIME
+        //this.productCatalogRepository.findAll().forEach(product -> System.out.println(product));
+
+        // SELECT * FROM PRODUCTS_CATALOG
+        // *************CLASE 39 PROBANDO RELACIONES PRODUCTOS - ORDENES - CATALOGOS *************
+        var productCatalog1 = this.productCatalogRepository.findAll().get(0);
+        var productCatalog2 = this.productCatalogRepository.findAll().get(4);
+        var productCatalog3 = this.productCatalogRepository.findAll().get(7);
+
+        var order = this.orderRepository.findById(1L).get();
+
+        var product1 = ProductEntity.builder().quantity(BigInteger.ONE).build();
+        var product2 = ProductEntity.builder().quantity(BigInteger.TWO).build();
+        var product3 = ProductEntity.builder().quantity(BigInteger.TEN).build();
+
+        var products = List.of(product1, product2, product3);
+        product1.setCatalog(productCatalog1);
+        product2.setCatalog(productCatalog2);
+        product3.setCatalog(productCatalog3);
+
+        order.addProduct(product1);
+        order.addProduct(product2);
+        order.addProduct(product3);
         this.orderRepository.save(order);
     }
 }
