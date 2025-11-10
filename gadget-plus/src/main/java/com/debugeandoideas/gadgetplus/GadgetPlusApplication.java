@@ -32,7 +32,8 @@ public class GadgetPlusApplication implements CommandLineRunner {
     @Autowired
     private CategoryRepository categoryRepository;
 
-
+    @Autowired
+    private RejectProductRepository rejectProductRepository;
     //*************************************************************
 
     public static void main(String[] args) {
@@ -144,7 +145,7 @@ public class GadgetPlusApplication implements CommandLineRunner {
 
         //***************************CLASE 46-47 Insertando Registros Aleatorios**************
 
-        var random = new Random();
+       /* var random = new Random();
 
         var productsCatalog = new LinkedList<>(this.productCatalogRepository.findAll());//aqui puedo inicializar en el constructor.
 
@@ -164,6 +165,11 @@ public class GadgetPlusApplication implements CommandLineRunner {
             product.setOrder(orderRandom);
             this.orderRepository.save(orderRandom);
 
-        });
+        });*/
+
+        //***************************CLASE 49 MAPEANDO LLAVE PRIMARIA COMPUESTA **************
+
+        this.rejectProductRepository.findAll().forEach(System.out::println);
+
     }
 }

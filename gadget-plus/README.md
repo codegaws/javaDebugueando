@@ -3812,6 +3812,56 @@ Este código **simula ventas realistas** donde cada producto del catálogo se ve
 
 ## #️ ⃣📚**Clase 48 : CREANDO LLAVE PRIMARIA COMPUESTA **
 
+- Tabla donde estan productos rechazados por el cliente.no es necesario id autoincremental o un UUID.
+- la llave primaria estara compuesta por product_name y brand_name.
 
+```sql
+
+CREATE TABLE reject_products (
+    product_name VARCHAR(64) NOT NULL,
+    brand_name VARCHAR(64) NOT NULL,
+    quantity INT,
+    PRIMARY KEY (product_name, brand_name)
+);
+
+SELECT *
+FROM reject_products;
+
+INSERT INTO reject_products (product_name, brand_name, quantity)
+VALUES ('Galazy S24 Plus', 'Samsung', 5);
+
+```
+![image](/images/32.png)
+
+## #️ ⃣📚**Clase 49 : MAPEANDO LLAVE PRIMARIA COMPUESTA **
+
+> ## Creamos
+> RejectProductEntity y le ponemos como es una entidad con llave compuesta -> `@IdClass(RejectProductId.class)`
+
+```java
+@Entity
+@Table(name = "reject_products")
+@Getter
+@Setter
+@ToString
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+@IdClass(RejectProductId.class)
+public class RejectProductEntity {
+
+    @Id
+    private String productName;
+    @Id
+    private String productBrand;
+    private Integer quantity;
+}
+
+
+```
+```java
+RejectProductEntity(productName=Galazy S24 Plus, productBrand=Samsung, quantity=5)
+
+```
 </details>
 
