@@ -126,8 +126,8 @@ public class GadgetPlusApplication implements CommandLineRunner {
 
         //***************************CLASE 44 probando @ManyToMany**************
 
-        final var HOME = this.categoryRepository.findById(1L).orElseThrow();//traemos el home
-        final var OFFICE = this.categoryRepository.findById(2L).orElseThrow();//traemos el home
+        /*final var HOME = this.categoryRepository.findById(1L).orElseThrow();//traemos el home
+        final var OFFICE = this.categoryRepository.findById(2L).orElseThrow();//traemos el office
 
         //traemos todos los productos catalogos
         this.productCatalogRepository.findAll().forEach(product -> {
@@ -141,11 +141,11 @@ public class GadgetPlusApplication implements CommandLineRunner {
                 product.addCategory(OFFICE);
             }
             this.productCatalogRepository.save(product);
-        });
+        });*/
 
         //***************************CLASE 46-47 Insertando Registros Aleatorios**************
 
-        var random = new Random();
+       /* var random = new Random();
 
         var productsCatalog = new LinkedList<>(this.productCatalogRepository.findAll());//aqui puedo inicializar en el constructor.
 
@@ -165,7 +165,7 @@ public class GadgetPlusApplication implements CommandLineRunner {
             product.setOrder(orderRandom);
             this.orderRepository.save(orderRandom);
 
-        });
+        });*/
 
         //***************************CLASE 49 MAPEANDO LLAVE PRIMARIA COMPUESTA **************
 

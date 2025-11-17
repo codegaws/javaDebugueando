@@ -1,0 +1,462 @@
+{
+	"info": {
+		"_postman_id": "3dbeb7f4-f79f-48da-8baf-9b8d5515d1e7",
+		"name": "gadget-plus",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "6302478"
+	},
+	"item": [
+		{
+			"name": "product-catalog",
+			"item": [
+				{
+					"name": "byId",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8080/product-catalog/b25d1f3c-619d-11ef-807e-0242ac120002",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"product-catalog",
+								"b25d1f3c-619d-11ef-807e-0242ac120002"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "byName",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8080/product-catalog/name/backpack N",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"product-catalog",
+								"name",
+								"backpack N"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "brand-count",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8080/product-catalog/brand-count/Lenovo",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"product-catalog",
+								"brand-count",
+								"Lenovo"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "brand",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8080/product-catalog/brand/Fender",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"product-catalog",
+								"brand",
+								"Fender"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "all",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8080/product-catalog/all?field=launchingDate&desc=true&page=0",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"product-catalog",
+								"all"
+							],
+							"query": [
+								{
+									"key": "field",
+									"value": "launchingDate"
+								},
+								{
+									"key": "desc",
+									"value": "true"
+								},
+								{
+									"key": "page",
+									"value": "0"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "statistics",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8080/product-catalog/report",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"product-catalog",
+								"report"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "like",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8080/product-catalog/like/BETWEEN?word=series",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"product-catalog",
+								"like",
+								"BETWEEN"
+							],
+							"query": [
+								{
+									"key": "word",
+									"value": "series"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "date-launch",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8080/product-catalog/date-launch/AFTER?date=2020-01-01",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"product-catalog",
+								"date-launch",
+								"AFTER"
+							],
+							"query": [
+								{
+									"key": "date",
+									"value": "2020-01-01"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "category",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8080/product-catalog/category?id=1",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"product-catalog",
+								"category"
+							],
+							"query": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "brand-rating",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8080/product-catalog/brand-rating?brand=Apple&rating=5",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"product-catalog",
+								"brand-rating"
+							],
+							"query": [
+								{
+									"key": "brand",
+									"value": "Apple"
+								},
+								{
+									"key": "rating",
+									"value": "5"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "between",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8080/product-catalog/between?min=200&max=400",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"product-catalog",
+								"between"
+							],
+							"query": [
+								{
+									"key": "min",
+									"value": "200"
+								},
+								{
+									"key": "max",
+									"value": "400"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "order",
+			"item": [
+				{
+					"name": "order",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"clientName\" : \"Shean Omelley\",\n    \"bill\" : {\n        \"idBill\" : \"b-32\",\n        \"clientRfc\" : \"ART655687JHZ\"\n    },\n    \"products\" : [\n        {\n            \"quantity\" : 2,\n            \"name\" : \"Alexa large\"\n\n        },\n\n                {\n            \"quantity\" : 1,\n            \"name\" : \"Pc office\"\n\n        },\n                {\n            \"quantity\" : 3,\n            \"name\" : \"TV 75\"\n\n        }\n    ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:8080/order",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"order"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "order",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:8080/order/10",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"order",
+								"10"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "order",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:8080/order/19",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"order",
+								"19"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "order Name",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:8080/order?name=Alexa Graso",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"order"
+							],
+							"query": [
+								{
+									"key": "name",
+									"value": "Alexa Graso"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "order",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"clientName\" : \"Brandon Moreno\",\n    \"bill\" : {\n        \"id\" : \"b-9\",\n        \"clientRfc\" : \"UPDATERFC000\"\n    },\n    \"products\" : [\n        {\n            \"quantity\" : 3,\n            \"name\" : \"Pc gamer\"\n        }\n    ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:8080/order/19",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"order",
+								"19"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "transaction",
+			"item": [
+				{
+					"name": "transaction",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "localhost:8080/transaction?id=3",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"transaction"
+							],
+							"query": [
+								{
+									"key": "id",
+									"value": "3"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

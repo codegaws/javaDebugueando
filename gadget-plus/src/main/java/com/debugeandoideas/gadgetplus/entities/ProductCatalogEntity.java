@@ -43,7 +43,6 @@ public class ProductCatalogEntity {
             joinColumns = @JoinColumn(name = "id_product"),
             inverseJoinColumns = @JoinColumn(name = "id_category")
     )
-
     private List<CategoryEntity> categories = new LinkedList<>();
 
     public void addCategory(CategoryEntity category) {

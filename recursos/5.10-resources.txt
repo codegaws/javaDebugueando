@@ -1,0 +1,2 @@
+CREATE INDEX idx_product_name ON products_catalog (product_name);
+@Index(name = "idx_product_name", columnList = "product_name", unique = true)
