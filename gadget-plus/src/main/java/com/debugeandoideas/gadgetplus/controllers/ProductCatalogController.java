@@ -15,6 +15,12 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ProductCatalogController {
 
+    /**
+     * En Spring Boot, marcar el atributo productCatalogService como final es una buena práctica porque:
+     * Inmutabilidad: Garantiza que la referencia al servicio no pueda ser cambiada después de la construcción del controlador.
+     * Seguridad en concurrencia: Hace que la clase sea más segura en entornos multihilo, ya que el valor no puede ser reasignado.
+     * Compatibilidad con @RequiredArgsConstructor: Lombok genera automáticamente un constructor que inicializa los campos final (y los marcados como @NonNull), facilitando la inyección de dependencias.
+     */
     private final ProductCatalogService productCatalogService;
 
     @GetMapping(path = "{id}")// este id se debe llamar
