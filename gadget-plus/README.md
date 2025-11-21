@@ -115,6 +115,16 @@ DELETE FROM bill WHERE id = 'FACT001';          -- Después la factura
 
 <details>
     <summary><strong>SESSION 3 MAPEO DE ENTIDADES</strong></summary>
+
+## CLASE 17 -> CONFIGURACION SPRING DATA JPA POSTGRESQL
+### ¿que es una entidad JPA?
+> Una entidad JPA (Java Persistence API) es una clase Java que representa una tabla en una base de datos relacional.
+> Cada instancia de la clase corresponde a una fila en la tabla. cada atributo de la entidad corresponde a una columna en la tabla.
+> 
+> Las entidades JPA son gestionadas por un contexto de persistencia (EntityManager) que se encarga de las operaciones de 
+> CRUD (Crear,Leer,Actualizar,Borrar) y del ciclo de vida de la entidad.
+
+---
 - En pomxml
 
 ```xml
