@@ -34,6 +34,11 @@ INSERT INTO orders (created_at, client_name, id_bill) VALUES
     (NOW(), 'Robert Whittaker', 'b-15'),
     (NOW(), 'Tony Ferguson', 'b-16');
 
+/**
+El valor 3000 en la función random_date(3000) indica el rango de días 
+hacia atrás desde la fecha actual para generar una fecha aleatoria.
+*/
+
 INSERT INTO products_catalog (launching_date, brand_name, product_name, description, price, rating, is_discount) VALUES
     (random_date(3000), 'ESP', 'Guitarra electrica - home', 'Is a guitar for home', 3400.99, 10, FALSE),
     (random_date(3000), 'Fender', 'Bajo electrico  - home', 'Is a bass for home', 3200.99, 6, TRUE),
