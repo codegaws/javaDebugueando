@@ -1,0 +1,120 @@
+¡Perfecto! Voy a mostrarte la relación entre **categories**, **products_catalog** (con UUID como clave primaria) y **product_join_category** con un cuadro de ejemplo usando datos ficticios (UUIDs incluidos).
+
+---
+
+## 1. **Tablas relevantes y campos**
+
+- **categories**
+  - `id` (bigint)
+  - `code` (ENUM: HOME/OFFICE/NONE)
+  - `description` (texto)
+
+- **products_catalog**
+  - `id` (UUID)
+  - `product_name` (texto)
+  - ... (otros datos: brand, price, description)
+
+- **product_join_category**
+  - `id_category` (bigint, FK de categories)
+  - `id_product` (UUID, FK de products_catalog)
+
+---
+
+## 2. **Ejemplo ficticio de datos**
+
+### categories
+```text
+id  | code    | description
+----|---------|---------------
+1   | HOME    | Productos para el hogar
+2   | OFFICE  | Productos para la oficina
+3   | NONE    | Sin categoría específica
+```
+
+### products_catalog
+```text
+id (UUID)                            | product_name   | brand_name
+-------------------------------------|---------------|-----------
+'abc111-ab1-2023-x987'               | Laptop        | Lenovo
+'def222-de2-2023-x123'               | Guitarra      | Yamaha
+'ghi333-gh3-2023-x456'               | Tablet        | Samsung
+'jkl444-jk4-2023-x789'               | Mochila       | Nike
+```
+
+### product_join_category
+```text
+id_category | id_product
+------------|-------------------------------------
+1           | 'abc111-ab1-2023-x987'   ← Laptop está en HOME
+1           | 'def222-de2-2023-x123'   ← Guitarra está en HOME
+2           | 'abc111-ab1-2023-x987'   ← Laptop está en OFFICE
+2           | 'jkl444-jk4-2023-x789'   ← Mochila está en OFFICE
+3           | 'ghi333-gh3-2023-x456'   ← Tablet está en NONE
+```
+
+---
+
+## 3. **Relación N:M explicada**
+
+- **Un producto del catálogo (products_catalog)** puede pertenecer a varias categorías (ejemplo, Laptop está tanto en HOME como OFFICE).
+- **Una categoría (categories)** puede tener varios productos vinculados a ella.
+- La relación N:M se maneja exclusivamente por la tabla **product_join_category**, que almacena los pares:  
+  (id_category, id_product), conectando por el UUID del producto y el id de la categoría.
+
+---
+
+## 4. **Cuadro visual**
+
+```text
+categories
+id | code     | description
+---|----------|--------------------------
+1  | HOME     | Productos para el hogar
+2  | OFFICE   | Productos para la oficina
+3  | NONE     | Sin categoría específica
+
+products_catalog
+id                         | product_name | brand_name
+---------------------------|--------------|-----------
+abc111-ab1-2023-x987       | Laptop       | Lenovo
+def222-de2-2023-x123       | Guitarra     | Yamaha
+ghi333-gh3-2023-x456       | Tablet       | Samsung
+jkl444-jk4-2023-x789       | Mochila      | Nike
+
+product_join_category
+id_category | id_product
+------------|--------------------------
+1           | abc111-ab1-2023-x987     → Laptop está en HOME
+1           | def222-de2-2023-x123     → Guitarra está en HOME
+2           | abc111-ab1-2023-x987     → Laptop está en OFFICE
+2           | jkl444-jk4-2023-x789     → Mochila está en OFFICE
+3           | ghi333-gh3-2023-x456     → Tablet está en NONE
+```
+
+---
+
+## 5. **Interpretación**
+
+- El **Laptop** (UUID: abc111-ab1-2023-x987) está en dos categorías: HOME (1) y OFFICE (2).
+- La tabla **product_join_category** vincula cada producto de catálogo (por UUID) con una categoría (por id).
+- Puedes rápidamente consultar qué productos están en una categoría, y a qué categorías pertenece un producto del catálogo.
+
+---
+
+## 6. **Ejemplo de consulta**
+
+**¿Qué productos pertenecen a la categoría HOME?**
+```sql
+SELECT pc.product_name, pc.brand_name
+FROM product_join_category pjc
+JOIN products_catalog pc ON pc.id = pjc.id_product
+WHERE pjc.id_category = 1;
+```
+
+**Resultados:**
+- Laptop (Lenovo)
+- Guitarra (Yamaha)
+
+---
+
+¿Quieres ver consultas del tipo “¿A qué categorías pertenece el producto Tablet?” o cómo insertar en esta tabla intermedia usando UUID?
