@@ -1,7 +1,7 @@
 ## DETALLE DEL PROYECTO GADGETPLUS
 
 <details>
-<summary><strong>DETALLE DE LA BASE DE DATOS</strong></summary>
+<summary><strong>🚀DETALLE DE LA BASE DE DATOS</strong></summary>
 ¡Excelente pregunta! **NO, es al revés.** El `CASCADE` funciona en la **dirección de la relación**.
 
 ## **¿Cómo funciona realmente?**
@@ -113,8 +113,329 @@ DELETE FROM bill WHERE id = 'FACT001';          -- Después la factura
 **¿Te queda claro ahora la dirección del CASCADE?** Es siempre **del padre hacia los hijos**. 🔄
 </details>
 
+
+
+
+
+
+
 <details>
-    <summary><strong>SESSION 3 MAPEO DE ENTIDADES</strong></summary>
+<summary><strong>🚀 CARDINALIDAD ENTRE LAS TABLAS </strong></summary>
+
+![img](/images/diagrama.png)
+
+## 📊RESUMEN Y EXPLICACION 
+### 🗃️ Relaciones entre Tablas en Base de Datos
+
+### 📊 Sistema de Órdenes, Productos y Catálogo
+
+---
+
+## 🎯 **RELACIÓN: orders → products (1:N)**
+
+> 📋 **Una orden puede contener múltiples productos**
+RELACION DE ORDER A PRODUCTS -> 
+> * 1:N UNA MISMA ORDEN PUEDE TENER VARIAS FILAS O ITEMS
+  * orders → products: 1:N (una orden puede tener muchas filas/ítems en products)
+> 
+> * En la tabla products, el campo id_order indica a qué orden pertenece cada línea de producto.
+  * Por lo tanto, un mismo valor de id_order puede aparecer en varias filas de la tabla products.
+
+**Tipo:** `1:N` (Una orden → Muchos productos)
+
+### 📦 Tabla: `products`
+```
+┌────┬─────────────────────┬──────────┬──────────┐
+│ 🆔 │     🏷️ Producto     │ 📑 Orden │ 🔢 Cant. │
+├────┼─────────────────────┼──────────┼──────────┤
+│  1 │ UUID1               │    1     │    2     │
+│  2 │ UUID2               │    1     │    1     │
+│  3 │ UUID3               │    2     │    1     │
+│  4 │ UUID2               │    2     │    1     │
+└────┴─────────────────────┴──────────┴──────────┘
+```
+* Las filas 1 y 2 pertenecen al pedido (order) número 1.
+* Las filas 3 y 4 pertenecen al pedido (order) número 2.
+
+**💡 Interpretación:** La orden #1 tiene 2 productos diferentes, la orden #2 también tiene 2 productos.
+
+---
+
+## 🔄 **RELACIÓN: products → orders (N:1)**
+
+> 🎯 **Muchos registros de productos apuntan a la misma orden**
+products → orders: N:1 (muchos registros en products pueden apuntar al mismo pedido)
+id de productos apunta dos veces a id_order
+> 
+**Tipo:** `N:1` (Muchos productos → Una orden)
+
+### 📦 Tabla: `products`
+```
+┌────┬─────────────────────┬──────────┬──────────┐
+│ 🆔 │     🏷️ Producto     │ 📑 Orden │ 🔢 Cant. │
+├────┼─────────────────────┼──────────┼──────────┤
+│  1 │ UUID1               │    1     │    2     │
+│  2 │ UUID2               │    1     │    1     │ ← Misma orden
+│  3 │ UUID3               │    2     │    1     │
+│  4 │ UUID2               │    2     │    1     │ ← Misma orden
+└────┴─────────────────────┴──────────┴──────────┘
+```
+
+**💡 Interpretación:** Varios productos (filas 1-2) pertenecen a la orden #1.
+
+---
+
+## 🧩 **RELACIÓN: products → products_catalog (N:1)**
+**En products tienes el campo id_product_catalog que es una clave foránea**
+
+```sql
+
+id_product_catalog UUID,
+FOREIGN KEY (id_product_catalog) REFERENCES products_catalog(id) ON DELETE CASCADE
+
+```
+
+> 📚 **El mismo producto del catálogo puede pedirse en múltiples órdenes**
+> 
+> **products → products_catalog**: N:1 (muchos registros de products pueden pedir el mismo ítem del catálogo)
+
+**Tipo:** `N:1` (Muchos pedidos → Un producto del catálogo)
+
+### 📦 Tabla: `products`
+```
+┌────┬─────────────────────────┬──────────┬──────────┐
+│ 🆔 │    🖥️ Producto Cat.    │ 📑 Orden │ 🔢 Cant. │
+├────┼─────────────────────────┼──────────┼──────────┤
+│  1 │ UUID1 (💻 laptop)      │    1     │    2     │ ← Mismo producto
+│  2 │ UUID1 (💻 laptop)      │    2     │    1     │ ← Mismo producto
+│  3 │ UUID1 (💻 laptop)      │    3     │    1     │ ← Mismo producto
+│  4 │ UUID1 (💻 laptop)      │    4     │    1     │ ← Mismo producto
+└────┴─────────────────────────┴──────────┴──────────┘
+```
+**💡** Cada fila en products representa un producto del catálogo que ha sido pedido en una orden.
+
+**💡 Interpretación:** La misma laptop se ha pedido en 4 órdenes diferentes.
+
+**Ejemplo práctico:**
+
+Si tienes 10 Macbooks en el catálogo (solo una fila en products_catalog), puedes tener 3000 registros en products (uno por cada vez que se pidió una Macbook en un pedido diferente).
+
+### ⭐¿Para qué sirve products?
+* Relaciona un order (id_order) con un producto del catálogo (id_product_catalog).
+* Guarda la cantidad pedida de ese producto en esa orden.
+* Es la tabla clásica de "detalle" en cualquier sistema de pedidos/facturación.
+
+### OTRO EJEMPLO VISUAL 
+
+![img](/images/ej.png)
+---
+
+## 🔁 **RELACIÓN: orders ↔ products_catalog (N:M)**
+
+> 🌐 **Relación muchos a muchos a través de tabla intermedia**
+
+**Tipo:** `N:M` (Muchas órdenes ↔ Muchos productos del catálogo)
+
+### 📦 Tabla: `products` (Tabla Intermedia)
+```
+┌────┬─────────────────────────┬──────────┬──────────┐
+│ 🆔 │    🛍️ Producto Cat.    │ 📑 Orden │ 🔢 Cant. │
+├────┼─────────────────────────┼──────────┼──────────┤
+│  1 │ UUID1 (💻 laptop)      │    1     │    2     │
+│  2 │ UUID2 (🖱️ mouse)       │    1     │    1     │
+│  3 │ UUID3 (📱 tablet)      │    3     │    1     │
+│  4 │ UUID4 (📷 camara)      │    4     │    1     │
+│  5 │ UUID1 (💻 laptop)      │    5     │    1     │
+│  6 │ UUID2 (🖱️ mouse)       │    6     │    1     │
+│  7 │ UUID5 (🎒 mochila)     │    7     │    1     │
+└────┴─────────────────────────┴──────────┴──────────┘
+```
+- 🎯El mouse (UUID2) está en la orden 1 y en la orden 6.
+- 🎯La laptop (UUID1) está en la orden 1 y en la orden 5.
+- 🎯Cada pedido (orden) puede tener diferentes productos del catálogo.
+
+### ✅ **Validaciones de la relación N:M:**
+- 🎯 **Una orden** puede tener múltiples productos (orden #1 → laptop + mouse)
+- 📦 **Un producto** puede estar en múltiples órdenes (laptop → órdenes #1 y #5)
+- 🔗 **La tabla `products`** actúa como puente entre órdenes y catálogo
+
+
+
+---
+
+## 🏗️ **Diagrama Visual de Relaciones**
+
+```
+     📋 orders                   📦 products                 📚 products_catalog
+┌──────────────┐           ┌──────────────────┐           ┌──────────────────┐
+│  🆔 id       │←────1:N───┤  🆔 id           │───N:1────→│  🆔 id (UUID)    │
+│  👤 cliente  │           │  📑 id_order     │           │  🏷️ product_name │
+│  📅 fecha    │           │  🛍️ id_catalog   │           │  🏢 brand_name   │
+│  💳 id_bill  │           │  🔢 quantity     │           │  💰 price        │
+└──────────────┘           └──────────────────┘           └──────────────────┘
+       ↑                            ↑                              ↑
+       │                            │                              │
+       └─────────────────[N:M]──────┴──────────────────────────────┘
+                    (vía tabla intermedia: products)
+```
+
+---
+
+## 🛠️ **Consultas SQL de Ejemplo**
+
+### 🔍 **Ver productos en una orden específica:**
+```sql
+SELECT 
+    pc.product_name AS 🛍️_Producto,
+    pc.brand_name AS 🏢_Marca,
+    p.quantity AS 🔢_Cantidad
+FROM products p
+JOIN products_catalog pc ON p.id_product_catalog = pc.id
+WHERE p.id_order = 1;
+```
+
+### 🔍 **Ver órdenes que incluyen un producto específico:**
+```sql
+SELECT 
+    o.id AS 📑_Orden,
+    o.client_name AS 👤_Cliente,
+    p.quantity AS 🔢_Cantidad
+FROM orders o
+JOIN products p ON o.id = p.id_order
+JOIN products_catalog pc ON p.id_product_catalog = pc.id
+WHERE pc.product_name = 'laptop';
+```
+
+### 🔍 **Reporte completo: Cliente + Productos:**
+```sql
+SELECT 
+    o.client_name AS 👤_Cliente,
+    pc.product_name AS 🛍️_Producto,
+    pc.brand_name AS 🏢_Marca,
+    p.quantity AS 🔢_Cantidad,
+    (pc.price * p.quantity) AS 💰_Total
+FROM orders o
+JOIN products p ON o.id = p.id_order
+JOIN products_catalog pc ON p.id_product_catalog = pc.id
+ORDER BY o.id, pc.product_name;
+```
+
+---
+
+## 📋 **Resumen de Tipos de Relación**
+
+| 🔗 Relación | 📊 Tipo | 💡 Descripción |
+|:------------|:------:|:---------------|
+| `orders` → `products` | **1:N** | Una orden contiene múltiples productos |
+| `products` → `orders` | **N:1** | Múltiples productos pertenecen a una orden |
+| `products` → `products_catalog` | **N:1** | Múltiples pedidos del mismo producto |
+| `orders` ↔ `products_catalog` | **N:M** | Relación compleja vía tabla intermedia |
+
+---
+
+
+
+## resumen final 
+
+¡Perfecto! 🎯 Ahora veo tu tabla `products` completa con las **claves foráneas** bien definidas.
+
+---
+
+## 🔍 **Análisis de tu tabla `products`:**
+
+```sql
+CREATE TABLE products (
+    id BIGSERIAL PRIMARY KEY,
+    quantity INT DEFAULT 1,
+    id_product_catalog UUID,         ← FK hacia products_catalog(id)
+    id_order BIGINT,                 ← FK hacia orders(id)
+    FOREIGN KEY (id_order) REFERENCES orders(id) ON DELETE CASCADE,
+    FOREIGN KEY (id_product_catalog) REFERENCES products_catalog(id) ON DELETE CASCADE
+);
+```
+
+---
+
+## ✅ **Confirmación de Relaciones:**
+
+### 🎯 **products → orders: N:1**
+- **Muchos registros** en `products` pueden apuntar a la **misma orden**
+- Cada registro tiene **un solo** `id_order`
+- ✅ **Correcto:** N:1
+
+### 🎯 **products → products_catalog: N:1**
+- **Muchos registros** en `products` pueden apuntar al **mismo producto del catálogo**
+- Cada registro tiene **un solo** `id_product_catalog`
+- ✅ **Correcto:** N:1
+
+### 🎯 **orders ↔ products_catalog: N:M**
+- A través de la tabla intermedia `products`
+- Una orden puede tener muchos productos del catálogo
+- Un producto del catálogo puede estar en muchas órdenes
+- ✅ **Correcto:** N:M
+
+---
+
+## 🛡️ **Integridad Referencial (CASCADE):**
+
+```sql
+ON DELETE CASCADE
+```
+
+**¿Qué significa?**
+- Si borras una **orden** (`orders`), se borran automáticamente todos sus **productos** relacionados
+- Si borras un **producto del catálogo** (`products_catalog`), se borran todos los registros en `products` que lo referencien
+
+**Muy útil para mantener la consistencia de datos.** ✅
+
+---
+
+## 📊 **Ejemplo visual con tu tabla:**
+
+```
+products
+┌────┬─────────────────────┬──────────┬──────────┐
+│ 🆔 │   🏷️ Catalog ID     │ 📑 Order │ 🔢 Qty   │
+├────┼─────────────────────┼──────────┼──────────┤
+│  1 │ UUID1-laptop        │    1     │    2     │
+│  2 │ UUID2-mouse         │    1     │    1     │ ← Orden 1 tiene 2 productos
+│  3 │ UUID1-laptop        │    2     │    1     │ ← Laptop en otra orden
+│  4 │ UUID3-keyboard      │    3     │    1     │
+└────┴─────────────────────┴──────────┴──────────┘
+```
+
+**Relaciones demostradas:**
+- Orden 1 → 2 productos (laptop + mouse) ✅ 1:N
+- Laptop aparece en orden 1 y 2 ✅ N:M via `products`
+
+---
+
+## 💡 **Tu esquema está perfecto para:**
+- Sistema de e-commerce ✅
+- Gestión de pedidos ✅
+- Inventario con catálogo ✅
+- Integridad referencial ✅
+
+
+<div align="center">
+
+**🎨 Documentación creada por @codegaws**  
+*📅 Última actualización: 2025-11-22 02:15:47 UTC*
+</div>
+
+</details>
+
+
+
+
+
+
+
+
+
+
+<details>
+    <summary><strong>✅SESSION 3 MAPEO DE ENTIDADES</strong></summary>
 
 ## CLASE 17 -> CONFIGURACION SPRING DATA JPA POSTGRESQL
 ### ¿que es una entidad JPA?

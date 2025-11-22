@@ -1,4 +1,6 @@
-RELACION DE ORDER A PRODUCTS -> 1:N UNA MISMA ORDEN PUEDE TENER VARIAS FILAS O ITEMS
+RELACION DE ORDER A PRODUCTS ->
+*******************************
+1:N UNA MISMA ORDEN PUEDE TENER VARIAS FILAS O ITEMS
 orders → products: 1:N (una orden puede tener muchas filas/ítems en products)
 
 products
@@ -9,7 +11,8 @@ id | id_product_catalog | id_order | quantity
 3  | UUID3              |   2      |   1
 4  | UUID2              |   2      |   1
 
-
+RELACION DE PRODUCTS A ORDER ->
+****************************
 products → orders: N:1 (muchos registros en products pueden apuntar al mismo pedido)
 id de productos apunta dos veces a id_order
 products
@@ -20,8 +23,19 @@ id | id_product_catalog | id_order | quantity
 3  | UUID3              |   2      |   1
 4  | UUID2              |   2      |   1
 
-
+RELACION DE PRODUCTS A PRODUCTS_CATALOG ->
+***************************************
 products → products_catalog: N:1 (muchos registros de products pueden pedir el mismo ítem del catálogo)
+Cada fila representa una relación entre un pedido (orden) y un producto del catálogo, y la cantidad solicitada.
+UUID1 (laptop) puede aparecer en muchos pedidos distintos (id_order 1, 2, 3, 4, etc.).
+Si el mismo cliente pide varias veces el laptop en diferentes pedidos, habrá varios registros, uno por cada pedido.
+Esto te da un esquema limpio y fácil de consultar, donde cada registro es único por combinación de pedido y producto de catálogo.
+Relación
+Esto sigue siendo N:1 desde products a products_catalog:
+Muchos registros de products pueden tener el mismo id de catálogo (UUID1).
+Y 1:N desde orders a products:
+Un pedido puede tener muchos productos.
+
 products
 id | id_product_catalog         | id_order | quantity
 -----------------------------------------------------
@@ -30,7 +44,8 @@ id | id_product_catalog         | id_order | quantity
 3  | UUID1(laptop)              |   3      |    1
 4  | UUID1(laptop)              |   4      |    1
 
-
+RELACION DE ORDER A PRODUCTS_CATALOG ->
+***************************************
 orders ↔ products_catalog: N:M (muchos pedidos pueden incluir muchos ítems del catálogo)
 products
 id | id_product_catalog         | id_order | quantity
@@ -44,3 +59,10 @@ id | id_product_catalog         | id_order | quantity
 7  | UUID5(mochila)             |   7      |    1
 
 orders ↔ products_catalog: N:M (muchos pedidos pueden incluir muchos ítems del catálogo y muchos ítems del catálogo pueden aparecer en muchos pedidos)
+
+Relación:
+orders ↔ products_catalog: N:M (muchos pedidos pueden incluir muchos ítems del catálogo y muchos ítems del catálogo pueden aparecer en muchos pedidos)
+
+Por medio de la tabla intermedia products, se vinculan los identificadores (id_order) y los productos de catálogo (id_product_catalog), 
+
+y se indica la cantidad pedida de cada uno.
