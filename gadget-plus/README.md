@@ -183,8 +183,187 @@ id de productos apunta dos veces a id_order
 
 **💡 Interpretación:** Varios productos (filas 1-2) pertenecen a la orden #1.
 
+## ¿se que esto ya me lo explicaste pero no seria valido decir que la columna id_order al tener distintos pedidos u ordenes por ejemplo 4 ordenes o pedidos puedne contener varios registros de catalogo y seria tambien desde order a products N:M? o no es logico
+
+RELACION DE ORDER A PRODUCTS ->
+*******************************
+1:N UNA MISMA ORDEN PUEDE TENER VARIAS FILAS O ITEMS
+orders → products: 1:N (una orden puede tener muchas filas/ítems en products)
+
+products
+id | id_product_catalog | id_order | quantity
+---------------------------------------------
+1  | UUID1              |   1      |   2
+2  | UUID2              |   2      |   1
+3  | UUID3              |   3      |   1
+4  | UUID2              |   4      |   1
+?
+¡Excelente pregunta! Vamos a aclarar esto porque es una confusión común pero importante de entender. 🤔
+
+## 🚫 **No es N:M - Sigue siendo 1:N**
+
+La relación **orders → products** es **1:N**, **NO N:M**, y aquí te explico por qué:
+
 ---
 
+## 🔍 **Análisis de tu ejemplo:**
+
+```
+products
+id | id_product_catalog | id_order | quantity
+---------------------------------------------
+1  | UUID1              |   1      |   2
+2  | UUID2              |   2      |   1
+3  | UUID3              |   3      |   1
+4  | UUID2              |   4      |   1
+```
+
+### 📊 **Lo que vemos aquí:**
+- **Orden 1** → tiene 1 producto (UUID1)
+- **Orden 2** → tiene 1 producto (UUID2)
+- **Orden 3** → tiene 1 producto (UUID3)
+- **Orden 4** → tiene 1 producto (UUID2)
+
+---
+
+## 🎯 **¿Por qué es 1:N y no N:M?**
+
+### 🔑 **Clave:** Cada registro en `products` pertenece a **UNA SOLA orden**
+
+- ✅ Una orden puede tener **muchos productos** (múltiples filas en `products`)
+- ❌ Un registro en `products` **NO puede** pertenecer a múltiples órdenes simultáneamente
+
+### 📝 **Ejemplo para que sea 1:N (una orden, múltiples productos):**
+```
+products
+id | id_product_catalog | id_order | quantity
+---------------------------------------------
+1  | UUID1              |   1      |   2      ← Orden 1
+2  | UUID2              |   1      |   1      ← Orden 1 (misma orden)
+3  | UUID3              |   1      |   3      ← Orden 1 (misma orden)
+4  | UUID4              |   2      |   1      ← Orden 2
+```
+
+**Aquí sí se ve claramente el 1:N:**
+- Orden 1 → 3 productos diferentes (filas 1, 2, 3)
+- Orden 2 → 1 producto (fila 4)
+
+---
+
+## 🤷‍♂️ **¿Por qué tu ejemplo puede confundir?**
+
+Tu ejemplo muestra **una fila por orden**, lo que puede parecer 1:1, pero la **estructura de la tabla** permite 1:N.
+
+- El hecho de que **diferentes órdenes** tengan productos no cambia la relación.
+- Lo importante es que **una orden específica** puede tener **múltiples registros** en `products`.
+
+---
+
+## 🧠 **Para que fuera N:M necesitarías:**
+
+Una situación donde un **registro en products** pudiera pertenecer a **múltiples órdenes**, algo como:
+
+```sql
+-- ❌ ESTO NO EXISTE en tu esquema
+id | id_product_catalog | id_orders (múltiples) | quantity
+----------------------------------------------------------
+1  | UUID1              | [1, 2, 3]             |   2
+```
+
+Pero esto **no es posible** con tu diseño actual.
+
+---
+
+## ✅ **Conclusión:**
+
+- **orders → products: 1:N** ✅ (correcto)
+- **orders → products: N:M** ❌ (incorrecto)
+
+La relación **N:M** está entre **orders ↔ products_catalog** (a través de la tabla intermedia `products`).
+
+---
+
+## ¿claro eso queria decir?
+-- ❌ ESTO NO EXISTE en tu esquema
+id | id_product_catalog | id_orders (múltiples) | quantity
+----------------------------------------------------------
+1  | UUID1              | [1, 2, 3]             |   2
+
+¡Exacto! 🎯 **Ahora entiendo perfectamente tu punto.**
+
+---
+
+## 🧠 **Tu razonamiento era correcto:**
+
+Estabas pensando: *"Si un registro en `products` pudiera pertenecer a múltiples órdenes simultáneamente, entonces sería N:M"*.
+
+**Y tienes razón** — eso sí haría la relación N:M.
+
+---
+
+## 🚫 **Por qué NO es N:M en tu esquema actual:**
+
+### Tu diseño actual:
+```sql
+CREATE TABLE products (
+    id BIGSERIAL PRIMARY KEY,
+    quantity INT DEFAULT 1,
+    id_product_catalog UUID,
+    id_order BIGINT,  ← UNA SOLA orden por registro
+    FOREIGN KEY (id_order) REFERENCES orders(id)
+);
+```
+
+**Limitación:** Cada fila de `products` solo puede tener **UN** `id_order`.
+
+---
+
+## ✅ **Para que fuera N:M necesitarías:**
+
+### Opción 1: Array de órdenes (como mencionaste)
+```sql
+-- ❌ NO ESTÁ en tu esquema
+id | id_product_catalog | id_orders    | quantity
+-------------------------------------------------
+1  | UUID1              | [1, 2, 3]    |   2
+2  | UUID2              | [1, 4]       |   1
+```
+
+### Opción 2: Tabla intermedia orders_products
+```sql
+-- ❌ TAMPOCO está en tu esquema
+CREATE TABLE orders_products (
+    id_order BIGINT,
+    id_product BIGINT,
+    quantity INT,
+    PRIMARY KEY (id_order, id_product)
+);
+```
+
+---
+
+## 🎯 **En tu diseño actual:**
+
+- **Una orden** puede tener muchos productos (múltiples filas en `products`)
+- **Un registro en products** pertenece a una sola orden
+- Por eso es **1:N**, no **N:M**
+
+**La relación N:M** ocurre a nivel más alto:
+- `orders` ↔ `products_catalog` (a través de la tabla intermedia `products`)
+
+---
+
+## 💡 **Resumen de tu insight:**
+
+```
+SI tuvieras:        ENTONCES sería:
+id_orders [1,2,3]  →  N:M ✅
+id_order 1          →  1:N ✅ (tu caso actual)
+```
+
+**¡Muy buena observación conceptual!** 🧠✨
+
+---
 ## 🧩 **RELACIÓN: products → products_catalog (N:1)**
 **En products tienes el campo id_product_catalog que es una clave foránea**
 
@@ -228,6 +407,106 @@ Si tienes 10 Macbooks en el catálogo (solo una fila en products_catalog), puede
 ### OTRO EJEMPLO VISUAL 
 
 ![img](/images/ej.png)
+
+# CONSULTAS ADICIONALES :
+¡Excelente pregunta! 🤔 Pero aquí hay una diferencia clave en el diseño de tu esquema que hace que **NO** sea N:M.
+
+---
+
+## 🔍 **Analicemos tu esquema actual:**
+
+```sql
+CREATE TABLE products (
+    id BIGSERIAL PRIMARY KEY,
+    quantity INT DEFAULT 1,
+    id_product_catalog UUID,  ← UNA SOLA referencia al catálogo
+    id_order BIGINT,
+    FOREIGN KEY (id_product_catalog) REFERENCES products_catalog(id)
+);
+```
+
+---
+
+## 🚫 **¿Por qué NO es N:M entre products y products_catalog?**
+
+### **Limitación del diseño:**
+Cada fila en `products` solo puede referenciar **UN** producto del catálogo (`id_product_catalog`).
+
+**No puede hacer esto:**
+```sql
+-- ❌ IMPOSIBLE con tu esquema actual
+id | id_product_catalogs     | id_order | quantity
+-------------------------------------------------
+1  | [UUID1, UUID2, UUID3]   |   1      |   2
+```
+
+---
+
+## ✅ **Lo que SÍ permite tu esquema (N:1):**
+
+### **Muchos registros → Un catálogo:**
+```
+products
+id | id_product_catalog | id_order | quantity
+---------------------------------------------
+1  | UUID1 (laptop)     |   1      |   2      ← Registro 1 → laptop
+2  | UUID1 (laptop)     |   2      |   1      ← Registro 2 → laptop (mismo)
+3  | UUID1 (laptop)     |   3      |   1      ← Registro 3 → laptop (mismo)
+4  | UUID2 (mouse)      |   4      |   1      ← Registro 4 → mouse
+```
+
+**Interpretación:**
+- 3 registros diferentes apuntan al mismo producto del catálogo (laptop)
+- Esto es **N:1** (muchos registros → un catálogo)
+
+---
+
+## 🤷‍♂️ **¿Para qué fuera N:M necesitarías?**
+
+### **Opción 1: Array de catálogos**
+```sql
+-- ❌ NO ESTÁ en tu esquema
+id | id_product_catalogs        | id_order | quantity
+----------------------------------------------------
+1  | [UUID1, UUID2, UUID3]      |   1      |   [2,1,3]
+```
+
+### **Opción 2: Tabla intermedia products_catalog_join**
+```sql
+-- ❌ TAMPOCO está en tu esquema
+CREATE TABLE products_catalog_join (
+    id_product BIGINT,
+    id_catalog UUID,
+    quantity_per_catalog INT,
+    PRIMARY KEY (id_product, id_catalog)
+);
+```
+
+---
+
+## 🎯 **La diferencia clave:**
+
+| Relación | Tu esquema actual | Para N:M necesitarías |
+|:---------|:-----------------|:---------------------|
+| **products → orders** | `id_order` (1 valor) | `id_orders` (múltiples) |
+| **products → products_catalog** | `id_product_catalog` (1 valor) | `id_product_catalogs` (múltiples) |
+
+---
+
+## 💡 **Resumen:**
+
+```
+Tu esquema actual:
+- Un registro en products → UNA orden (N:1) ✅
+- Un registro en products → UN catálogo (N:1) ✅
+
+Para que fuera N:M necesitarías:
+- Un registro en products → MUCHAS órdenes (N:M) ❌
+- Un registro en products → MUCHOS catálogos (N:M) ❌
+```
+
+**Tu lógica conceptual es correcta**, pero está **limitada por el diseño de la tabla** `products` que solo permite una referencia por columna.
+
 ---
 
 ## 🔁 **RELACIÓN: orders ↔ products_catalog (N:M)**
@@ -686,6 +965,94 @@ products (tabla puente que guarda las intersecciones ✅)
 **Y `products` es la tabla que almacena todas las intersecciones posibles entre órdenes y productos del catálogo.**
 
 ¿Ahora está súper claro por qué TIENE que ser N:M? 🤓✨
+
+
+---
+# CATEGORIES - PRODUCT_JOIN_CATEGORY - PRODUCTS_CATALOG
+
+¡Listo! Te lo dejo en Markdown con iconos bonitos para que sea claro y agradable. Puedes copiarlo directamente a un README o nota.
+
+# 🗂️ Relación: categories ↔ products_catalog ↔ product_join_category
+
+## 🧾 ¿Qué representa cada tabla?
+- 🏷️ **categories** — Tabla de categorías (p. ej. HOME, OFFICE, NONE).
+- 📦 **products_catalog** — Catálogo maestro de productos. (PK = UUID)
+- 🔗 **product_join_category** — Tabla intermedia que une categorías y productos (N:M).
+
+---
+
+## 📋 Ejemplo ficticio de datos
+
+### 🏷️ categories
+| id | code  | description                    |
+|----:|:------|:-------------------------------|
+| 1   | HOME  | Productos para el hogar        |
+| 2   | OFFICE| Productos para la oficina      |
+| 3   | NONE  | Sin categoría específica       |
+
+### 📦 products_catalog (UUID)
+| id (UUID)                            | product_name | brand_name |
+|:------------------------------------|:-------------|:-----------|
+| abc111ab-1a11-4a11-x987              | Laptop       | Lenovo     |
+| def222de-2b22-4b22-x123              | Guitarra     | Yamaha     |
+| ghi333gh-3c33-4c33-x456              | Tablet       | Samsung    |
+| jkl444jk-4d44-4d44-x789              | Mochila      | Nike       |
+
+### 🔗 product_join_category
+| id_category | id_product (UUID)                 |
+|------------:|:----------------------------------|
+| 1           | abc111ab-1a11-4a11-x987            | ← Laptop → HOME
+| 1           | def222de-2b22-4b22-x123            | ← Guitarra → HOME
+| 2           | abc111ab-1a11-4a11-x987            | ← Laptop → OFFICE
+| 2           | jkl444jk-4d44-4d44-x789            | ← Mochila → OFFICE
+| 3           | ghi333gh-3c33-4c33-x456            | ← Tablet → NONE
+
+---
+
+## 🔍 Interpretación rápida
+- ✅ El **Laptop** (abc111...) está en dos categorías: **HOME** y **OFFICE**.
+- ✅ Una **categoría** puede tener muchos productos.
+- ✅ Un **producto** puede pertenecer a muchas categorías.
+- ✅ La tabla `product_join_category` almacena pares (id_category, id_product) usando el UUID del producto.
+
+---
+
+## 🛠️ Consultas útiles (SQL)
+
+- Productos en la categoría HOME:
+```sql
+SELECT pc.product_name, pc.brand_name
+FROM product_join_category pjc
+JOIN products_catalog pc ON pc.id = pjc.id_product
+JOIN categories c ON pjc.id_category = c.id
+WHERE c.code = 'HOME';
+```
+
+- Categorías donde está la "Laptop":
+```sql
+SELECT c.id, c.code, c.description
+FROM product_join_category pjc
+JOIN categories c ON pjc.id_category = c.id
+JOIN products_catalog pc ON pjc.id_product = pc.id
+WHERE pc.product_name = 'Laptop';
+```
+
+- Insertar en la tabla intermedia (ejemplo):
+```sql
+-- Supongamos que ya existen category_id = 1 y product UUID 'abc111ab-1a11-4a11-x987'
+INSERT INTO product_join_category (id_category, id_product)
+VALUES (1, 'abc111ab-1a11-4a11-x987');
+```
+
+---
+
+## 🧭 Diagrama rápido (texto)
+```
+categories      ←---[N:M via product_join_category]--→   products_catalog (UUID)
+   1 (HOME)   <--- many --->  product_join_category  <--- many --->  abc111ab-... (Laptop)
+```
+
+---
 
 <div align="center">
 
