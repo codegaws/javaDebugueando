@@ -1053,6 +1053,85 @@ categories      ←---[N:M via product_join_category]--→   products_catalog (U
 ```
 
 ---
+NOTA: ¿QUE ES TABLA product_join_category POR QUE ES DIFERENTE A TABLA PRODUCTS?
+
+Correcto. La tabla `products` no es solo una tabla intermedia, sino que representa una entidad propia con atributos (como `quantity`). Tiene:
+
+- Relación **muchos a uno** con `orders` (`id_order`): varios productos pueden pertenecer a una orden.
+- Relación **muchos a uno** con `products_catalog` (`id_product_catalog`): varios registros de productos pueden referenciar el mismo producto del catálogo.
+
+Esto permite, por ejemplo, que una orden tenga varios productos y cada producto esté basado en una entrada del catálogo, además de almacenar información adicional como la cantidad.
+
+Sí, si `categories` tuviera un atributo propio como `cantidad`, dejaría de ser solo una tabla de referencia y pasaría a ser una entidad con información adicional. Esto implica que la tabla representa algo más que una simple lista de categorías y puede tener lógica o datos propios relevantes en el modelo de negocio.
+
+¡Perfecto! Veamos la relación de mapeo entre esas dos tablas, usando tus definiciones.
+
+---
+
+## 🔗 **Relación orders ↔ bill**
+
+### **Estructura**
+```sql
+CREATE TABLE bill (
+    id VARCHAR(64) PRIMARY KEY,
+    total_amount NUMERIC NULL,
+    client_rfc VARCHAR(14) NOT NULL
+);
+
+CREATE TABLE orders (
+    id BIGSERIAL PRIMARY KEY,
+    created_at TIMESTAMP NOT NULL,
+    client_name VARCHAR(32) NOT NULL,
+    id_bill VARCHAR(64) UNIQUE NOT NULL,
+    FOREIGN KEY (id_bill) REFERENCES bill(id) ON DELETE CASCADE
+);
+```
+
+---
+
+## ▶️ **Cómo se mapean:**
+
+- En la **tabla orders**, la columna `id_bill` apunta al campo `id` en la tabla **bill**.
+- Hay una restricción **UNIQUE** en `id_bill` de orders, lo que significa que **cada factura solo puede estar asociada a UNA orden**. (Una factura no puede agrupar varios pedidos).
+- **Relación:** **1:1**
+    - **Un pedido tiene una factura**
+    - **Una factura tiene un solo pedido asociado**
+
+---
+
+## 🎯 **Visualización ejemplo:**
+```text
+bill
+id      | total_amount | client_rfc
+--------|-------------|------------
+B-1     |    1000     | AAA010101AA1
+B-2     |    5500     | BBB020202BB2
+
+orders
+id | created_at      | client_name | id_bill
+---|-----------------|-------------|--------
+1  | 2023-11-01 10:05| Pedro       | B-1
+2  | 2023-11-02 13:22| Juan        | B-2
+```
+- **Cada order** tiene **UNA** factura
+- **Cada factura** puede estar sólo en **UNA** order
+
+---
+
+## ❌ **¿Podría ser 1:N (una factura → varios pedidos)?**
+
+No, porque el campo `id_bill` en **orders** es **UNIQUE**, lo que impide que varias órdenes usen la misma factura.
+
+---
+
+## 💡 **Resumen:**
+
+- **Relación de mapeo:** `bill` ↔ `orders` = **1:1**
+- **Columna clave en orders:** `id_bill` (apunta por FK a bill)
+- **Cada registro en bill puede estar referenciado en UNA sola orden (por UNIQUE)**
+
+---
+---
 
 <div align="center">
 
@@ -1074,13 +1153,23 @@ categories      ←---[N:M via product_join_category]--→   products_catalog (U
 <details>
     <summary><strong>✅SESSION 3 MAPEO DE ENTIDADES</strong></summary>
 
-## CLASE 17 -> CONFIGURACION SPRING DATA JPA POSTGRESQL
-### ¿que es una entidad JPA?
-> Una entidad JPA (Java Persistence API) es una clase Java que representa una tabla en una base de datos relacional.
-> Cada instancia de la clase corresponde a una fila en la tabla. cada atributo de la entidad corresponde a una columna en la tabla.
-> 
-> Las entidades JPA son gestionadas por un contexto de persistencia (EntityManager) que se encarga de las operaciones de 
-> CRUD (Crear,Leer,Actualizar,Borrar) y del ciclo de vida de la entidad.
+## ⚠️ CLASE 17 -> MAPEO DE ENTIDADES
+
+![img](/images/33.png)
+
+![img](/images/34.png)
+
+## ️️⚠️ Recursividad Infinita
+![img](/images/35.png)
+
+
+---
+# ✅ CLASE 18 -> DEMOSTRACION DE LO VAMOS A LOGRAR EN ESTA SECCION - COMO FUNCIONA ESTA BASE DE DATOS
+
+### SOLO EXPLICO COMO ES EL MAPEO
+---
+# ✅ CLASE 19 -> CREANDO UN PROYECTO CON SPRING DATA JPA
+
 
 ---
 - En pomxml
@@ -1111,6 +1200,15 @@ categories      ←---[N:M via product_join_category]--→   products_catalog (U
 
 </dependencies>
 ```
+---
+# ✅ CLASE 20 -> CONFIGURANDO PROPERTIES
+
+### ¿que es una entidad JPA?
+> Una entidad JPA (Java Persistence API) es una clase Java que representa una tabla en una base de datos relacional.
+> Cada instancia de la clase corresponde a una fila en la tabla. cada atributo de la entidad corresponde a una columna en la tabla.
+>
+> Las entidades JPA son gestionadas por un contexto de persistencia (EntityManager) que se encarga de las operaciones de
+> CRUD (Crear,Leer,Actualizar,Borrar) y del ciclo de vida de la entidad.
 
 - En properties
 
@@ -1150,23 +1248,84 @@ logging.level.org.hibernate.SQL=DEBUG
 
 
 ```
+```java
+Te explico para qué sirve cada propiedad:
+
+- `spring.datasource.hikari.connection-timeout=20000`: Tiempo máximo (ms) que HikariCP espera para obtener una conexión antes de lanzar error.
+- `spring.datasource.hikari.maximum-pool-size=5`: Número máximo de conexiones en el pool de HikariCP.
+
+- `spring.jpa.show-sql=true`: Muestra las sentencias SQL ejecutadas por JPA en consola.
+- `spring.jpa.format-sql=true`: Formatea las sentencias SQL para que sean más legibles.
+
+- `spring.jpa.properties.hibernate.format_sql=true`: Hibernate también formatea el SQL generado.
+- `spring.jpa.properties.hibernate.use_sql_comments=true`: Hibernate agrega comentarios explicativos en el SQL generado.
+
+- `logging.level.com.baeldung.testloglevel=DEBUG`: Nivel de log DEBUG para esa clase/paquete.
+- `logging.level.org.springframework.orm.jpa=DEBUG`: Log detallado para la capa JPA de Spring.
+- `logging.level.org.springframework.transaction=DEBUG`: Log detallado para transacciones.
+- `logging.level.org.springframework.data.jpa=DEBUG`: Log detallado para Spring Data JPA.
+- `logging.level.org.hibernate.SQL=DEBUG`: Muestra el SQL generado por Hibernate en el log.
+
+En resumen: configuras el pool de conexiones, activas y formateas el log de SQL, y defines el nivel de detalle de los logs para depuración.
+```
 
 ---
-
-# CLASE 21 -> ENTIDADES JPA
+# ✅ CLASE 21 -> ENTITY
 
 - Query para ver como esta estructurado nuestra base de datos
 
 ````sql
-SELECT column_name, data_type, is_nullable
+SELECT column_name,
+       data_type,
+       character_maximum_length,
+       is_nullable,
+       column_default
 FROM information_schema.columns
 WHERE table_name = 'orders';
 
 ````
+- 🎯CREAMOS OrderEntity
 
-# # CLASE 22 -> MAPEO DE ENTIDADES
+```java
+@Entity
+@Table(name = "orders")
+@Getter
+@Setter
+@ToString
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+public class OrderEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-## FETCH TYPE :
+    @Column(name = "created_at", nullable = false)// no es necesario por que debajo lo mapea como created_at a pesar que se llama createdAt
+    private LocalDateTime createdAt;
+
+    @Column(name = "client_name", length = 32, nullable = false)
+    private String clientName;//no es necesario mapear el guion bajo
+
+    // Relación uno a uno con BillEntity CASCADE.TYPE.MERGE y PERSIST
+    /*
+    @OneToOne(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @JoinColumn(name = "id_bill", nullable = false, unique = true)
+    private BillEntity bill;
+    */
+
+    // Relación uno a uno con BillEntity DELETE.TYPE.MERGE y PERSIST
+    //con DETACH BORRAMOS TANTO EL HIJO COMO EL PADRE OSEA DEL ORDER Y DEL BILL
+    // lo menos comun es ver esto -> cascade = {CascadeType.DETACH, CascadeType.REMOVE}
+    @OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @JoinColumn(name = "id_bill", nullable = false, unique = true)
+    @ToString.Exclude
+    private BillEntity bill;
+```
+
+---
+# ✅CLASE 22 -> MAPEO DE RELACIONES ENTRE ENTIDADES
+
+## 🛠️ FETCH TYPE :
 
 > FETCHTYPE.EAGER : Carga inmediata de datos relacionados carga ansiosa
 > Su valor por defecto es @OneToOne y @ManyToOne entonces si no especificas el tipo de FETCHTYPE
@@ -1175,16 +1334,25 @@ WHERE table_name = 'orders';
 > necesita crear un proxy para implementar la carga perezosa, osea LazyLoading y en las relaciones one to one
 > no siempre es posible crear este proxy.Entonces tener cuidado cuando tengas un tipo lazy y una asociacion
 > @OneToOne y @ManyToOne.
->
+
+![img](/images/36.png)
+
 > ---
 >
 > FETCHTYPE.LAZY : Carga diferida de datos relacionados., es lo contratio de la carga perezosa imaginate que tienes
 > departamento con empleados primero carga departamento y cuando necesites los empleados ahi si los carga.
 > Su valor por defecto es @OneToMany y @ManyToMany.,¿Cuando cargas a empleados ? solo cuando se lo indiques en la query
->
+> ¿Como se carga entonces ? por ejemplo cuando hago un FindByID deparment entonces ahi si carga los empleados
+> relacionados a ese departamento.-> mediante ua query
+> 
+
+![img](/images/37.png)
+
 ---
 
-## CASCADE TYPE:
+## 🛠️CASCADE TYPE:
+
+![img](/images/38.png)
 
 > CASCADE TYPE es una opcion que le indicas a JPA que cuando realices una operacion en una entidad
 > se propague a las entidades relacionadas. Por ejemplo si tienes una entidad padre y una entidad hijo
@@ -1203,10 +1371,11 @@ WHERE table_name = 'orders';
 > los datos.
 >
 
-## ORPHAN REMOVAL:
+## 🛠️ORPHAN REMOVAL:
 
 > ORPHAN REMOVAL es una opcion que le indicas a JPA que cuando una entidad hija ya no este asociada a su entidad padre
-> se elimine automaticamente de la base de datos. Por ejemplo si tienes una entidad padre y una entidad hijo
+> se elimine automaticamente de la base de datos eliminando la fk que asocia 
+> Por ejemplo si tienes una entidad padre y una entidad hijo
 > y quieres que cuando elimines la referencia del hijo en el padre se elimine el hijo tambien, entonces usas orphan
 > removal.
 >
@@ -1216,15 +1385,15 @@ WHERE table_name = 'orders';
 > padre.
 ---
 
-## ¿DIFERENCIA ENTRE EL ORPHAN REMOVAL Y EL CASCADETYPE?:
+## 🛠️¿DIFERENCIA ENTRE EL ORPHAN REMOVAL Y EL CASCADETYPE REMOVE?:
 
 >
-> ORPHAN REMOVAL SE ACTIVA CUANDO SE ELIMINA LA REFERENCIA A LA LLAVE FORANEA DE LA ENTIDAD HIJA EN LA ENTIDAD PADRE.
-> CASCADE TYPE SE ACTIVA CUANDO SE REALIZA UNA OPERACION DE ELIMINACION EN LA ENTIDAD PADRE. AQUI SE ELIMINA TODO TANTO
+> 🐛ORPHAN REMOVAL SE ACTIVA CUANDO SE ELIMINA LA REFERENCIA A LA LLAVE FORANEA DE LA ENTIDAD HIJA EN LA ENTIDAD PADRE.
+> 🐛CASCADE TYPE REMOVE SE ACTIVA CUANDO SE REALIZA UNA OPERACION DE ELIMINACION EN LA ENTIDAD PADRE. AQUI SE ELIMINA TODO TANTO
 > ENTIDAD PADRE
 > COMO HIJO
 
-# CLASE 23 -> CRUD REPOSITORY
+# ✅CLASE 23 -> CRUD REPOSITORY
 
 - public interface OrderRepository extends CrudRepository<OrderEntity, Long> { }
 - Recuerda que CrudRepository ya tiene los metodos basicos para hacer un CRUD
@@ -1241,15 +1410,13 @@ WHERE table_name = 'orders';
 - count(): Devuelve el numero de entidades.
 - existsById(ID id): Verifica si una entidad existe por su ID.
 
-# ¿consulta mis repositorios BillRepository y OrderRepository son
-
-# llamados en mi clase main como @Autowired entonces por que en mis
-
-# repositorios no estan como @component o @Repository???
+### ¿consulta mis repositorios BillRepository y OrderRepository son
+### llamados en mi clase main como @Autowired entonces por que en mis
+### repositorios no estan como @component o @Repository?
 
 **No necesitas** `@Component` o `@Repository` en tus interfaces de repositorio porque:
 
-## Spring Data JPA maneja automáticamente los repositorios
+## ✅Spring Data JPA maneja automáticamente los repositorios
 
 Cuando una interface extiende `CrudRepository` (o cualquier repositorio de Spring Data):
 
@@ -1292,7 +1459,7 @@ las interfaces que extienden `CrudRepository`.
 
 ---
 
-## nota :
+## 🔍nota :
 
 - Mapeamos solo lo que necesitamos.
 
@@ -1341,7 +1508,7 @@ public class GadgetPlusApplication implements CommandLineRunner {
 
 ![imagen](/images/1.png)
 
-# CLASE 24 -> ONETOONE
+# ✅CLASE 24 -> ONETOONE
 
 > VAMOS A UNIR LA TABLA ORDERS CON LA TABLA BILL A TRAVES DE LO QUE ES EL ID Y EL ID_BILL
 
@@ -1375,7 +1542,7 @@ public class BillEntity {
 
 ![imagen](/images/3.png)
 
-# CLASE 25 -> FETCH TYPE LAZY
+# ✅ CLASE 25 -> FETCH TYPE LAZY
 
 SI PONEMOS FETCH TYPE LAZY EN LA RELACION ONE TO ONE NOS VA A DAR UNA EXCEPCION
 >
@@ -1453,9 +1620,9 @@ System.out.println(order.toString()); // No accede a order.bill
 
 Es una práctica común usar `@ToString.Exclude` en relaciones JPA, especialmente con `LAZY` loading.
 
-# CLASE 27 -> ONETOONE CIRCULAR
+# ✅CLASE 27 -> ONETOONE CIRCULAR
 
-## LO QUE SE DESEA HACER ES UN JOIN orders y bill
+## ⭐LO QUE SE DESEA HACER ES UN JOIN orders y bill
 
 ![image](/images/9.png)
 
@@ -1488,7 +1655,7 @@ private BillEntity bill;
 
 ---
 
-### En `BillEntity`:
+### ⭐ En `BillEntity`:
 
 ```java
 
@@ -1526,7 +1693,7 @@ OrderEntity(id=2, createdAt=2025-10-28T02:20:18.193608, clientName=Amanda Nunes,
 
 ---
 
-## Nota explicacion por que existen estas relaciones
+## ⭐Nota explicacion por que existen estas relaciones
 
 > Las asociaciones que ves en las entidades `OrderEntity` y `BillEntity` son relaciones de **mapeo de objetos a tablas**
 > usando JPA (Jakarta Persistence API) para reflejar cómo los datos se relacionan en la base de datos. Te explico el
@@ -1534,15 +1701,15 @@ OrderEntity(id=2, createdAt=2025-10-28T02:20:18.193608, clientName=Amanda Nunes,
 
 ---
 
-## ¿Por qué se usan estas asociaciones?
+## ⭐¿Por qué se usan estas asociaciones?
 
-### 1. **Relación @OneToOne**
+### ⭐1. **Relación @OneToOne**
 
 - La anotación `@OneToOne` significa que **cada entidad de un lado de la relación se asocia con exactamente una entidad
   del otro lado**.
 - En este caso, cada `OrderEntity` está asociada a una sola `BillEntity` y viceversa.
 
-### 2. **¿Por qué existen estas asociaciones?**
+### ⭐2. **¿Por qué existen estas asociaciones?**
 
 - **Representan reglas del negocio.** Por ejemplo, si en tu sistema **cada orden tiene exactamente un
   comprobante/factura (bill), y cada factura pertenece a una sola orden**, entonces una relación uno a uno es la forma
@@ -1550,7 +1717,7 @@ OrderEntity(id=2, createdAt=2025-10-28T02:20:18.193608, clientName=Amanda Nunes,
 - **Facilitan operaciones CRUD y navegación entre entidades.** Puedes acceder fácilmente desde una orden a su factura, y
   desde una factura a su orden usando los getters/setters generados por Lombok.
 
-## ¿Por qué no usar @OneToMany o @ManyToOne?
+## ⭐¿Por qué no usar @OneToMany o @ManyToOne?
 
 - Si una factura pudiera tener **muchas órdenes** asociadas, usarías `@OneToMany` o `@ManyToOne`.
 - Si un pedido pudiera tener **muchas facturas**, también usarías una opción diferente.
@@ -1558,7 +1725,7 @@ OrderEntity(id=2, createdAt=2025-10-28T02:20:18.193608, clientName=Amanda Nunes,
 
 ---
 
-## Resumen
+## ⭐Resumen
 
 - **Motivo principal**: Reflejar la realidad del dominio del negocio (una orden solo tiene una factura y viceversa).
 - **Ventaja**: Permite integridad referencial, navegación sencilla entre entidades y un modelo de datos claro y

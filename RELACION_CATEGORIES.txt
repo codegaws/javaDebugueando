@@ -1,4 +1,7 @@
-¡Perfecto! Voy a mostrarte la relación entre **categories**, **products_catalog** (con UUID como clave primaria) y **product_join_category** con un cuadro de ejemplo usando datos ficticios (UUIDs incluidos).
+Relación entre 
+**categories**, 
+**products_catalog** (con UUID como clave primaria) y 
+**product_join_category** con un cuadro de ejemplo usando datos ficticios (UUIDs incluidos).
 
 ---
 
@@ -116,5 +119,83 @@ WHERE pjc.id_category = 1;
 - Guitarra (Yamaha)
 
 ---
+NOTA: ¿QUE ES TABLA product_join_category POR QUE ES DIFERENTE A TABLA PRODUCTS? 
 
-¿Quieres ver consultas del tipo “¿A qué categorías pertenece el producto Tablet?” o cómo insertar en esta tabla intermedia usando UUID?
+Correcto. La tabla `products` no es solo una tabla intermedia, sino que representa una entidad propia con atributos (como `quantity`). Tiene:
+
+- Relación **muchos a uno** con `orders` (`id_order`): varios productos pueden pertenecer a una orden.
+- Relación **muchos a uno** con `products_catalog` (`id_product_catalog`): varios registros de productos pueden referenciar el mismo producto del catálogo.
+
+Esto permite, por ejemplo, que una orden tenga varios productos y cada producto esté basado en una entrada del catálogo, además de almacenar información adicional como la cantidad.
+
+Sí, si `categories` tuviera un atributo propio como `cantidad`, dejaría de ser solo una tabla de referencia y pasaría a ser una entidad con información adicional. Esto implica que la tabla representa algo más que una simple lista de categorías y puede tener lógica o datos propios relevantes en el modelo de negocio.
+
+¡Perfecto! Veamos la relación de mapeo entre esas dos tablas, usando tus definiciones.
+
+---
+
+## 🔗 **Relación orders ↔ bill**
+
+### **Estructura**
+```sql
+CREATE TABLE bill (
+    id VARCHAR(64) PRIMARY KEY,
+    total_amount NUMERIC NULL,
+    client_rfc VARCHAR(14) NOT NULL
+);
+
+CREATE TABLE orders (
+    id BIGSERIAL PRIMARY KEY,
+    created_at TIMESTAMP NOT NULL,
+    client_name VARCHAR(32) NOT NULL,
+    id_bill VARCHAR(64) UNIQUE NOT NULL,
+    FOREIGN KEY (id_bill) REFERENCES bill(id) ON DELETE CASCADE
+);
+```
+
+---
+
+## ▶️ **Cómo se mapean:**
+
+- En la **tabla orders**, la columna `id_bill` apunta al campo `id` en la tabla **bill**.
+- Hay una restricción **UNIQUE** en `id_bill` de orders, lo que significa que **cada factura solo puede estar asociada a UNA orden**. (Una factura no puede agrupar varios pedidos).
+- **Relación:** **1:1**
+  - **Un pedido tiene una factura**
+  - **Una factura tiene un solo pedido asociado**
+
+---
+
+## 🎯 **Visualización ejemplo:**
+```text
+bill
+id      | total_amount | client_rfc
+--------|-------------|------------
+B-1     |    1000     | AAA010101AA1
+B-2     |    5500     | BBB020202BB2
+
+orders
+id | created_at      | client_name | id_bill
+---|-----------------|-------------|--------
+1  | 2023-11-01 10:05| Pedro       | B-1
+2  | 2023-11-02 13:22| Juan        | B-2
+```
+- **Cada order** tiene **UNA** factura
+- **Cada factura** puede estar sólo en **UNA** order
+
+---
+
+## ❌ **¿Podría ser 1:N (una factura → varios pedidos)?**
+
+No, porque el campo `id_bill` en **orders** es **UNIQUE**, lo que impide que varias órdenes usen la misma factura.
+
+---
+
+## 💡 **Resumen:**
+
+- **Relación de mapeo:** `bill` ↔ `orders` = **1:1**
+- **Columna clave en orders:** `id_bill` (apunta por FK a bill)
+- **Cada registro en bill puede estar referenciado en UNA sola orden (por UNIQUE)**
+
+---
+
+¿Te gustaría ver cómo sería el modelo si permitieras una factura para varios pedidos (relación 1:N), o así está bien para tu caso?

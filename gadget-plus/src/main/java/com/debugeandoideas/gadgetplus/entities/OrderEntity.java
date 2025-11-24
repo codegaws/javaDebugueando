@@ -21,7 +21,7 @@ public class OrderEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "created_at", nullable = false)
+    @Column(name = "created_at", nullable = false)// no es necesario por que debajo lo mapea como created_at a pesar que se llama createdAt
     private LocalDateTime createdAt;
 
     @Column(name = "client_name", length = 32, nullable = false)
@@ -39,9 +39,9 @@ public class OrderEntity {
     // lo menos comun es ver esto -> cascade = {CascadeType.DETACH, CascadeType.REMOVE}
     @OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JoinColumn(name = "id_bill", nullable = false, unique = true)
-    @ToString.Exclude
+   // @ToString.Exclude
     private BillEntity bill;
-
+/*
     // Relación uno a muchos con ProductEntity ONETOMANY
     @OneToMany(mappedBy = "order",
             fetch = FetchType.EAGER,
@@ -52,6 +52,8 @@ public class OrderEntity {
         products.add(product);
         product.setOrder(this);
     }
+ */
+
 
     @Override
     public boolean equals(Object o) {

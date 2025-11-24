@@ -2,6 +2,7 @@ RELACION DE ORDER A PRODUCTS ->
 *******************************
 1:N UNA MISMA ORDEN PUEDE TENER VARIAS FILAS O ITEMS
 orders → products: 1:N (una orden puede tener muchas filas/ítems en products)
+products → orders : N:1 (Muchos registros en products pueden apuntar al mismo pedido)
 
 products
 id | id_product_catalog | id_order | quantity
@@ -26,11 +27,15 @@ id | id_product_catalog | id_order | quantity
 RELACION DE PRODUCTS A PRODUCTS_CATALOG ->
 ***************************************
 products → products_catalog: N:1 (muchos registros de products pueden pedir el mismo ítem del catálogo)
+
 Cada fila representa una relación entre un pedido (orden) y un producto del catálogo, y la cantidad solicitada.
 UUID1 (laptop) puede aparecer en muchos pedidos distintos (id_order 1, 2, 3, 4, etc.).
-Si el mismo cliente pide varias veces el laptop en diferentes pedidos, habrá varios registros, uno por cada pedido.
+
+Si el mismo cliente pide varias veces la laptop en diferentes pedidos, habrá varios registros, uno por cada pedido.
 Esto te da un esquema limpio y fácil de consultar, donde cada registro es único por combinación de pedido y producto de catálogo.
+
 Relación
+*********
 Esto sigue siendo N:1 desde products a products_catalog:
 Muchos registros de products pueden tener el mismo id de catálogo (UUID1).
 Y 1:N desde orders a products:

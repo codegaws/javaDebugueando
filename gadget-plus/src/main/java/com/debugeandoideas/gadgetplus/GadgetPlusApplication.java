@@ -43,9 +43,9 @@ public class GadgetPlusApplication implements CommandLineRunner {
     //*************************************************************
     @Override
     public void run(String... args) throws Exception {
-      /* this.orderRepository.findAll().forEach(OrderEntity -> System.out.println(OrderEntity.toString()));
-        this.billRepository.findAll().forEach(bill -> System.out.println(bill.toString()));*/
-
+        //this.orderRepository.findAll().forEach(OrderEntity -> System.out.println(OrderEntity.toString()));
+        //this.billRepository.findAll().forEach(bill -> System.out.println(bill.toString()));
+        this.orderRepository.findAll().forEach(System.out::println);
         //EJERCICIO CASCADE.MERGE Y PERSIST***************************************************
         // SETEAMOS
         /*var bill = BillEntity.builder()
