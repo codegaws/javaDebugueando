@@ -1,5 +1,7 @@
 package com.debugeandoideas.gadgetplus;
 
+import com.debugeandoideas.gadgetplus.entities.BillEntity;
+import com.debugeandoideas.gadgetplus.entities.OrderEntity;
 import com.debugeandoideas.gadgetplus.entities.ProductEntity;
 import com.debugeandoideas.gadgetplus.repositories.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,7 +9,9 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.time.LocalDateTime;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
@@ -17,7 +21,7 @@ import java.util.stream.IntStream;
 public class GadgetPlusApplication implements CommandLineRunner {
 
     //CREACION DE ATRIBUTOS REPOSITORYS Y VARIABLES CONSTANTES
-    @Autowired
+    @Autowired// OJO USAR AUTOWIRED YA NO ES UNA BUENA PRACTICCA
     private OrderRepository orderRepository;
 
     @Autowired
@@ -43,12 +47,12 @@ public class GadgetPlusApplication implements CommandLineRunner {
     //*************************************************************
     @Override
     public void run(String... args) throws Exception {
-        //this.orderRepository.findAll().forEach(OrderEntity -> System.out.println(OrderEntity.toString()));
-        //this.billRepository.findAll().forEach(bill -> System.out.println(bill.toString()));
-        this.orderRepository.findAll().forEach(System.out::println);
-        //EJERCICIO CASCADE.MERGE Y PERSIST***************************************************
+        //this.orderRepository.findAll().forEach(System.out::println);//LLAMAMOS AL METODO TOSTRING DEL ORDERENTITY
+        this.orderRepository.findAll().forEach(OrderEntity -> System.out.println(OrderEntity.toString()));
+        this.billRepository.findAll().forEach(bill -> System.out.println(bill.toString()));
+        //CLASE 28  CASCADE.MERGE Y PERSIST***************************************************
         // SETEAMOS
-        /*var bill = BillEntity.builder()
+        var bill = BillEntity.builder()
                 .rfc("AS537GD7X")
                 .totalAmount(BigDecimal.TEN)
                 .id("b-17")
@@ -60,7 +64,7 @@ public class GadgetPlusApplication implements CommandLineRunner {
                 .clientName("Alex Martinez")
                 .bill(bill)
                 .build();
-        this.orderRepository.save(order);*/
+        this.orderRepository.save(order);
         /*
         var order = this.orderRepository.findById(17L).get();
         System.out.println("PRE PERSISTENCE: " + order.getClientName());

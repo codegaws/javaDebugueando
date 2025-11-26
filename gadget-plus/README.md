@@ -1371,25 +1371,32 @@ public class OrderEntity {
 > los datos.
 >
 
-## 🛠️ORPHAN REMOVAL:
+## 🛠️ORPHAN REMOVAL: ONETOMANY y ONETOONE
 
-> ORPHAN REMOVAL es una opcion que le indicas a JPA que cuando una entidad hija ya no este asociada a su entidad padre
+> ORPHAN REMOVAL es una opcion que le indicas a JPA que cuando una entidad hija ya no este 
+> asociada a su entidad padre
 > se elimine automaticamente de la base de datos eliminando la fk que asocia 
 > Por ejemplo si tienes una entidad padre y una entidad hijo
-> y quieres que cuando elimines la referencia del hijo en el padre se elimine el hijo tambien, entonces usas orphan
+> y quieres que cuando elimines la referencia del hijo en el padre se elimine el hijo tambien, 
+> entonces usas orphan
 > removal.
 >
-> Es importante usar orphan removal con precaucion, ya que puede tener implicaciones en la integridad de los datos.
+> Es importante usar orphan removal con precaucion, ya que puede tener implicaciones en la integridad 
+> de los datos.
 > Proposito especifico es ORPHAN REMOVAL se aplica en relaciones One to Many y One to one.
-> Cuando se configura como true , JPA elimina automaticamente las entidades hijas que ya no estan asociadas a su entidad
+> Cuando se configura como true , JPA elimina automaticamente las entidades hijas que ya no 
+> estan asociadas a su entidad
 > padre.
 ---
 
 ## 🛠️¿DIFERENCIA ENTRE EL ORPHAN REMOVAL Y EL CASCADETYPE REMOVE?:
 
 >
-> 🐛ORPHAN REMOVAL SE ACTIVA CUANDO SE ELIMINA LA REFERENCIA A LA LLAVE FORANEA DE LA ENTIDAD HIJA EN LA ENTIDAD PADRE.
-> 🐛CASCADE TYPE REMOVE SE ACTIVA CUANDO SE REALIZA UNA OPERACION DE ELIMINACION EN LA ENTIDAD PADRE. AQUI SE ELIMINA TODO TANTO
+> 🐛ORPHAN REMOVAL SE ACTIVA CUANDO SE ELIMINA LA REFERENCIA A LA LLAVE FORANEA DE LA ENTIDAD 
+> HIJA EN LA ENTIDAD PADRE.
+> 
+> 🐛CASCADE TYPE REMOVE SE ACTIVA CUANDO SE REALIZA UNA OPERACION DE ELIMINACION EN LA 
+> ENTIDAD PADRE. AQUI SE ELIMINA TODO TANTO
 > ENTIDAD PADRE
 > COMO HIJO
 
@@ -1514,7 +1521,17 @@ public class GadgetPlusApplication implements CommandLineRunner {
 
 ![imagen](/images/2.png)
 
+- Esta es la query SQL que se genera para hacer el JOIN entre orders y bill
+
+```sql
+SELECT *
+FROM orders o
+         join bill b on b.id = o.id_bill;
+```
+![imagen](/images/39.png)
+
 - Creamos un BillEntity
+- El ID es autoincrementable
 
 ```java
 
@@ -1524,17 +1541,20 @@ public class GadgetPlusApplication implements CommandLineRunner {
 public class BillEntity {
 
     @Id
-    @Column(nullable = false, length = 64)
+    @Column(nullable = false, length = 64)// en nullable = true es el valor por defecto
     private String id;
 
     @Column
-    private BigDecimal totalAmount;
+    private BigDecimal totalAmount;// es mejor para calculos matematicos BigDecimal
 
     @Column(name = "client_rfc", length = 14, nullable = false)
     private String rfc;
 
 }
 ```
+
+![imagen](/images/40.png)
+
 
 ---
 
@@ -1544,7 +1564,8 @@ public class BillEntity {
 
 # ✅ CLASE 25 -> FETCH TYPE LAZY
 
-SI PONEMOS FETCH TYPE LAZY EN LA RELACION ONE TO ONE NOS VA A DAR UNA EXCEPCION
+### ⭐SI PONEMOS FETCH TYPE LAZY EN LA RELACION ONE TO ONE NOS VA A DAR UNA EXCEPCION
+
 >
 >![imagen](/images/4.png)
 >
@@ -1563,17 +1584,26 @@ SI PONEMOS FETCH TYPE LAZY EN LA RELACION ONE TO ONE NOS VA A DAR UNA EXCEPCION
 > ## Resultado en consola
 > ![imagen](/images/7.png)
 >
-> ## RESUMEN
-> El EAGER trae todo OrderEntity y BillEntity
+> ## RESUMEN : 
+
+> ## ⭐El EAGER trae todo OrderEntity y BillEntity, osea carga la entidad principal y sus hijos recuerda que en Order tienes
+> ## una relacion one to one con BillEntity y al ser EAGER trae todo OrderEntity y BillEntity.
+> ⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐
+> ## ⭐El LAZY sirve para cuando voy a trabajar con las propiedades de mi entidad principal si lo aplicas habiando una propiedad
+> ## hija o que pertenezca a otra entidad saldra error
+
+### 📦DETALLE :
 > - this.orderRepository.findAll().forEach(o -> System.out.println(o.toString()));// aqui te trae todo el objeto order
-    con bill incluido
-    > El LAZY no puede traer el Bill por eso falla si tratas de imprimir todo el objeto order con bill incluido.
+    con bill incluido.
+> 
+> El LAZY no puede traer el Bill por eso falla si tratas de imprimir todo el objeto order con bill incluido.
 >
 > - this.orderRepository.findAll().forEach(o -> System.out.println(o.getClientName()));// aqui solo te trae el nombre
     del cliente y no falla
     > otra solucion es para que no truene usamos el metodo de lombok ### @ToString.Exclude() ###
 > - y asi evitamos que se imprima el objeto bill
 > - @ToString.Exclude -> quedaria asi
+
 
 ```java
 
@@ -1620,7 +1650,15 @@ System.out.println(order.toString()); // No accede a order.bill
 
 Es una práctica común usar `@ToString.Exclude` en relaciones JPA, especialmente con `LAZY` loading.
 
-# ✅CLASE 27 -> ONETOONE CIRCULAR
+---
+# ✅CLASE 26 -> RECURSIVIDAD INFINITA 
+
+- El Ejemplo esta en  proyecto aparte ver video interesante la explicacion
+
+
+---
+
+`# ✅CLASE 27 -> ONETOONE CIRCULAR`
 
 ## ⭐LO QUE SE DESEA HACER ES UN JOIN orders y bill
 
@@ -1634,7 +1672,8 @@ FROM orders o
 
 ```
 
-### En Order Entity se mapea el Bill este esta realizando el JOIN y en BillEntity se mapea la orden pero esta es la parte inversa de la relacion
+### En Order Entity se mapea el Bill este esta realizando el JOIN y en BillEntity se mapea 
+### la orden pero esta es la parte inversa de la relacion
 
 ### no es necesario hacer el JOIN desde BillEntity es redundante.
 
@@ -1664,7 +1703,7 @@ private OrderEntity order;
 ```
 
 - `mappedBy = "bill"`: Indica que esta es la parte **inversa** de la relación, y que la clave foránea vive en la otra
-  entidad (`OrderEntity`).
+  entidad (`OrderEntity`) es la propietaria por que tiene la FK.
 
 ---
 

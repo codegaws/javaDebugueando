@@ -14,8 +14,8 @@ import java.util.Objects;
 @Setter
 @ToString
 @AllArgsConstructor
-@NoArgsConstructor
-@Builder
+@NoArgsConstructor// crea constructor sin parametros
+@Builder // Patron de diseño builder
 public class OrderEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -38,8 +38,7 @@ public class OrderEntity {
     //con DETACH BORRAMOS TANTO EL HIJO COMO EL PADRE OSEA DEL ORDER Y DEL BILL
     // lo menos comun es ver esto -> cascade = {CascadeType.DETACH, CascadeType.REMOVE}
     @OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    @JoinColumn(name = "id_bill", nullable = false, unique = true)
-   // @ToString.Exclude
+    @JoinColumn(name = "id_bill", nullable = false, unique = true)//Aqui es la union de la FK es como vas hacer el join
     private BillEntity bill;
 /*
     // Relación uno a muchos con ProductEntity ONETOMANY

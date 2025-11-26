@@ -18,7 +18,7 @@ import java.util.Objects;
 public class BillEntity {
 
     @Id
-    @Column(length = 64)
+    @Column(nullable = false, length = 64)
     private String id;
 
     @Column
@@ -27,7 +27,7 @@ public class BillEntity {
     @Column(name = "client_rfc", length = 14, nullable = false)
     private String rfc;
 
-    //RELACION
+    //RELACION ONETOONE
 
     @ToString.Exclude
     @OneToOne(mappedBy = "bill", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
