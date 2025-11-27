@@ -3862,8 +3862,8 @@ VALUES (1, 1, UUID-123);
 ¿Ahora está súper claro por qué esa frase es tan importante? 🤓
 ---
 ## #️ ⃣📚**Clase 34: OREPHAN REMOVAL`**
-
-# ANTES -> tenemos los id de productos en relacion de las ordenes
+- Por herfanos nos refrimos que le quitamos su referencia a un registro padre.
+- ANTES -> tenemos los id de productos en relacion de las ordenes
 
 ### Aplicacimos ->
 
