@@ -2256,8 +2256,8 @@ private BillEntity bill;
 
 ## #️ ⃣📚**Clase 31: LOMBOK DATA EN ENTIDADES`**
 
-- agregamos @setter , @Getter y hashcode equals en BillEntity y OrderEntity
-
+- Agregamos @setter , @Getter y hashcode equals en BillEntity y OrderEntity
+- No es recomendable usar @Data en clases Entity, en DTO si se puede usar , es mejor usar @Getter, @Setter,@ToString y EQUALS,HASHCODE
 ### NOTA ¿POR QUE ES NECESARIO?
 
 Agregar los métodos `equals` y `hashCode` en las entidades JPA como `OrderEntity` y `BillEntity` es importante por estas
@@ -2273,6 +2273,18 @@ razones:
 **Resumen:**  
 Implementar `equals` y `hashCode` garantiza que las entidades se comporten correctamente al ser comparadas, almacenadas
 o gestionadas por JPA y colecciones de Java.
+
+```java
+@Entity
+@Table(name = "orders")
+@Getter
+@Setter
+@ToString
+@AllArgsConstructor
+@NoArgsConstructor// crea constructor sin parametros
+@Builder // Patron de diseño builder
+public class OrderEntity
+```
 
 ```java
 
