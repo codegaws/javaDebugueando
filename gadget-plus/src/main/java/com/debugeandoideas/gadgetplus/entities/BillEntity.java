@@ -18,7 +18,7 @@ import java.util.Objects;
 public class BillEntity {
 
     @Id
-    @Column(nullable = false, length = 64)
+    @Column(length = 64)
     private String id;
 
     @Column

@@ -52,7 +52,7 @@ public class GadgetPlusApplication implements CommandLineRunner {
         this.billRepository.findAll().forEach(bill -> System.out.println(bill.toString()));
         //CLASE 28  CASCADE.MERGE Y PERSIST***************************************************
         // SETEAMOS
-        var bill = BillEntity.builder()
+        /*var bill = BillEntity.builder()
                 .rfc("AS537GD7X")
                 .totalAmount(BigDecimal.TEN)
                 .id("b-17")
@@ -65,6 +65,9 @@ public class GadgetPlusApplication implements CommandLineRunner {
                 .bill(bill)
                 .build();
         this.orderRepository.save(order);
+
+         */
+        // ************* CLASE 29 CASCADE.MERGE Y PERSIST *************
         /*
         var order = this.orderRepository.findById(17L).get();
         System.out.println("PRE PERSISTENCE: " + order.getClientName());
@@ -77,9 +80,9 @@ public class GadgetPlusApplication implements CommandLineRunner {
         System.out.println("POST PERSISTENCE: " + order2.getClientName());
         */
 
-        // ************* Ejercicio CASCADE.DELETE AUNQUE MEJOR ES CASCADE.ALL *************
-       /* var order = this.orderRepository.findById(17L).get();
-        this.orderRepository.delete(order);*/
+        // ************* Ejercicio 30 CASCADE.DELETE AUNQUE MEJOR ES CASCADE.ALL *************
+        var order = this.orderRepository.findById(17L).get();
+        this.orderRepository.delete(order);
         //borramos el order y el bill asociado con cascade delete con id 17L
 
         // *************CLASE 37 PROBANDO RELACIONES OneToMany *************
