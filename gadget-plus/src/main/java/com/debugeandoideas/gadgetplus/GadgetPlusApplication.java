@@ -48,8 +48,8 @@ public class GadgetPlusApplication implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         //this.orderRepository.findAll().forEach(System.out::println);//LLAMAMOS AL METODO TOSTRING DEL ORDERENTITY
-        this.orderRepository.findAll().forEach(OrderEntity -> System.out.println(OrderEntity.toString()));
-        this.billRepository.findAll().forEach(bill -> System.out.println(bill.toString()));
+        //this.orderRepository.findAll().forEach(OrderEntity -> System.out.println(OrderEntity.toString()));
+        //this.billRepository.findAll().forEach(bill -> System.out.println(bill.toString()));
         //CLASE 28  CASCADE.MERGE Y PERSIST***************************************************
         // SETEAMOS
         /*var bill = BillEntity.builder()
@@ -81,15 +81,15 @@ public class GadgetPlusApplication implements CommandLineRunner {
         */
 
         // ************* Ejercicio 30 CASCADE.DELETE AUNQUE MEJOR ES CASCADE.ALL *************
-        var order = this.orderRepository.findById(17L).get();
-        this.orderRepository.delete(order);
+        //var order = this.orderRepository.findById(17L).get();
+        //this.orderRepository.delete(order);
         //borramos el order y el bill asociado con cascade delete con id 17L
 
-        // *************CLASE 37 PROBANDO RELACIONES OneToMany *************
-        //var order = this.orderRepository.findById(2L).orElseThrow();
+        // *************CLASE 33 PROBANDO RELACIONES OneToMany *************
+        var order = this.orderRepository.findById(1L).orElseThrow();
 
-        //CREO PRODUCTOS
-        /*
+        //CREO PRODUCTOS Y LO SETEAMOS
+
         var product1 = ProductEntity.builder().quantity(BigInteger.ONE).build();
         var product2 = ProductEntity.builder().quantity(BigInteger.TWO).build();
         var product3 = ProductEntity.builder().quantity(BigInteger.TEN).build();
@@ -100,9 +100,9 @@ public class GadgetPlusApplication implements CommandLineRunner {
         order.addProduct(product1);
         order.addProduct(product2);
         order.addProduct(product3);
-        */
+
         //order.getProducts().removeFirst();// removemos el primer elemento de la lista de productos
-        //this.orderRepository.save(order);
+        this.orderRepository.save(order);
 
         // *************CLASE 38 PROBANDO RELACIONES OneToMany *************
 
