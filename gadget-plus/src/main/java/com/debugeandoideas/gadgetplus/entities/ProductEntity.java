@@ -22,7 +22,7 @@ public class ProductEntity {
     // mapear la cantidad de productos que tiene esta orden
     private BigInteger quantity;
     // RELACION MUCHOS A UNO HACIA ORDER LADO PROPIETARIO LLEVA JOINCOLUMN Y LLAVE FORANEA.
-    //@ManyToOne(cascade = CascadeType.ALL)// NO ES BUENO ALL
+    //@ManyToOne(cascade = CascadeType.ALL)// NO ES BUENO ALL por que borra todo
     @ManyToOne
     @JoinColumn(name = "id_order")//LLAVE FORANEA HACIA ORDER
     private OrderEntity order;

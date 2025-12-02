@@ -34,18 +34,19 @@ public class OrderEntity {
     @OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JoinColumn(name = "id_bill", nullable = false, unique = true)//Aqui es la union de la FK es como vas hacer el join
     private BillEntity bill;
-    /*
-        // Relación uno a muchos con ProductEntity ONETOMANY es la relacion inversa
-        @OneToMany(mappedBy = "order",
-                fetch = FetchType.EAGER,
-                cascade = CascadeType.ALL, orphanRemoval = true)
-        private List<ProductEntity> products = new ArrayList<>();
 
-        public void addProduct(ProductEntity product) {
-            products.add(product);
-            product.setOrder(this);
-        }
-     */
+    // Relación uno a muchos con ProductEntity ONETOMANY es la relacion inversa - aplicando ORPHAN REMOVAL
+    @OneToMany(mappedBy = "order",
+            fetch = FetchType.EAGER,
+            cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ProductEntity> products = new ArrayList<>();
+
+    public void addProduct(ProductEntity product) {
+        products.add(product);
+        product.setOrder(this);//seteamos la relacion bidireccional¿a quien pertenece?sino lo haces el producto no sabra a donde pertenece.
+    }
+
+   /*
     @OneToMany(mappedBy = "order",
             fetch = FetchType.EAGER,
             cascade = CascadeType.ALL)
@@ -55,31 +56,30 @@ public class OrderEntity {
         products.add(p);
         p.setOrder(this);//seteamos la relacion bidireccional¿a quien pertenece?sino lo haces el producto no sabra a donde pertenece.
     }
+*/
 
     /**
      * ESTO ES LO QUE PASA CUANDO HACEMOS p.setOrder(this) EN EL METODO addProduct
+     *
      * @Entity
      * @Table(name = "products")
      * public class ProductEntity {
-     *
-     *     @Id
-     *     @GeneratedValue(strategy = GenerationType. IDENTITY)
-     *     private Long id;
-     *
-     *     private BigInteger quantity;
-     *
-     *     @Column(name = "id_order")
-     *     private Long idOrder;               // ← Este campo se va a setear
-     *
-     *     @ManyToOne
-     *     @JoinColumn(name = "id_order")
-     *     private OrderEntity order;          // ← Este objeto se va a setear
-     *
-     *     // Método que se ejecuta cuando haces p.setOrder(this):
-     *     public void setOrder(OrderEntity order) {
-     *         this. order = order;             // ← Guarda la referencia completa
-     *         this.idOrder = order.getId();   // ← Extrae el ID y lo setea como FK
-     *     }
+     * @Id
+     * @GeneratedValue(strategy = GenerationType. IDENTITY)
+     * private Long id;
+     * <p>
+     * private BigInteger quantity;
+     * @Column(name = "id_order")
+     * private Long idOrder;               // ← Este campo se va a setear
+     * @ManyToOne
+     * @JoinColumn(name = "id_order")
+     * private OrderEntity order;          // ← Este objeto se va a setear
+     * <p>
+     * // Método que se ejecuta cuando haces p.setOrder(this):
+     * public void setOrder(OrderEntity order) {
+     * this. order = order;             // ← Guarda la referencia completa
+     * this.idOrder = order.getId();   // ← Extrae el ID y lo setea como FK
+     * }
      * }
      */
 

@@ -86,7 +86,7 @@ public class GadgetPlusApplication implements CommandLineRunner {
         //borramos el order y el bill asociado con cascade delete con id 17L
 
         // *************CLASE 33 PROBANDO RELACIONES OneToMany *************
-        var order = this.orderRepository.findById(1L).orElseThrow();
+       /* var order = this.orderRepository.findById(1L).orElseThrow();
 
         //CREO PRODUCTOS Y LO SETEAMOS
 
@@ -103,6 +103,26 @@ public class GadgetPlusApplication implements CommandLineRunner {
 
         //order.getProducts().removeFirst();// removemos el primer elemento de la lista de productos
         this.orderRepository.save(order);
+        */
+        // *************CLASE 35 ORPHAN REMOVAL CASCADE DELETE *************
+        var order = this.orderRepository.findById(1L).orElseThrow();
+
+        //CREO PRODUCTOS Y LO SETEAMOS
+/*
+        var product1 = ProductEntity.builder().quantity(BigInteger.ONE).build();
+        var product2 = ProductEntity.builder().quantity(BigInteger.TWO).build();
+        var product3 = ProductEntity.builder().quantity(BigInteger.TEN).build();
+
+        var products = List.of(product1, product2, product3);
+        //order.setProducts(products);
+        //products.forEach(product -> product.setOrder(order));
+        order.addProduct(product1);
+        order.addProduct(product2);
+        order.addProduct(product3);
+*/
+        order.getProducts().removeFirst();// removemos el primer elemento de la lista de productos, lo dejamos huerfano , de debe evitar tener registros huerfanos en nuestra BD
+        this.orderRepository.save(order);
+
 
         // *************CLASE 38 PROBANDO RELACIONES OneToMany *************
 

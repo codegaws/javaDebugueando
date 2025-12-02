@@ -3862,7 +3862,7 @@ VALUES (1, 1, UUID-123);
 ¿Ahora está súper claro por qué esa frase es tan importante? 🤓
 ---
 ## #️ ⃣📚**Clase 34: OREPHAN REMOVAL`**
-- Por herfanos nos refrimos que le quitamos su referencia a un registro padre.
+- Por huerfanos nos referimos que le quitamos su referencia a un registro padre.
 - ANTES -> tenemos los id de productos en relacion de las ordenes
 
 ### Aplicacimos ->
@@ -3903,9 +3903,10 @@ FROM products;
 UPDATE products
 SET id_order = 1
 WHERE id_order is null;
+
 UPDATE products
 SET id_order = null
-WHERE id = 2;
+WHERE id = 5;
 ```
 
 # Despues :
@@ -3928,7 +3929,7 @@ WHERE id = 2;
 ### Nota : Aplicando a tratar huerfanos en base de datos.
 ---
 
-## #️ ⃣📚**Clase 35: OREPHAN REMOVAL Y CASCADE DELETE`**
+## #️ 📚⃣**Clase 35: OREPHAN REMOVAL Y CASCADE DELETE`**
 
 > ### HACEMOS UN DELETE -> DELETE FROM products;
 > AGREGAMOS 3 PRODUCTOS NO OLVIDAR QUE LO HEMOS HECHO CON UN METODO HELPER ADD PARA AGREGAR
@@ -3941,6 +3942,7 @@ WHERE id = 2;
 ---
 > ## AHORA QUE HACEMOS ->
 > ### order.getProducts().removeFirst();
+> ## ¿QUE PASA SI ESTO SUCEDE?
 > Removemos el primer elemento de la lista de productos osea pone al primer elemento de la tabla productos con
 > referencia
 > a id_order como null entonces si lo seteamos como nulo es dejar huerfano a ese producto.
@@ -3970,7 +3972,7 @@ public void addProduct(ProductEntity product) {
 
 ### ¿QUE PASA AHORA APLICANDO orphanRemoval = true?
 
-> AL HACER ESTO ELIMINA EL REGISTRO HUERFANO DE LA TABLA PRODUCTOS Y TAMBIEN TODOS LOS DEMAS
+> AL HACER ESTO ELIMINA EL REGISTRO HUERFANO DE LA TABLA PRODUCTOS Y TAMBIEN TODO LOS DEMAS
 > CUANDO HACEMOS EL SELECT * FROM products; o el JOIN
 ![image](/images/17.png)
 
