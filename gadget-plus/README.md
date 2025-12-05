@@ -3949,7 +3949,32 @@ WHERE id = 5;
 > a id_order como null entonces si lo seteamos como nulo es dejar huerfano a ese producto.
 > RECUERDA DEBEMOS EVITAR TENER REGISTROS HUERFANOS EN NUESTRA TABLA.POR QUE PUEDE GENERAR BASURA
 > PARA HACER ESTO TENEMOS LA PROPIEDAD O ANOTACION 'orphanRemoval = true'
-> APLICANDO EN OrderEntity:
+> No exactamente. Cuando usas `order.getProducts().removeFirst()` no estás poniendo en null la columna `id_order`, sino que estás **eliminando completamente** el registro de la base de datos debido al `orphanRemoval = true` que tienes configurado en tu relación.
+
+Aquí está lo que realmente sucede:
+
+1. **`order.getProducts()`** - Trae la lista de productos asociados a esa orden
+2. **`.removeFirst()`** - Elimina el primer producto de la lista en memoria
+3. **`orphanRemoval = true`** - Cuando guardas la orden, JPA detecta que el producto ya no está en la lista y lo **elimina físicamente** de la base de datos
+
+```java
+@OneToMany(mappedBy = "order",
+        fetch = FetchType.EAGER,
+        cascade = CascadeType.ALL, orphanRemoval = true) // ← Esta configuración
+private List<ProductEntity> products = new ArrayList<>();
+```
+
+**Lo que pasa paso a paso:**
+- Antes: Producto existe en BD con `id_order = 1`
+- Ejecutas: `order.getProducts().removeFirst()`
+- Después del save: El producto **se elimina completamente** de la tabla `products`
+
+**Si no tuvieras `orphanRemoval = true`:**
+- El producto seguiría existiendo en BD pero con `id_order = null` (huérfano)
+
+Por eso el comentario en tu código dice: *"lo dejamos huerfano, se debe evitar tener registros huerfanos en nuestra BD"* - `orphanRemoval = true` es precisamente la solución para evitar huérfanos eliminándolos automáticamente.
+
+> ## APLICANDO EN OrderEntity:
 
 ```java
     // Relación uno a muchos con ProductEntity ONETOMANY
@@ -3969,7 +3994,70 @@ public void addProduct(ProductEntity product) {
 ```java> 
         order.getProducts().removeFirst();
         this.orderRepository.save(order);
+
 ```
+### Te adelanto que paso si aplicas el removeFirst() recuerda que tienes ProductEntity ?
+**Correcto**, es una **muy buena práctica** evitar `CascadeType.ALL` en la relación `@ManyToOne` (lado hijo/no propietario).
+
+## **¿Por qué no usar `CascadeType.ALL` en `@ManyToOne`?**
+
+### **Problema principal: Eliminación en cascada peligrosa**
+
+```java
+// Con cascade = CascadeType.ALL en @ManyToOne
+@ManyToOne(cascade = CascadeType.ALL)
+@JoinColumn(name = "id_order")
+private OrderEntity order;
+```
+
+**Consecuencias peligrosas:**
+
+```java
+// Si eliminas UN producto...
+productRepository.delete(product);
+
+// Se elimina la ORDEN COMPLETA y TODOS sus productos
+// ¡Perdiste datos que no querías perder!
+```
+
+### **Regla general recomendada:**
+
+- **`@OneToMany` (lado padre):** ✅ Usa `cascade` cuando sea necesario
+- **`@ManyToOne` (lado hijo):** ❌ Evita `cascade`, especialmente `ALL` y `REMOVE`
+
+## **Configuración recomendada:**
+
+```java
+// En OrderEntity (lado padre) - SÍ usar cascade
+@OneToMany(mappedBy = "order", 
+           cascade = CascadeType.ALL, 
+           orphanRemoval = true)
+private List<ProductEntity> products;
+
+// En ProductEntity (lado hijo) - NO usar cascade
+@ManyToOne
+@JoinColumn(name = "id_order")
+private OrderEntity order;
+```
+
+## **¿Cuándo sí usar cascade en `@ManyToOne`?**
+
+Solo en casos muy específicos como `PERSIST`:
+
+```java
+@ManyToOne(cascade = CascadeType.PERSIST)
+@JoinColumn(name = "id_order")
+private OrderEntity order;
+```
+
+Esto permite guardar la orden automáticamente al guardar el producto, pero **sin** eliminar la orden al eliminar el producto.
+
+## **Resumen:**
+- ✅ **Lado padre (`@OneToMany`):** Controla el ciclo de vida de los hijos
+- ❌ **Lado hijo (`@ManyToOne`):** No debe controlar el ciclo de vida del padre
+- Tu comentario `"NO ES BUENO ALL por que borra todo"` es **100% correcto**
+
+---
 
 ### ¿QUE PASA AHORA APLICANDO orphanRemoval = true?
 
@@ -4270,6 +4358,10 @@ private OrderEntity order;
 
 ![image](/images/19.png)
 
+
+---
+## #️ ⃣📚**Clase 36: SOLUCION ORPHANREMOVAL Y CASCADE DELETE`**
+
 ## Regla de Oro
 **Correcto**, es una **muy buena práctica** evitar `CascadeType.ALL` en la relación `@ManyToOne` (lado hijo/no propietario).
 
@@ -4330,6 +4422,49 @@ Esto permite guardar la orden automáticamente al guardar el producto, pero **si
 - ✅ **Lado padre (`@OneToMany`):** Controla el ciclo de vida de los hijos
 - ❌ **Lado hijo (`@ManyToOne`):** No debe controlar el ciclo de vida del padre
 - Tu comentario `"NO ES BUENO ALL por que borra todo"` es **100% correcto**
+
+## ❌ ¿POR QUE BORRA EN DESORDEN Y NO EL PRIMER ELEMENTO POR QUE NO NECESARIAMENTE BORRA EN ORDEN TUS ID?
+
+El problema está en que `removeFirst()` no necesariamente elimina el producto con `id = 1`, sino que elimina el **primer elemento** de la lista tal como está ordenada en memoria.
+
+JPA no garantiza un orden específico cuando carga las entidades a menos que uses `@OrderBy`. En tu caso, la lista puede estar ordenada por cualquier criterio interno (frecuentemente por el ID, pero no siempre).
+
+## Solución: Usar `@OrderBy`
+
+Para que siempre elimine el producto con el ID más bajo, agrega la anotación `@OrderBy` en tu relación:
+
+```java
+@OneToMany(mappedBy = "order",
+        fetch = FetchType.EAGER,
+        cascade = CascadeType.ALL, orphanRemoval = true)
+@OrderBy("id ASC") // ← Ordena por ID ascendente
+private List<ProductEntity> products = new ArrayList<>();
+```
+
+## Alternativas más explícitas:
+
+**Opción 1: Eliminar por ID específico**
+```java
+// En lugar de removeFirst()
+var productToRemove = order.getProducts().stream()
+    .min(Comparator.comparing(ProductEntity::getId))
+    .orElse(null);
+
+if (productToRemove != null) {
+    order.getProducts().remove(productToRemove);
+}
+```
+
+**Opción 2: Ordenar antes de eliminar**
+```java
+// Ordenar la lista antes de eliminar
+order.getProducts().sort(Comparator.comparing(ProductEntity::getId));
+order.getProducts().removeFirst();
+```
+
+La opción más limpia es usar `@OrderBy("id ASC")` en la entidad, así siempre tendrás un orden consistente y `removeFirst()` eliminará efectivamente el producto con el ID más bajo.
+
+---
 
 ## #️ ⃣📚**Clase 37: UUID`**
 

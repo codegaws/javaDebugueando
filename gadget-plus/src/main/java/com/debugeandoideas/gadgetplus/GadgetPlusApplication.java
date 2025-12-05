@@ -105,22 +105,22 @@ public class GadgetPlusApplication implements CommandLineRunner {
         this.orderRepository.save(order);
         */
         // *************CLASE 35 ORPHAN REMOVAL CASCADE DELETE *************
-        var order = this.orderRepository.findById(1L).orElseThrow();
+        var order = this.orderRepository.findById(2L).orElseThrow();
 
         //CREO PRODUCTOS Y LO SETEAMOS
-/*
-        var product1 = ProductEntity.builder().quantity(BigInteger.ONE).build();
+
+/*        var product1 = ProductEntity.builder().quantity(BigInteger.ONE).build();
         var product2 = ProductEntity.builder().quantity(BigInteger.TWO).build();
         var product3 = ProductEntity.builder().quantity(BigInteger.TEN).build();
 
-        var products = List.of(product1, product2, product3);
+        //var products = List.of(product1, product2, product3);
         //order.setProducts(products);
-        //products.forEach(product -> product.setOrder(order));
+        //products.forEach(product -> product.setOrder(order));// hace la relacion inversa a nuestra lista de productos
         order.addProduct(product1);
         order.addProduct(product2);
-        order.addProduct(product3);
-*/
-        order.getProducts().removeFirst();// removemos el primer elemento de la lista de productos, lo dejamos huerfano , de debe evitar tener registros huerfanos en nuestra BD
+        order.addProduct(product3);*/
+
+        order.getProducts().removeFirst();// traigo la tabla productos y removemos el primer elemento de la lista de productos, lo dejamos huerfano , de debe evitar tener registros huerfanos en nuestra BD
         this.orderRepository.save(order);
 
 

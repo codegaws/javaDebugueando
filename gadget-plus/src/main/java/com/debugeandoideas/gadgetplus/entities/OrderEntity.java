@@ -39,6 +39,7 @@ public class OrderEntity {
     @OneToMany(mappedBy = "order",
             fetch = FetchType.EAGER,
             cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("id ASC") // ← Ordena por ID ascendente
     private List<ProductEntity> products = new ArrayList<>();
 
     public void addProduct(ProductEntity product) {
