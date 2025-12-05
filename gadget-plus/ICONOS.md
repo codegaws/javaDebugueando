@@ -78,3 +78,63 @@ ALTER SEQUENCE products_id_seq RESTART WITH 1;
 
 
 ```
+
+**Correcto**, es una **muy buena práctica** evitar `CascadeType.ALL` en la relación `@ManyToOne` (lado hijo/no propietario).
+
+## **¿Por qué no usar `CascadeType.ALL` en `@ManyToOne`?**
+
+### **Problema principal: Eliminación en cascada peligrosa**
+
+```java
+// Con cascade = CascadeType.ALL en @ManyToOne
+@ManyToOne(cascade = CascadeType.ALL)
+@JoinColumn(name = "id_order")
+private OrderEntity order;
+```
+
+**Consecuencias peligrosas:**
+
+```java
+// Si eliminas UN producto...
+productRepository.delete(product);
+
+// Se elimina la ORDEN COMPLETA y TODOS sus productos
+// ¡Perdiste datos que no querías perder!
+```
+
+### **Regla general recomendada:**
+
+- **`@OneToMany` (lado padre):** ✅ Usa `cascade` cuando sea necesario
+- **`@ManyToOne` (lado hijo):** ❌ Evita `cascade`, especialmente `ALL` y `REMOVE`
+
+## **Configuración recomendada:**
+
+```java
+// En OrderEntity (lado padre) - SÍ usar cascade
+@OneToMany(mappedBy = "order", 
+           cascade = CascadeType.ALL, 
+           orphanRemoval = true)
+private List<ProductEntity> products;
+
+// En ProductEntity (lado hijo) - NO usar cascade
+@ManyToOne
+@JoinColumn(name = "id_order")
+private OrderEntity order;
+```
+
+## **¿Cuándo sí usar cascade en `@ManyToOne`?**
+
+Solo en casos muy específicos como `PERSIST`:
+
+```java
+@ManyToOne(cascade = CascadeType.PERSIST)
+@JoinColumn(name = "id_order")
+private OrderEntity order;
+```
+
+Esto permite guardar la orden automáticamente al guardar el producto, pero **sin** eliminar la orden al eliminar el producto.
+
+## **Resumen:**
+- ✅ **Lado padre (`@OneToMany`):** Controla el ciclo de vida de los hijos
+- ❌ **Lado hijo (`@ManyToOne`):** No debe controlar el ciclo de vida del padre
+- Tu comentario `"NO ES BUENO ALL por que borra todo"` es **100% correcto**
