@@ -4548,6 +4548,9 @@ La opción más limpia es usar `@OrderBy("id ASC")` en la entidad, así siempre 
 > En esta leccion vamos a mapear el productCatalog
 > Se crea una entidad ProductCatalogEntity
 
+
+> Validamos la estructura de la entidad product_catalog.
+
  ```sql
  /*VAMOS A VER EL SQUEMA*/
 SELECT column_name,
@@ -4630,7 +4633,7 @@ docker compose up
 ```
 
 > ### Creamos la instancia en ProdudtEntity
->
+
 
 ```java
 

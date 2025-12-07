@@ -33,6 +33,8 @@ public class ProductCatalogEntity {
     private Boolean isDiscount;
     private Short rating;
 
+    //
+
     @ManyToMany(fetch = FetchType.EAGER,
             cascade = {CascadeType.DETACH,
                     //CascadeType.MERGE, puede salir un error se estan creando 2 entidades iguales y hacen referencia a la misma tabla
