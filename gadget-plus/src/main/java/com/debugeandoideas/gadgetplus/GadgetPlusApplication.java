@@ -127,10 +127,11 @@ public class GadgetPlusApplication implements CommandLineRunner {
         // *************CLASE 38 PROBANDO RELACIONES OneToMany *************
 
          //SELECT * FROM PRODUCTS_CATALOG ME ITERA Y LO IMPRIME
-        this.productCatalogRepository.findAll().forEach(product -> System.out.println(product));
+        //this.productCatalogRepository.findAll().forEach(product -> System.out.println(product));
 
         // *************CLASE 39 PROBANDO RELACIONES PRODUCTOS - ORDENES - CATALOGOS *************
-        /*var productCatalog1 = this.productCatalogRepository.findAll().get(0);
+        //SELECT * FROM PRODUCTS_CATALOG
+        var productCatalog1 = this.productCatalogRepository.findAll().get(0);
         var productCatalog2 = this.productCatalogRepository.findAll().get(4);
         var productCatalog3 = this.productCatalogRepository.findAll().get(7);
 
@@ -140,7 +141,6 @@ public class GadgetPlusApplication implements CommandLineRunner {
         var product2 = ProductEntity.builder().quantity(BigInteger.TWO).build();
         var product3 = ProductEntity.builder().quantity(BigInteger.TEN).build();
 
-        var products = List.of(product1, product2, product3);
         product1.setCatalog(productCatalog1);
         product2.setCatalog(productCatalog2);
         product3.setCatalog(productCatalog3);
@@ -148,7 +148,8 @@ public class GadgetPlusApplication implements CommandLineRunner {
         order.addProduct(product1);
         order.addProduct(product2);
         order.addProduct(product3);
-        this.orderRepository.save(order);*/
+
+        this.orderRepository.save(order);
 
         //***************************CLASE 44 probando @ManyToMany**************
 
