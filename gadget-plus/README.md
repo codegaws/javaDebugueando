@@ -2636,6 +2636,83 @@ flexibilidad en el manejo de los productos asociados a la orden.
 
 ## #️ ⃣📚**Clase 33: PROBANDO RELACIONES ONETOMANY**
 
+# ¿QUIEN ES PADRE - HIJO - QUIEN ES PROPIETARIO Y QUIEN NO?
+¡**NO, NO ESTÁ MAL**! 🎯 El texto está **CORRECTO**.
+
+Hay una confusión en los términos.  Déjame aclararte:
+
+---
+
+## 🔍 **Diferencia entre "PADRE" y "PROPIETARIO":**
+
+### **🏠 PADRE/HIJO (Relación conceptual):**
+- **PADRE** = Entidad independiente (puede existir sin la otra)
+- **HIJO** = Entidad dependiente (necesita al padre para existir)
+
+### **👑 PROPIETARIO/INVERSO (Relación técnica JPA):**
+- **PROPIETARIO** = Quien controla la FK (tiene `@JoinColumn`)
+- **INVERSO** = Quien no controla la FK (tiene `mappedBy`)
+
+---
+
+## 📊 **En tu caso orders ↔ products:**
+
+```java
+// ProductEntity
+@ManyToOne
+@JoinColumn(name = "id_order")     // ← PROPIETARIO (controla FK)
+private OrderEntity order;
+
+// OrderEntity  
+@OneToMany(mappedBy = "order")     // ← INVERSO (no controla FK)
+private List<ProductEntity> products;
+```
+
+**Análisis:**
+- 🏠 **PADRE:** `orders` (independiente)
+- 👶 **HIJO:** `products` (depende de orders)
+- 👑 **PROPIETARIO:** `ProductEntity` (tiene `@JoinColumn`)
+- 🔄 **INVERSO:** `OrderEntity` (tiene `mappedBy`)
+
+---
+
+## 💡 **¿Por qué el HIJO es PROPIETARIO?**
+
+**Porque el hijo es quien "posee" la FK física en la DB:**
+```sql
+CREATE TABLE products (
+    id BIGSERIAL PRIMARY KEY,
+    id_order BIGINT,              -- ← FK está aquí (hijo la "posee")
+    FOREIGN KEY (id_order) REFERENCES orders(id)
+);
+```
+
+---
+
+## ✅ **Tu confusión era natural porque:**
+
+- **Conceptualmente:** `orders` es el PADRE
+- **Técnicamente en JPA:** `ProductEntity` es el PROPIETARIO
+
+**Ambos términos son correctos, pero se refieren a cosas diferentes:**
+
+| Concepto | orders | products |
+|:---------|:-------|:---------|
+| **Relación conceptual** | PADRE 🏠 | HIJO 👶 |
+| **Control JPA** | INVERSO 🔄 | PROPIETARIO 👑 |
+
+---
+
+## 🎯 **El texto está correcto porque:**
+
+> *"El propietario es el que **contiene la FK** y **no** tiene `mappedBy`"*
+
+✅ `ProductEntity` contiene la FK (`id_order`)
+✅ `ProductEntity` no tiene `mappedBy`  
+✅ `OrderEntity` tiene `mappedBy` → es el lado inverso
+
+**Tu texto es técnicamente perfecto. ** 👍 Solo hay que entender que **PADRE ≠ PROPIETARIO** necesariamente.
+
 # ¿PORQUE BUILDER?
 
 ```java
