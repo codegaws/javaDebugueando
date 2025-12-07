@@ -33,7 +33,6 @@ public class ProductCatalogEntity {
     private Boolean isDiscount;
     private Short rating;
 
-    //
 
     @ManyToMany(fetch = FetchType.EAGER,
             cascade = {CascadeType.DETACH,
