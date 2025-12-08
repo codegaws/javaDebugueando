@@ -6329,6 +6329,308 @@ private ParentEntity parent;
 
 **Es OBLIGATORIO en el lado `mappedBy` de relaciones bidireccionales.  ** ✨🤓
 
+## ¿COMO SABER QUIEN ES PADRE SI AMBOS TIENEN LA MISMA JERARQUIA AQUI LA RESPUESTA?
+¡**EXCELENTE PREGUNTA**! 🎯 **Tienes razón - en M:N es diferente.**
+
+---
+
+## 🔍 **Diferencia clave:  1: N vs M:N**
+
+### **En relaciones 1:N (jerarquía padre/hijo clara):**
+```java
+// PADRE (obligatorio usar mappedBy)
+@OneToMany(mappedBy = "order")           // ← mappedBy OBLIGATORIO aquí
+@ToString.Exclude
+private List<ProductEntity> products;
+
+// HIJO (obligatorio usar @JoinColumn)  
+@ManyToOne
+@JoinColumn(name = "id_order")           // ← @JoinColumn OBLIGATORIO aquí
+private OrderEntity order;
+```
+**No hay opción - la jerarquía está definida por la FK**
+
+### **En relaciones M: N (sin jerarquía clara):**
+```java
+// Opción A: 
+@ManyToMany
+@JoinTable(...)                          // ← PROPIETARIO (arbitrario)
+private List<CategoryEntity> categories;
+
+@ManyToMany(mappedBy = "categories")     // ← INVERSO (arbitrario) 
+private List<ProductCatalogEntity> products;
+
+// Opción B (intercambiado):
+@ManyToMany(mappedBy = "products")       // ← INVERSO (arbitrario)
+private List<ProductCatalogEntity> products;
+
+@ManyToMany
+@JoinTable(...)                          // ← PROPIETARIO (arbitrario)
+private List<CategoryEntity> categories;
+```
+
+---
+
+## ✅ **En M:N puedes elegir quién es propietario:**
+
+### **Criterios para decidir en M:N:**
+
+#### **1. Lógica de negocio:**
+```java
+// Si piensas:  "Un producto TIENE categorías"
+// ProductCatalogEntity es propietario: 
+@ManyToMany
+@JoinTable(name = "product_join_category",
+    joinColumns = @JoinColumn(name = "id_product"),
+    inverseJoinColumns = @JoinColumn(name = "id_category"))
+private List<CategoryEntity> categories;
+```
+
+#### **2. Cuál se usa más para modificar la relación:**
+```java
+// Si más frecuentemente haces: product.getCategories().add(category)
+// Entonces ProductCatalogEntity debería ser propietario
+```
+
+#### **3. Convención de nombres:**
+```java
+// Tu tabla se llama "product_join_category"
+// Sugiere que product es el "dueño" de la relación
+```
+
+---
+
+## 🎯 **Regla actualizada para @ToString.Exclude:**
+
+### **1: N (padre/hijo definido):**
+> **"mappedBy = PADRE → @ToString.Exclude"**
+
+### **M:N (sin padre/hijo):**
+> **"mappedBy = LADO INVERSO → @ToString. Exclude"**
+> **"El lado inverso se elige arbitrariamente"**
+
+---
+
+## 📊 **Tu caso específico:**
+
+### **Decisión en tu código:**
+```java
+// ProductCatalogEntity (PROPIETARIO elegido)
+@ManyToMany
+@JoinTable(name = "product_join_category",
+    joinColumns = @JoinColumn(name = "id_product"),
+    inverseJoinColumns = @JoinColumn(name = "id_category"))
+private List<CategoryEntity> categories;
+
+// CategoryEntity (INVERSO elegido)
+@ManyToMany(mappedBy = "categories")     // ← mappedBy = INVERSO
+@ToString.Exclude                        // ← Excluir el INVERSO
+private List<ProductCatalogEntity> products;
+```
+
+---
+
+## 💡 **¿Por qué elegiste ProductCatalogEntity como propietario?**
+
+### **Razones probables:**
+1. **Nombre de tabla:** `product_join_category` sugiere que product es el principal
+2. **Lógica:** "Un producto pertenece a categorías" es más natural que "Una categoría tiene productos"
+3. **Uso:** Probablemente asignas categorías a productos más que productos a categorías
+
+---
+
+## ✅ **Regla de oro actualizada:**
+
+### **Para cualquier relación bidireccional:**
+> **"El lado con mappedBy usa @ToString.Exclude"**
+
+**Sin importar si es:**
+- 1:N → mappedBy está en el padre
+- M:N → mappedBy está en el lado inverso (arbitrario)
+
+**En ambos casos, el lado `mappedBy` necesita `@ToString.Exclude`.  ** 🎯✨
+
+¡**MAS EXPLICACION**! 🎯 **PARA ENTENDERLO MEJOR ENTONCES .**
+
+---
+
+## ✅ **RESPONDIENDO AMBAS PUEDEN TENER MAPPEDBY PUES SI:**
+
+### **En M:N (sin jerarquía padre/hijo):**
+- ✅ **Ambas entidades son iguales jerárquicamente**
+- ✅ **Cualquiera puede tener `mappedBy`** (es arbitrario)
+- ✅ **La que tenga `mappedBy` → usa `@ToString.Exclude`**
+
+---
+
+## 📊 **Tu ejemplo - Opción A (actual):**
+```java
+// ProductCatalogEntity (PROPIETARIO elegido)
+@ManyToMany
+@JoinTable(...)
+private List<CategoryEntity> categories;
+
+// CategoryEntity (INVERSO elegido)  
+@ManyToMany(mappedBy = "categories")     // ← Tiene mappedBy
+@ToString.Exclude                        // ← Usa @ToString.Exclude
+private List<ProductCatalogEntity> products;
+```
+
+## 📊 **Tu ejemplo - Opción B (alternativa válida):**
+```java
+// ProductCatalogEntity (INVERSO elegido)
+@ManyToMany(mappedBy = "categories")     // ← Tiene mappedBy  
+@ToString.Exclude                        // ← Usa @ToString. Exclude
+private List<CategoryEntity> categories;
+
+// CategoryEntity (PROPIETARIO elegido)
+@ManyToMany
+@JoinTable(...)
+private List<ProductCatalogEntity> products;
+```
+
+**¡Ambas opciones son técnicamente válidas! ** ✅
+
+---
+
+## 🎯 **Regla simplificada:**
+
+> **"El que tiene `mappedBy` usa `@ToString.Exclude`"**
+
+### **Sin importar:**
+- ❌ Si es padre o hijo (en M:N no hay padre/hijo)
+- ❌ Cuál entidad es "más importante"
+- ❌ El nombre de la tabla intermedia
+
+### **Solo importa:**
+- ✅ **¿Quién tiene `mappedBy`?** → Esa usa `@ToString.Exclude`
+
+---
+
+## 💡 **¿Por qué elegiste la Opción A?**
+
+### **Posibles razones (todas válidas):**
+- 📝 **Nombre de tabla:** `product_join_category` sugiere product primero
+- 🔧 **Lógica de uso:** Más común asignar categorías a productos
+- 🎯 **Convención:** Muchos desarrolladores ponen el propietario en la entidad "principal"
+
+**Pero podrías haber elegido la Opción B y estaría igual de bien.  **
+
+---
+
+## ✅ **Tu entendimiento final es perfecto:**
+
+> **"En M:N, cualquiera puede tener `mappedBy`, y el que lo tenga debe usar `@ToString.Exclude`"**
+
+## **SI CONSULTAS ESTE SCRIPT SALDRAN DOS REGISTROS HOME / OFFICE DE UN SOLO PRODUCTO PERO PORQUE?** 🎯✨🤓
+
+¡Excelente consulta! 🎯 **SÍ, está PERFECTAMENTE BIEN** que te arroje dos registros.
+
+---
+
+## 📊 **¿Por qué aparecen 2 registros "iguales"?**
+
+### **Explicación:**
+Cuando haces un `JOIN` en una relación **M:N**, por cada combinación de `producto + categoría` obtienes **UN registro**.
+
+### **Tu consulta:**
+```sql
+SELECT *
+FROM products_catalog p
+    JOIN product_join_category pc ON pc.id_product = p. id
+    JOIN categories c ON pc.id_category = c.id
+WHERE p.id = 'b927287f-d410-4134-a5cd-c2968b346c70';
+```
+
+---
+
+## 🔍 **Ejemplo de resultado esperado:**
+
+### **Si el producto pertenece a 2 categorías:**
+```
+| id (producto)          | product_name    | brand | id_category | description |
+|------------------------|-----------------|-------|-------------|-------------|
+| b927287f-d410-4134-...  | Macbook air     | Apple | 1           | for home    |
+| b927287f-d410-4134-... | Macbook air     | Apple | 2           | for office  |
+```
+
+**¿Por qué 2 registros?**
+- ✅ Es el **MISMO producto** (Macbook air)
+- ✅ Pero en **2 categorías diferentes** (HOME + OFFICE)
+- ✅ El JOIN crea una fila por cada relación en `product_join_category`
+
+---
+
+## 📋 **Estructura de tus datos:**
+
+### **product_join_category (tabla intermedia):**
+```sql
+-- Probablemente tienes algo así:
+| id_product             | id_category |
+|------------------------|-------------|
+| b927287f-d410-4134-... | 1          | ← HOME
+| b927287f-d410-4134-... | 2          | ← OFFICE
+```
+
+### **Por eso el JOIN produce 2 filas:**
+- **Fila 1:** Producto + Categoría HOME
+- **Fila 2:** **MISMO** Producto + Categoría OFFICE
+
+---
+
+## ✅ **Esto es el comportamiento CORRECTO de M:N:**
+
+### **Un producto puede estar en múltiples categorías:**
+- 🏠 **Macbook** → Categoría HOME (para uso personal)
+- 🏢 **Macbook** → Categoría OFFICE (para uso laboral)
+
+### **Una categoría puede tener múltiples productos:**
+- 🏠 **HOME** → Macbook, TV, Xbox, etc.
+- 🏢 **OFFICE** → Macbook, Monitor, PC escritorio, etc.
+
+---
+
+## 🎯 **¿Cómo verificar que está bien?**
+
+### **1. Consulta la tabla intermedia:**
+```sql
+SELECT *
+FROM product_join_category
+WHERE id_product = 'b927287f-d410-4134-a5cd-c2968b346c70';
+```
+
+### **2. Si quieres evitar filas duplicadas:**
+```sql
+-- Ver el producto una sola vez con categorías como string
+SELECT 
+    p.id,
+    p.product_name,
+    p.brand_name,
+    STRING_AGG(c.description, ', ') AS categories
+FROM products_catalog p
+    JOIN product_join_category pc ON pc.id_product = p. id
+    JOIN categories c ON pc.id_category = c.id
+WHERE p.id = 'b927287f-d410-4134-a5cd-c2968b346c70'
+GROUP BY p.id, p.product_name, p.brand_name;
+```
+
+**Resultado:**
+```
+| id         | product_name | brand | categories       |
+|------------|------------- |-------|------------------|
+| b927287f..  | Macbook air  | Apple | for home, office |
+```
+
+---
+
+## 💡 **Resumen:**
+
+**Tener 2 registros iguales con diferentes categorías es:**
+- ✅ **Normal** en consultas M:N con JOIN
+- ✅ **Correcto** según el diseño de tu base de datos
+- ✅ **Esperado** cuando un producto pertenece a múltiples categorías
+
+**DETALLE DE UN QUERY NUEVO* 🎯✨
 ---
 
 ## #️ ⃣📚**Clase 45 : invaliddataAccesApiUsageException Solucion 💡**
