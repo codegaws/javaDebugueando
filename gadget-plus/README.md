@@ -5482,6 +5482,8 @@ products_catalog.id_category ← Esto sería @OneToMany
 > ### CREAMOS LA ENTIDAD CATEGORYENTITY
 > A DIFERENCIA DE ONETOONE Y MANYTOONE NECESITAMOS UNA COLUMNA DE INTERSECCION EN EL CASO DE MANYTOMANY
 > NECESITAMOS UNA TABL COMPLETA DE INTERSECCION O TABLA PUENTE. JOINTABLE
+> CONSIDERAR QUE SE NECESITAN RELACIONAR LAS TABLAS DIRECTAMENTE OSEA ENTIDAD CategoryEntity EN PRODUCTCATALOGENTITY 
+> Y LA ENTIDAD PRODUCTCATALOGENTITY EN CATEGORYENTITY
 
 ```java
 
@@ -5760,6 +5762,7 @@ SELECT *
 FROM products_catalog p
          join product_join_category pc on pc.id_product = p.id
          join categories c on pc.id_category = c.id
+         
 ```
 
 ## DESCRICION DE LA TABLA CATEGORIES
@@ -5857,9 +5860,10 @@ Esta consulta es útil para:
 
 ¡Es la forma manual de ver lo que JPA hace automáticamente con la relación @ManyToMany! 🎉
 
-## #️ ⃣📚**Clase 43 :repositorio para catalogos 💡**
+## #️ ⃣📚**Clase 43 :Repositorio para catalogos 💡**
 
-- En ProductCatalogEntity ya tenemos la relacion manytomany con categories
+- Creamos un Repositorio llamado CategoryRepository.
+- En ProductCatalogEntity ya tenemos la relacion manytomany con categories.
 
 ```java
 public class ProductCatalogEntity {
@@ -6165,6 +6169,167 @@ WHERE p.id = '7f27ae67-8545-448d-a871-a9c9c207f066';
 ```
 
 ![image](/images/30.png)
+
+## 💥¿POR QUE USAR EN UNA RELACION BIDIRECCIONAL EL @TOSTRING.EXCLUDE?💥RECURSIÓN INFINITA en toString()
+¡Excelente pregunta! 🎯 Te explico por qué necesitas `@ToString.Exclude` en relaciones bidireccionales:
+
+---
+
+## 🚨 **El problema: RECURSIÓN INFINITA en toString()**
+
+### **Sin @ToString.Exclude:**
+```java
+// CategoryEntity
+@ManyToMany(mappedBy = "categories")
+private List<ProductCatalogEntity> productCatalog;  // ← SIN @ToString.Exclude
+
+// ProductCatalogEntity  
+@ManyToMany
+@JoinTable(...)
+private List<CategoryEntity> categories;            // ← SIN @ToString. Exclude
+```
+
+---
+
+## 💥 **¿Qué pasa cuando haces toString()?**
+
+### **Ejemplo:**
+```java
+CategoryEntity category = new CategoryEntity();
+category.setDescription("Electronics");
+
+ProductCatalogEntity product = new ProductCatalogEntity();
+product.setProductName("iPhone");
+
+// Se relacionan bidireccional
+category.getProductCatalog().add(product);
+product.getCategories(). add(category);
+
+// ¡PROBLEMA al imprimir!
+System.out. println(category.toString());
+```
+
+### **Resultado SIN @ToString.Exclude:**
+```
+CategoryEntity(
+  id=1, 
+  description=Electronics,
+  productCatalog=[
+    ProductCatalogEntity(
+      id=1, 
+      productName=iPhone,
+      categories=[
+        CategoryEntity(
+          id=1, 
+          description=Electronics,
+          productCatalog=[
+            ProductCatalogEntity(
+              id=1,
+              productName=iPhone,
+              categories=[
+                CategoryEntity(...  ← ¡INFINITO! 
+```
+
+**¡Se cuelga la aplicación! ** 💀
+
+---
+
+## ✅ **Solución con @ToString.Exclude:**
+
+### **Código corregido:**
+```java
+// CategoryEntity
+@ManyToMany(mappedBy = "categories")
+@ToString.Exclude                               // ← ROMPE el ciclo
+@JsonIgnore
+private List<ProductCatalogEntity> productCatalog;
+
+// ProductCatalogEntity (opcional excluir aquí también)
+@ManyToMany
+@JoinTable(...)
+// @ToString.Exclude                           // ← Opcional
+private List<CategoryEntity> categories;
+```
+
+### **Resultado CON @ToString.Exclude:**
+```
+CategoryEntity(
+  id=1, 
+  description=Electronics
+  // productCatalog NO aparece ← Se excluye del toString
+)
+```
+
+---
+
+## 🔄 **¿Por qué pasa la recursión?**
+
+### **Relación bidireccional:**
+```
+CategoryEntity ←→ ProductCatalogEntity
+      ↑                    ↓
+      └─── toString() ─────┘
+           llama a toString()
+           del otro lado ∞
+```
+
+### **Lombok genera toString() automáticamente:**
+```java
+// Lombok genera esto automáticamente:
+public String toString() {
+    return "CategoryEntity(" +
+           "id=" + id +
+           ", description=" + description +
+           ", productCatalog=" + productCatalog. toString() + // ← Llama toString() de productCatalog
+           ")";
+}
+```
+
+---
+
+## 📋 **¿Dónde usar @ToString.Exclude?**
+
+### **Regla general:**
+> **"Excluir en el lado INVERSO (mappedBy) de relaciones bidireccionales"**
+
+| Relación | Entidad | ¿Excluir? | Razón |
+|:---------|:--------|:----------|:------|
+| `orders ↔ products` | OrderEntity | ✅ Sí | Es lado inverso (mappedBy) |
+| `orders ↔ products` | ProductEntity | ❌ No | Es lado propietario |
+| `categories ↔ products_catalog` | CategoryEntity | ✅ Sí | Es lado inverso (mappedBy) |
+| `categories ↔ products_catalog` | ProductCatalogEntity | ❌ No | Es lado propietario |
+
+---
+
+## 💡 **Patrón general en relaciones bidireccionales:**
+
+```java
+// PADRE (lado inverso) - SIEMPRE excluir
+@OneToMany(mappedBy = "parent")
+@ToString.Exclude                    // ← OBLIGATORIO
+@JsonIgnore                          // ← OBLIGATORIO  
+private List<ChildEntity> children;
+
+// HIJO (lado propietario) - OPCIONAL excluir
+@ManyToOne
+@JoinColumn(name = "parent_id")
+// @ToString.Exclude                 // ← OPCIONAL
+private ParentEntity parent;
+```
+
+---
+
+## 🎯 **Resumen:**
+
+**@ToString.Exclude previene:**
+- ✅ StackOverflowError en toString()
+- ✅ Recursión infinita en logs
+- ✅ Problemas de debugging
+- ✅ Serialización problemática
+
+**Es OBLIGATORIO en el lado `mappedBy` de relaciones bidireccionales.  ** ✨🤓
+
+---
 
 ## #️ ⃣📚**Clase 45 : invaliddataAccesApiUsageException Solucion 💡**
 

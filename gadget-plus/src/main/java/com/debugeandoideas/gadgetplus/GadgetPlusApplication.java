@@ -131,7 +131,7 @@ public class GadgetPlusApplication implements CommandLineRunner {
 
         // *************CLASE 39 PROBANDO RELACIONES PRODUCTOS - ORDENES - CATALOGOS *************
         //SELECT * FROM PRODUCTS_CATALOG
-        var productCatalog1 = this.productCatalogRepository.findAll().get(0);
+       /* var productCatalog1 = this.productCatalogRepository.findAll().get(0);
         var productCatalog2 = this.productCatalogRepository.findAll().get(4);
         var productCatalog3 = this.productCatalogRepository.findAll().get(7);
 
@@ -149,11 +149,14 @@ public class GadgetPlusApplication implements CommandLineRunner {
         order.addProduct(product2);
         order.addProduct(product3);
 
-        this.orderRepository.save(order);
+        this.orderRepository.save(order);*/
+
+        //***************************CLASE 43 Repositorio para catalogos *******
+
 
         //***************************CLASE 44 probando @ManyToMany**************
 
-        /*final var HOME = this.categoryRepository.findById(1L).orElseThrow();//traemos el home
+        final var HOME = this.categoryRepository.findById(1L).orElseThrow();//traemos el home
         final var OFFICE = this.categoryRepository.findById(2L).orElseThrow();//traemos el office
 
         //traemos todos los productos catalogos
@@ -168,7 +171,7 @@ public class GadgetPlusApplication implements CommandLineRunner {
                 product.addCategory(OFFICE);
             }
             this.productCatalogRepository.save(product);
-        });*/
+        });
 
         //***************************CLASE 46-47 Insertando Registros Aleatorios**************
 
