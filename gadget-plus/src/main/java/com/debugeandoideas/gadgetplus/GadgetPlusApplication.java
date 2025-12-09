@@ -156,7 +156,7 @@ public class GadgetPlusApplication implements CommandLineRunner {
 
         //***************************CLASE 44 probando @ManyToMany**************
 
-        final var HOME = this.categoryRepository.findById(1L).orElseThrow();//traemos el home
+     /*   final var HOME = this.categoryRepository.findById(1L).orElseThrow();//traemos el home
         final var OFFICE = this.categoryRepository.findById(2L).orElseThrow();//traemos el office
 
         //traemos todos los productos catalogos
@@ -171,11 +171,12 @@ public class GadgetPlusApplication implements CommandLineRunner {
                 product.addCategory(OFFICE);
             }
             this.productCatalogRepository.save(product);
-        });
+        });*/
 
         //***************************CLASE 46-47 Insertando Registros Aleatorios**************
 
-       /* var random = new Random();
+       /* //1. CREAMOS UN OBJETO RANDOM
+        var random = new Random();
 
         var productsCatalog = new LinkedList<>(this.productCatalogRepository.findAll());//aqui puedo inicializar en el constructor.
 
@@ -185,7 +186,7 @@ public class GadgetPlusApplication implements CommandLineRunner {
             var idOrderRandom = random.nextLong(16) + 1;
             var orderRandom = this.orderRepository.findById(idOrderRandom).orElseThrow();
 
-            //CREAMOS PRODUCTOS CON DATOS ALEATORIOS
+            //CREAMOS PRODUCTOS CON DATOS ALEATORIOS - SETEAMOS
             var product = ProductEntity.builder()
                     .quantity(BigInteger.valueOf(random.nextLong(5) + 1))
                     .catalog(productsCatalog.poll())
@@ -199,7 +200,7 @@ public class GadgetPlusApplication implements CommandLineRunner {
 
         //***************************CLASE 49 MAPEANDO LLAVE PRIMARIA COMPUESTA **************
 
-        //this.rejectProductRepository.findAll().forEach(System.out::println);
+        this.rejectProductRepository.findAll().forEach(System.out::println);
 
     }
 }
