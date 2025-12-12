@@ -126,7 +126,7 @@ public class GadgetPlusApplication implements CommandLineRunner {
 
         // *************CLASE 38 PROBANDO RELACIONES OneToMany *************
 
-         //SELECT * FROM PRODUCTS_CATALOG ME ITERA Y LO IMPRIME
+        //SELECT * FROM PRODUCTS_CATALOG ME ITERA Y LO IMPRIME
         //this.productCatalogRepository.findAll().forEach(product -> System.out.println(product));
 
         // *************CLASE 39 PROBANDO RELACIONES PRODUCTOS - ORDENES - CATALOGOS *************
@@ -155,7 +155,7 @@ public class GadgetPlusApplication implements CommandLineRunner {
 
 
         //***************************CLASE 44 probando @ManyToMany**************
-
+/*
         final var HOME = this.categoryRepository.findById(1L).orElseThrow();//traemos el home
         final var OFFICE = this.categoryRepository.findById(2L).orElseThrow();//traemos el office
 
@@ -172,10 +172,10 @@ public class GadgetPlusApplication implements CommandLineRunner {
             }
             this.productCatalogRepository.save(product);
         });
-
+*/
         //***************************CLASE 46-47 Insertando Registros Aleatorios**************
-
-       /* //1. CREAMOS UN OBJETO RANDOM
+/*
+        //1. CREAMOS UN OBJETO RANDOM
         var random = new Random();
 
         var productsCatalog = new LinkedList<>(this.productCatalogRepository.findAll());//aqui puedo inicializar en el constructor.

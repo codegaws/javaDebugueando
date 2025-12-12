@@ -17,8 +17,8 @@ import java.util.UUID;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
-@Transactional(readOnly = true)
+@RequiredArgsConstructor//-> se realaciona con todas las final se hace inyeccion de dependencias
+@Transactional(readOnly = true)// accedemos a la BD solo de lectura
 public class ProductCatalogServiceImpl implements ProductCatalogService {
 
     private final ProductCatalogRepository catalogRepository;

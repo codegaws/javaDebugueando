@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
 import java.util.UUID;
 
 @RestController
@@ -24,7 +25,8 @@ public class ProductCatalogController {
     private final ProductCatalogService productCatalogService;
 
     @GetMapping(path = "{id}")// este id se debe llamar
-    public ResponseEntity<ProductCatalogEntity> getById(@PathVariable String id) {// aqui recibes un UUID en forma de string
+    public ResponseEntity<ProductCatalogEntity> getById(@PathVariable String id) {// aqui recibes un UUID en forma de string y debe llamarse igual "id"
         return ResponseEntity.ok(this.productCatalogService.findById(UUID.fromString(id)));
     }
+
 }

@@ -6111,41 +6111,23 @@ En @ManyToMany, JPA **automáticamente**:
 
 ```java
 //***************************CLASE 44 probando @ManyToMany**************
-
 final var HOME = this.categoryRepository.findById(1L).orElseThrow();//traemos el home
-final var OFFICE = this.categoryRepository.findById(2L).orElseThrow();//traemos el home
+final var OFFICE = this.categoryRepository.findById(2L).orElseThrow();//traemos el office
 
 //traemos todos los productos catalogos
-        this.productCatalogRepository.
-
-findAll().
-
-forEach(product ->{
+        this.productCatalogRepository.findAll().forEach(product -> {
         //si contiene alguna palabra "home" le asignamos la categoria HOME
-        if(product.
-
-getDescription().
-
-contains("home")){
+        if (product.getDescription().contains("home")) {
         //añadimos la categoria home
-        product.
-
-addCategory(HOME);
+        product.addCategory(HOME);
             }
-                    if(product.
-
-getDescription().
-
-contains("office")){
+                    if (product.getDescription().contains("office")) {
         //añadimos la categoria home
-        product.
-
-addCategory(OFFICE);
+        product.addCategory(OFFICE);
             }
-                    this.productCatalogRepository.
-
-save(product);
+                    this.productCatalogRepository.save(product);
         });
+
 ```
 
 ## 💡PROBANDO

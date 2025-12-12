@@ -52,4 +52,6 @@ public class ProductCatalogEntity {
         this.categories.add(category);
     }
 
+    //NO OLVIDES QUE DEBES EVITAR RECURSIVIDAD INFINITA AL SERIALIZAR A JSON EN CategoryEntity ->@JsonIgnore
+    //UN producto puede tener muchas categorias, una categoria puede tener muchos productos
 }
