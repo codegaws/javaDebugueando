@@ -105,11 +105,11 @@ public class GadgetPlusApplication implements CommandLineRunner {
         this.orderRepository.save(order);
         */
         // *************CLASE 35 ORPHAN REMOVAL CASCADE DELETE *************
-        var order = this.orderRepository.findById(2L).orElseThrow();
+        //var order = this.orderRepository.findById(2L).orElseThrow();
 
         //CREO PRODUCTOS Y LO SETEAMOS
 
-/*        var product1 = ProductEntity.builder().quantity(BigInteger.ONE).build();
+       /* var product1 = ProductEntity.builder().quantity(BigInteger.ONE).build();
         var product2 = ProductEntity.builder().quantity(BigInteger.TWO).build();
         var product3 = ProductEntity.builder().quantity(BigInteger.TEN).build();
 
@@ -120,18 +120,18 @@ public class GadgetPlusApplication implements CommandLineRunner {
         order.addProduct(product2);
         order.addProduct(product3);*/
 
-        order.getProducts().removeFirst();// traigo la tabla productos y removemos el primer elemento de la lista de productos, lo dejamos huerfano , de debe evitar tener registros huerfanos en nuestra BD
-        this.orderRepository.save(order);
+        //order.getProducts().removeFirst();// traigo la tabla productos y removemos el primer elemento de la lista de productos, lo dejamos huerfano , de debe evitar tener registros huerfanos en nuestra BD
+        //this.orderRepository.save(order);
 
 
         // *************CLASE 38 PROBANDO RELACIONES OneToMany *************
 
-        // SELECT * FROM PRODUCTS_CATALOG ME ITERA Y LO IMPRIME
+         //SELECT * FROM PRODUCTS_CATALOG ME ITERA Y LO IMPRIME
         //this.productCatalogRepository.findAll().forEach(product -> System.out.println(product));
 
-        // SELECT * FROM PRODUCTS_CATALOG
         // *************CLASE 39 PROBANDO RELACIONES PRODUCTOS - ORDENES - CATALOGOS *************
-        /*var productCatalog1 = this.productCatalogRepository.findAll().get(0);
+        //SELECT * FROM PRODUCTS_CATALOG
+       /* var productCatalog1 = this.productCatalogRepository.findAll().get(0);
         var productCatalog2 = this.productCatalogRepository.findAll().get(4);
         var productCatalog3 = this.productCatalogRepository.findAll().get(7);
 
@@ -141,7 +141,6 @@ public class GadgetPlusApplication implements CommandLineRunner {
         var product2 = ProductEntity.builder().quantity(BigInteger.TWO).build();
         var product3 = ProductEntity.builder().quantity(BigInteger.TEN).build();
 
-        var products = List.of(product1, product2, product3);
         product1.setCatalog(productCatalog1);
         product2.setCatalog(productCatalog2);
         product3.setCatalog(productCatalog3);
@@ -149,11 +148,15 @@ public class GadgetPlusApplication implements CommandLineRunner {
         order.addProduct(product1);
         order.addProduct(product2);
         order.addProduct(product3);
+
         this.orderRepository.save(order);*/
+
+        //***************************CLASE 43 Repositorio para catalogos *******
+
 
         //***************************CLASE 44 probando @ManyToMany**************
 
-        /*final var HOME = this.categoryRepository.findById(1L).orElseThrow();//traemos el home
+        final var HOME = this.categoryRepository.findById(1L).orElseThrow();//traemos el home
         final var OFFICE = this.categoryRepository.findById(2L).orElseThrow();//traemos el office
 
         //traemos todos los productos catalogos
@@ -168,11 +171,12 @@ public class GadgetPlusApplication implements CommandLineRunner {
                 product.addCategory(OFFICE);
             }
             this.productCatalogRepository.save(product);
-        });*/
+        });
 
         //***************************CLASE 46-47 Insertando Registros Aleatorios**************
 
-       /* var random = new Random();
+       /* //1. CREAMOS UN OBJETO RANDOM
+        var random = new Random();
 
         var productsCatalog = new LinkedList<>(this.productCatalogRepository.findAll());//aqui puedo inicializar en el constructor.
 
@@ -182,7 +186,7 @@ public class GadgetPlusApplication implements CommandLineRunner {
             var idOrderRandom = random.nextLong(16) + 1;
             var orderRandom = this.orderRepository.findById(idOrderRandom).orElseThrow();
 
-            //CREAMOS PRODUCTOS CON DATOS ALEATORIOS
+            //CREAMOS PRODUCTOS CON DATOS ALEATORIOS - SETEAMOS
             var product = ProductEntity.builder()
                     .quantity(BigInteger.valueOf(random.nextLong(5) + 1))
                     .catalog(productsCatalog.poll())

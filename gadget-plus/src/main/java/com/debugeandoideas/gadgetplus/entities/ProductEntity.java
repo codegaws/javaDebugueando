@@ -29,6 +29,7 @@ public class ProductEntity {
 
 
     // CREAMOS OTRA INSTANCIA DE PRODUCTCATALOGENTITY PARA HACER LA RELACION UNO A UNO
+    // ESTA MAL DEBERIA SER MANYTOONE Y CASCADE PERSIST
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "id_product_catalog")
     private ProductCatalogEntity catalog;
