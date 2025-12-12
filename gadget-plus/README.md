@@ -1367,7 +1367,7 @@ No, porque el campo `id_bill` en **orders** es **UNIQUE**, lo que impide que var
 
 
 <details>
-    <summary><strong>✅SESSION 3 MAPEO DE ENTIDADES</strong></summary>
+    <summary><strong>🎯SESSION 3 MAPEO DE ENTIDADES</strong></summary>
 
 ## ⚠️ CLASE 17 -> MAPEO DE ENTIDADES
 
@@ -6312,9 +6312,9 @@ RejectProductEntity(productName=Galazy S24 Plus, productBrand=Samsung, quantity=
 
 </details>
 <details>
-<summary><strong>SECCION 4 JPA REPOSITORIOS</strong></summary>
-<details>
-    <summary><strong>SESSION 4</strong></summary>
+<summary><strong>🎯SECCION 4 JPA REPOSITORIOS</strong></summary>
+
+    
 
 ## #️ ⃣📚**Clase 52:DTO CATEGORIAS`**
 
@@ -7560,6 +7560,6 @@ public ResponseEntity<ProductCatalogDTO> getById(@PathVariable String id) {
 
 ## #️ ⃣📚**Clase 56:DTO CATEGORIAS`**
 
-</details>
+
 
 </details>
