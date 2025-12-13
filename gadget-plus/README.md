@@ -8274,5 +8274,28 @@ public interface ProductCatalogRepository extends JpaRepository<ProductCatalogEn
 
 ---
 
+
+
+## #️ ⃣📚**Clase 51:DTO CATEGORIAS`**
+
+```sql
+-- CONSIDERACIONES DE LA SECCION 51
+select *
+from product_join_category pjc
+         join public.categories c on c.id = pjc.id_category
+         join public.products_catalog p on p.id = pjc.id_product;
+
+select o.client_name, pc.product_name, p.quantity
+from products p
+         join orders o on p.id_order = o.id
+         join products_catalog pc on pc.id = p.id_product_catalog;
+
+```
+
+---
+
+
+
+
 </details>
 
