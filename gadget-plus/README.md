@@ -9333,5 +9333,4 @@ public ResponseEntity<ProductCatalogDTO> getById(@PathVariable String id) {
 
 
 
-
 </details>

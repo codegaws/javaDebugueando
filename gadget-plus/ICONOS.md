@@ -79,3 +79,7 @@ ALTER SEQUENCE products_id_seq RESTART WITH 1;
 
 ```
 
+---
+
+![imagen](/images/46.png)
+
