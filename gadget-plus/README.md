@@ -8054,6 +8054,242 @@ RejectProductEntity(productName=Galazy S24 Plus, productBrand=Samsung, quantity=
 <summary><strong>🎯SECCION 4 JPA REPOSITORIOS</strong></summary>
 
 
+## #️ ⃣📚**Clase 50: EXPLICACION DE LOS REPOSITORIOS JPA`**
+
+![image](/images/42.png)
+
+![image](/images/43.png)
+
+## 🎯JPQL le hace QUERY a la Entidad no a la tabla 🎯
+
+![image](/images/44.png)
+
+![image](/images/45.png)
+
+¡**EXCELENTE PREGUNTA**! 🎯 **Puedes elegir entre ambos según el caso de uso. ** Te explico cuándo usar cada uno:
+
+---
+
+## 🔍 **¿Qué son Query Methods y JPQL?**
+
+### **Query Methods (Spring Data):**
+
+```java
+// Spring genera automáticamente la consulta basándose en el nombre del método
+public interface ProductRepository extends JpaRepository<ProductEntity, UUID> {
+    List<ProductEntity> findByBrandName(String brandName);
+    List<ProductEntity> findByPriceBetween(BigDecimal min, BigDecimal max);
+    Optional<ProductEntity> findByProductNameAndBrandName(String product, String brand);
+}
+```
+
+### **JPQL (Java Persistence Query Language):**
+
+```java
+public interface ProductRepository extends JpaRepository<ProductEntity, UUID> {
+    @Query("SELECT p FROM ProductEntity p WHERE p.brandName = :brand")
+    List<ProductEntity> findProductsByBrand(@Param("brand") String brandName);
+    
+    @Query("SELECT p FROM ProductEntity p WHERE p.price BETWEEN :min AND :max")
+    List<ProductEntity> findProductsInPriceRange(@Param("min") BigDecimal min, 
+                                                 @Param("max") BigDecimal max);
+}
+```
+
+---
+
+## 📊 **¿Cuándo usar Query Methods?**
+
+### **✅ PERFECTO para consultas SIMPLES:**
+
+```java
+// ✅ Búsquedas por un campo
+findByProductName(String name)
+findByBrandName(String brand)
+
+// ✅ Búsquedas con operadores básicos  
+findByPriceGreaterThan(BigDecimal price)
+findByPriceBetween(BigDecimal min, BigDecimal max)
+
+// ✅ Combinaciones simples con AND/OR
+findByBrandNameAndIsDiscount(String brand, Boolean discount)
+findByBrandNameOrProductName(String brand, String product)
+
+// ✅ Ordenamiento básico
+findByBrandNameOrderByPriceAsc(String brand)
+
+// ✅ Paginación 
+Page<ProductEntity> findByBrandName(String brand, Pageable pageable)
+```
+
+### **❌ NO usar Query Methods cuando:**
+
+```java
+// ❌ Consultas complejas (nombres muy largos)
+findByBrandNameAndPriceBetweenAndIsDiscountTrueAndRatingGreaterThanOrderByPriceAsc(...)
+
+// ❌ JOINs complejos
+// ❌ Subconsultas
+// ❌ Agregaciones (SUM, COUNT, AVG)
+// ❌ Consultas dinámicas
+```
+
+---
+
+## 📊 **¿Cuándo usar JPQL?**
+
+### **✅ PERFECTO para consultas COMPLEJAS:**
+
+```java
+// ✅ JOINs con múltiples tablas
+@Query("SELECT p FROM ProductEntity p " +
+       "JOIN p.categories c " +
+       "WHERE c.description = :category AND p.price > :minPrice")
+List<ProductEntity> findProductsByCategoryAndPrice(@Param("category") String category,
+                                                   @Param("minPrice") BigDecimal minPrice);
+
+// ✅ Agregaciones y funciones
+@Query("SELECT AVG(p.price) FROM ProductEntity p WHERE p.brandName = :brand")
+BigDecimal getAveragePriceByBrand(@Param("brand") String brand);
+
+// ✅ Subconsultas
+@Query("SELECT p FROM ProductEntity p WHERE p.price > " +
+       "(SELECT AVG(pr.price) FROM ProductEntity pr)")
+List<ProductEntity> findProductsAboveAveragePrice();
+
+// ✅ Consultas personalizadas complejas
+@Query("SELECT new com.example.dto.ProductSummaryDTO(p.brandName, COUNT(p), AVG(p.price)) " +
+       "FROM ProductEntity p GROUP BY p.brandName")
+List<ProductSummaryDTO> getProductSummaryByBrand();
+```
+
+---
+
+## 🎯 **Comparación práctica con TUS entidades:**
+
+### **Ejemplos con ProductEntity:**
+
+#### **Query Methods (simples):**
+
+```java
+public interface ProductCatalogRepository extends JpaRepository<ProductCatalogEntity, UUID> {
+    
+    // ✅ Búsqueda simple por marca
+    List<ProductCatalogEntity> findByBrandName(String brandName);
+    
+    // ✅ Productos en descuento
+    List<ProductCatalogEntity> findByIsDiscountTrue();
+    
+    // ✅ Rango de precios  
+    List<ProductCatalogEntity> findByPriceBetween(BigDecimal min, BigDecimal max);
+    
+    // ✅ Top productos por rating
+    List<ProductCatalogEntity> findTop10ByOrderByRatingDesc();
+}
+```
+
+#### **JPQL (complejas):**
+
+```java
+public interface ProductCatalogRepository extends JpaRepository<ProductCatalogEntity, UUID> {
+    
+    // ✅ Productos por categoría con JOIN
+    @Query("SELECT DISTINCT p FROM ProductCatalogEntity p " +
+           "JOIN p.categories c " + 
+           "WHERE c.description = :categoryDesc")
+    List<ProductCatalogEntity> findByCategory(@Param("categoryDesc") String category);
+    
+    // ✅ Estadísticas por marca
+    @Query("SELECT p.brandName, COUNT(p), AVG(p.price), MAX(p.rating) " +
+           "FROM ProductCatalogEntity p " +
+           "GROUP BY p.brandName " +
+           "HAVING COUNT(p) > :minCount")
+    List<Object[]> getStatisticsByBrand(@Param("minCount") Long minCount);
+    
+    // ✅ Productos más vendidos (con orders)
+    @Query("SELECT pc FROM ProductCatalogEntity pc " +
+           "WHERE pc.id IN (" +
+           "  SELECT p.catalog.id FROM ProductEntity p " +
+           "  GROUP BY p.catalog.id " +
+           "  HAVING COUNT(p) > :minSales)")
+    List<ProductCatalogEntity> findBestSellers(@Param("minSales") Long minSales);
+}
+```
+
+---
+
+## 📋 **Guía de decisión:**
+
+| Criterio                | Query Methods           | JPQL                     |
+|:------------------------|:------------------------|:-------------------------|
+| **Simplicidad**         | ✅ Muy simple            | ❌ Más verboso            |
+| **Legibilidad**         | ✅ Autodocumentado       | ❌ Requiere leer query    |
+| **Mantenimiento**       | ✅ Fácil                 | ❌ Más propenso a errores |
+| **Performance**         | ✅ Optimizado por Spring | ✅ Control total          |
+| **Flexibilidad**        | ❌ Limitado              | ✅ Total flexibilidad     |
+| **JOINs complejos**     | ❌ No soporta bien       | ✅ Excelente              |
+| **Agregaciones**        | ❌ No soporta            | ✅ Perfecto               |
+| **Consultas dinámicas** | ❌ No soporta            | ✅ Con Criteria API       |
+
+---
+
+## 💡 **Mi recomendación:**
+
+### **🎯 Estrategia híbrida (combinar ambos):**
+
+```java
+@Repository
+public interface ProductCatalogRepository extends JpaRepository<ProductCatalogEntity, UUID> {
+    
+    // Query Methods para consultas simples
+    List<ProductCatalogEntity> findByBrandName(String brand);
+    List<ProductCatalogEntity> findByIsDiscountTrue();
+    Optional<ProductCatalogEntity> findByProductName(String productName);
+    
+    // JPQL para consultas complejas  
+    @Query("SELECT pc FROM ProductCatalogEntity pc " +
+           "JOIN pc.categories c WHERE c.description = :category")
+    List<ProductCatalogEntity> findByCategory(@Param("category") String category);
+    
+    @Query("SELECT pc. brandName, AVG(pc.price) FROM ProductCatalogEntity pc " +
+           "GROUP BY pc. brandName")
+    List<Object[]> getAveragePriceByBrand();
+}
+```
+
+---
+
+## ✅ **Respuesta a tu pregunta:**
+
+> **"¿Puedo elegir?"**
+
+**¡SÍ, PUEDES ELEGIR!  ** 🎯
+
+- ✅ **Query Methods** → Para consultas simples (80% de casos)
+- ✅ **JPQL** → Para consultas complejas (20% de casos)
+- ✅ **Combinación** → La mejor estrategia (recomendado)
+
+**No es obligatorio usar ambos, pero combinarlos te da lo mejor de ambos mundos.  ** ✨🤓
+
+---
+
+## #️ ⃣📚**Clase 51:DTO CATEGORIAS`**
+
+```sql
+-- CONSIDERACIONES DE LA SECCION 51
+select *
+from product_join_category pjc
+         join public.categories c on c.id = pjc.id_category
+         join public.products_catalog p on p.id = pjc.id_product;
+
+select o.client_name, pc.product_name, p.quantity
+from products p
+         join orders o on p.id_order = o.id
+         join products_catalog pc on pc.id = p.id_product_catalog;
+
+```
+
+---
 </details>
 
 
