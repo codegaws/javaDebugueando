@@ -9235,7 +9235,7 @@ com.fasterxml.jackson.databind.JsonMappingException:
 Infinite recursion (StackOverflowError)
 ```
 
-O:
+
 
 ```
 org.springframework.http.converter.HttpMessageNotWritableException: 
