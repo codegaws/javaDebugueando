@@ -8293,8 +8293,6 @@ from products p
 ```
 
 ---
-
-
 ## #️ ⃣📚**Clase 52:DTO CATEGORIAS`**
 
 El DTO (Data Transfer Object) en este proyecto sirve como **capa de transferencia de datos** entre diferentes capas de
@@ -8378,84 +8376,6 @@ public class ProductService {
 
 El DTO actúa como un **contrato** entre tu backend y el frontend/cliente, garantizando estabilidad en la comunicación.
 
----
-
-## #️ ⃣📚**Clase 53:SERVICIO PARA CATEGORIAS`**
-
-Analizando el código del servicio, te explico lo que se ha hecho:
-
-## ProductCatalogService (Interfaz)
-
-Define el **contrato** para operaciones de consulta del catálogo de productos:
-
-### Tipos de operaciones definidas:
-
-1. **Búsquedas básicas**:
-  - `findById(UUID)` - Por ID único
-  - `findByName(String)` - Por nombre exacto
-
-2. **Búsquedas con filtros**:
-  - `findNameLike(String)` - Nombres similares (LIKE)
-  - `findNameBetween(BigDecimal, BigDecimal)` - Por rango de precios
-  - `findByCategoryName(BigInteger)` - Por categoría
-  - `findByBrandAndRating(String, Short)` - Por marca y calificación
-
-3. **Operaciones paginadas**:
-  - `findAll(String, Boolean)` - Todos con ordenamiento
-  - `findAllByBrand(String)` - Por marca con paginación
-
-4. **Operaciones de agregación**:
-  - `countByBrand(String)` - Contar productos por marca
-
-## ProductCatalogServiceImpl (Implementación)
-
-### Estado actual:
-
-```java
-
-@Service
-@RequiredArgsConstructor  // Inyección por constructor
-@Transactional(readOnly = true)  // Solo lectura por defecto
-public class ProductCatalogServiceImpl implements ProductCatalogService {
-
-    private final ProductCatalogRepository catalogRepository;
-
-    // TODOS LOS MÉTODOS RETORNAN VALORES POR DEFECTO
-    @Override
-    public ProductCatalogEntity findById(UUID id) {
-        return null;  // Sin implementar
-    }
-
-    // ... resto de métodos sin implementar
-}
-```
-
-## Resumen del estado:
-
-**✅ Lo que está hecho**:
-
-- Estructura de servicio con Spring Boot
-- Interfaz bien definida con diferentes tipos de consultas
-- Inyección de dependencias configurada
-- Transacciones de solo lectura
-
-**❌ Lo que falta**:
-
-- **Implementar todos los métodos** (actualmente retornan `null` o valores por defecto)
-- **Usar el repository** para las consultas reales
-- **Manejo de excepciones** para casos no encontrados
-- **Conversión a DTOs** si es necesario
-
-Este patrón es común en desarrollo: primero defines la interfaz y estructura, luego implementas la lógica real método
-por método.
-
----
-
-## #️ ⃣📚**Clase 54:POSTMAN`**
-
-SE AGREGA DE RECURSOS JSON
-
----
 
 
 
