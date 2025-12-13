@@ -1,7 +1,7 @@
 # 🚀 Título con emoji
 ## 💡 Subtítulo
 
-- ✅ Tarea completada
+- ✅ Tarea completada cambio
 - ❌ Error detectado
 - ⚠️ Atención
 - 🔧 Configuración
