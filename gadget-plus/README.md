@@ -9329,7 +9329,8 @@ public ResponseEntity<ProductCatalogDTO> getById(@PathVariable String id) {
 }
 ```
 
-## #️ ⃣📚**Clase 56:DTO CATEGORIAS`**
+## #️ ⃣📚**Clase 56:BUSCAR POR NOMBRE`**
+
 
 
 
