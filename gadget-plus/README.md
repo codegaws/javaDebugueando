@@ -1,4 +1,4 @@
-## DETALLE DEL PROYECTO GADGETPLUS
+## DETALLE DEL PROYECTO GADGETPLUS 
 
 <details>
 <summary><strong>🚀DETALLE DE LA BASE DE DATOS</strong></summary>
