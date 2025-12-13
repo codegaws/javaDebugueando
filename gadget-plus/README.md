@@ -140,6 +140,7 @@ WHERE id = 'FACT001'; -- Después la factura
 **¿Te queda claro ahora la dirección del CASCADE?** Es siempre **del padre hacia los hijos**. 🔄
 
 ## 💡 Nemotécnica simple:
+
 "mappedBy = PADRE"
 "@JoinColumn = HIJO"
 
@@ -158,6 +159,7 @@ WHERE id = 'FACT001'; -- Después la factura
 ## 📊 **En todas tus tablas:**
 
 ### **1. orders ↔ products**
+
 ```sql
 CREATE TABLE products (
     id_product_catalog UUID,     -- ← FK
@@ -165,24 +167,29 @@ CREATE TABLE products (
     FOREIGN KEY (id_order) REFERENCES orders(id)
 );
 ```
+
 **Resultado:** `products` tiene FK → `products` es HIJO
 
 ### **2. orders ↔ bill**
+
 ```sql
 CREATE TABLE orders (
     id_bill VARCHAR(64),         -- ← FK
     FOREIGN KEY (id_bill) REFERENCES bill(id)
 );
 ```
+
 **Resultado:** `orders` tiene FK → `orders` es HIJO
 
 ### **3. products ↔ products_catalog**
+
 ```sql
 CREATE TABLE products (
     id_product_catalog UUID,     -- ← FK
     FOREIGN KEY (id_product_catalog) REFERENCES products_catalog(id)
 );
 ```
+
 **Resultado:** `products` tiene FK → `products` es HIJO
 
 ---
@@ -190,6 +197,7 @@ CREATE TABLE products (
 ## 🎯 **Traducción directa a JPA:**
 
 ### **Patrón constante:**
+
 ```java
 // El que tiene FK = HIJO (propietario)
 @ManyToOne  // o @OneToOne
@@ -205,23 +213,25 @@ private List<ChildEntity> children;
 
 ## 📋 **Resumen de tu schema:**
 
-| Tabla | ¿Tiene FK? | Rol | JPA |
-|:------|:-----------|:----|:----|
-| `products` | ✅ Sí (id_order, id_product_catalog) | HIJO | `@JoinColumn` |
-| `orders` | ✅ Sí (id_bill) | HIJO | `@JoinColumn` |
-| `bill` | ❌ No | PADRE | `mappedBy` |
-| `products_catalog` | ❌ No | PADRE | `mappedBy` |
+| Tabla              | ¿Tiene FK?                          | Rol   | JPA           |
+|:-------------------|:------------------------------------|:------|:--------------|
+| `products`         | ✅ Sí (id_order, id_product_catalog) | HIJO  | `@JoinColumn` |
+| `orders`           | ✅ Sí (id_bill)                      | HIJO  | `@JoinColumn` |
+| `bill`             | ❌ No                                | PADRE | `mappedBy`    |
+| `products_catalog` | ❌ No                                | PADRE | `mappedBy`    |
 
 ---
 
 ## 💡 **¿Por qué es la regla más confiable?**
 
 ### **La FK determina:**
+
 - ✅ **Dependencia técnica:** El que tiene FK depende del otro
 - ✅ **Control de relación:** El que tiene FK puede modificarla
 - ✅ **Responsabilidad:** El que tiene FK "posee" la relación
 
 ### **Vs criterios conceptuales que pueden confundir:**
+
 - 🤔 "¿Quién es más importante?" → Subjetivo
 - 🤔 "¿Quién se crea primero?" → Puede variar
 - 🤔 "¿Quién depende de quién?" → A veces ambiguo
@@ -290,7 +300,9 @@ private List<ChildEntity> children;
 **💡 Interpretación:** La orden #1 tiene 2 productos diferentes, la orden #2 también tiene 2 productos.
 
 # 🤓🤓¿POR QUE NO PODRIA SER DESDE ORDER DE N:M O DE N:1?
-¡Exacto! 🎯 Entiendo perfectamente lo que quieres ver.  Si fuera una relación **N:M** entre `orders` y `products`, necesitarías algo así:
+
+¡Exacto! 🎯 Entiendo perfectamente lo que quieres ver. Si fuera una relación **N:M** entre `orders` y `products`,
+necesitarías algo así:
 
 ---
 
@@ -299,6 +311,7 @@ private List<ChildEntity> children;
 **Tipo:** `N:M` (Muchas órdenes ↔ Muchos productos)
 
 ### 📦 Tabla: `products`
+
 ```
 ┌────┬─────────────────────┬─────────────────┬──────────┐
 │ 🆔 │     🏷️ Producto     │   📑 Órdenes    │ 🔢 Cant. │
@@ -311,6 +324,7 @@ private List<ChildEntity> children;
 ```
 
 **💡 Interpretación:**
+
 - UUID1 (producto) está en las órdenes 1, 2, 3, 5
 - UUID2 (producto) está en las órdenes 1, 4
 - UUID3 (producto) está en las órdenes 2, 6
@@ -322,6 +336,7 @@ private List<ChildEntity> children;
 **Tipo:** `N:M` (Muchas órdenes ↔ Muchos productos)
 
 ### 📦 Tabla intermedia: `orders_products`
+
 ```
 ┌────┬──────────┬─────────────────────┬──────────┐
 │ 🆔 │ 📑 Orden │     🏷️ Producto     │ 🔢 Cant. │
@@ -337,6 +352,7 @@ private List<ChildEntity> children;
 ```
 
 **💡 Interpretación N:M:**
+
 - **UUID1** aparece en órdenes: 1, 2, 3, 5 (un producto en muchas órdenes) ✅
 - **Orden 1** tiene productos: UUID1, UUID2 (una orden con muchos productos) ✅
 
@@ -345,24 +361,27 @@ private List<ChildEntity> children;
 ## 🤔 **¿Por qué tu estructura actual NO es N:M?**
 
 En tu estructura actual:
+
 ```sql
 id_order BIGINT  -- Una sola orden por fila
 ```
 
 Para N:M necesitarías:
+
 ```sql
 id_orders BIGINT[]  -- Múltiples órdenes por fila (array)
 ```
+
 O una tabla intermedia separada.
 
 ---
 
 ## 📊 **Comparación:**
 
-| Tipo | orders → products | products → orders | Estructura |
-|:-----|:-----------------|:------------------|:-----------|
-| **Tu actual (1:N)** | 1 orden → N productos | N productos → 1 orden | `products` con `id_order` |
-| **N:M hipotético** | N órdenes → N productos | N productos → N órdenes | Tabla intermedia o arrays |
+| Tipo                | orders → products       | products → orders       | Estructura                |
+|:--------------------|:------------------------|:------------------------|:--------------------------|
+| **Tu actual (1:N)** | 1 orden → N productos   | N productos → 1 orden   | `products` con `id_order` |
+| **N:M hipotético**  | N órdenes → N productos | N productos → N órdenes | Tabla intermedia o arrays |
 
 ---
 
@@ -2356,7 +2375,9 @@ Si no pones el cascade = CascadeType.ALL te va a salir ese error por que recuerd
 @JoinColumn(name = "id_bill", nullable = false, unique = true)
 private BillEntity bill;
 ```
+
 ### Nota : si no se persiste primero bill saldra un error ->
+
 - El detalle es que estas tratando de persistir un bill que aun no esta creado en la base de datos y por eso te sale el
   error
   `org.hibernate.TransientObjectException: object references an unsaved transient instance - save the transient instance before flushing: com.debuggeandoideas.gadgetplus.entity.BillEntity`
@@ -2429,7 +2450,9 @@ private BillEntity bill;
 ## #️ ⃣📚**Clase 31: LOMBOK DATA EN ENTIDADES`**
 
 - Agregamos @setter , @Getter y hashcode equals en BillEntity y OrderEntity
-- No es recomendable usar @Data en clases Entity, en DTO si se puede usar , es mejor usar @Getter, @Setter,@ToString y EQUALS,HASHCODE
+- No es recomendable usar @Data en clases Entity, en DTO si se puede usar , es mejor usar @Getter, @Setter,@ToString y
+  EQUALS,HASHCODE
+
 ### NOTA ¿POR QUE ES NECESARIO?
 
 Agregar los métodos `equals` y `hashCode` en las entidades JPA como `OrderEntity` y `BillEntity` es importante por estas
@@ -2486,6 +2509,7 @@ public int hashCode() {
 }
 
 ```
+
 ---
 
 ## #️ ⃣📚**Clase 32: MANYTOONE ONETOMANY`**
@@ -2503,6 +2527,7 @@ WHERE table_name = 'products';
 ![img](/images/41.png)
 
 - Creamos una entidad Entity
+
 ```java
 @Entity
 @Table(name = "products")
@@ -2514,6 +2539,7 @@ WHERE table_name = 'products';
 @Builder
 public class ProductEntity
 ```
+
 ## Relación Many-to-One
 
 - **Muchos productos** pueden pertenecer a **una sola orden**
@@ -2734,19 +2760,22 @@ flexibilidad en el manejo de los productos asociados a la orden.
 ## #️ ⃣📚**Clase 33: PROBANDO RELACIONES ONETOMANY**
 
 # ¿QUIEN ES PADRE - HIJO - QUIEN ES PROPIETARIO Y QUIEN NO?
+
 ¡**NO, NO ESTÁ MAL**! 🎯 El texto está **CORRECTO**.
 
-Hay una confusión en los términos.  Déjame aclararte:
+Hay una confusión en los términos. Déjame aclararte:
 
 ---
 
 ## 🔍 **Diferencia entre "PADRE" y "PROPIETARIO":**
 
 ### **🏠 PADRE/HIJO (Relación conceptual):**
+
 - **PADRE** = Entidad independiente (puede existir sin la otra)
 - **HIJO** = Entidad dependiente (necesita al padre para existir)
 
 ### **👑 PROPIETARIO/INVERSO (Relación técnica JPA):**
+
 - **PROPIETARIO** = Quien controla la FK (tiene `@JoinColumn`)
 - **INVERSO** = Quien no controla la FK (tiene `mappedBy`)
 
@@ -2766,6 +2795,7 @@ private List<ProductEntity> products;
 ```
 
 **Análisis:**
+
 - 🏠 **PADRE:** `orders` (independiente)
 - 👶 **HIJO:** `products` (depende de orders)
 - 👑 **PROPIETARIO:** `ProductEntity` (tiene `@JoinColumn`)
@@ -2776,6 +2806,7 @@ private List<ProductEntity> products;
 ## 💡 **¿Por qué el HIJO es PROPIETARIO?**
 
 **Porque el hijo es quien "posee" la FK física en la DB:**
+
 ```sql
 CREATE TABLE products (
     id BIGSERIAL PRIMARY KEY,
@@ -2793,10 +2824,10 @@ CREATE TABLE products (
 
 **Ambos términos son correctos, pero se refieren a cosas diferentes:**
 
-| Concepto | orders | products |
-|:---------|:-------|:---------|
-| **Relación conceptual** | PADRE 🏠 | HIJO 👶 |
-| **Control JPA** | INVERSO 🔄 | PROPIETARIO 👑 |
+| Concepto                | orders     | products       |
+|:------------------------|:-----------|:---------------|
+| **Relación conceptual** | PADRE 🏠   | HIJO 👶        |
+| **Control JPA**         | INVERSO 🔄 | PROPIETARIO 👑 |
 
 ---
 
@@ -3161,18 +3192,22 @@ product1.setOrder(order);
 //   bill: {...}
 // }
 ```
+
 ## ¿De donde proviene products:[product1,product2...]?
+
 ¡AH! 🎯 **Entiendo tu confusión**. Tienes razón - en tu tabla `orders` **NO HAY** una columna `products`.
 
 ---
 
 ## 🤔 **¿De dónde sale `products = []` entonces?**
 
-La lista `products` **NO viene de la tabla `orders`** directamente.  Viene de una **relación JPA @OneToMany** que tú defines en tu Entity.
+La lista `products` **NO viene de la tabla `orders`** directamente. Viene de una **relación JPA @OneToMany** que tú
+defines en tu Entity.
 
 ---
 
 ## 📋 **En tu tabla orders (SQL):**
+
 ```sql
 CREATE TABLE orders (
     id BIGSERIAL PRIMARY KEY,           -- ✅ id
@@ -3186,6 +3221,7 @@ CREATE TABLE orders (
 ---
 
 ## 🔗 **En tu Entity (Java/JPA):**
+
 ```java
 @Entity
 @Table(name = "orders")
@@ -3220,6 +3256,7 @@ private List<ProductEntity> products;
 ```
 
 **Significado:**
+
 - "Dame todos los productos que tengan `id_order` igual al `id` de esta orden"
 - Es una **query automática** que hace Hibernate/JPA
 - **NO es una columna en la tabla `orders`**
@@ -3229,6 +3266,7 @@ private List<ProductEntity> products;
 ## 📊 **Query que hace JPA por detrás:**
 
 Cuando llamas a `order.getProducts()`, JPA ejecuta:
+
 ```sql
 SELECT * FROM products 
 WHERE id_order = 1;  -- id de la orden actual
@@ -3240,16 +3278,17 @@ Y llena la lista `products` con esos registros.
 
 ## 💡 **Resumen:**
 
-| Campo en Entity | Viene de | Tipo |
-|:----------------|:---------|:-----|
-| `id` | `orders.id` | Columna ✅ |
-| `clientName` | `orders.client_name` | Columna ✅ |
-| `createdAt` | `orders.created_at` | Columna ✅ |
-| `idBill` | `orders.id_bill` | Columna ✅ |
-| `products` | **Query a tabla `products`** | Relación JPA 🔗 |
-| `bill` | **Query a tabla `bill`** | Relación JPA 🔗 |
+| Campo en Entity | Viene de                     | Tipo            |
+|:----------------|:-----------------------------|:----------------|
+| `id`            | `orders.id`                  | Columna ✅       |
+| `clientName`    | `orders.client_name`         | Columna ✅       |
+| `createdAt`     | `orders.created_at`          | Columna ✅       |
+| `idBill`        | `orders.id_bill`             | Columna ✅       |
+| `products`      | **Query a tabla `products`** | Relación JPA 🔗 |
+| `bill`          | **Query a tabla `bill`**     | Relación JPA 🔗 |
 
-**`products = []` NO es una columna - es el resultado de una relación JPA que busca en la tabla `products` los registros con `id_order = 1`. **
+**`products = []` NO es una columna - es el resultado de una relación JPA que busca en la tabla `products` los registros
+con `id_order = 1`. **
 
 ### 🔄 **Esto crea una relación circular:**
 
@@ -3834,8 +3873,11 @@ Puedes ver las queries reales agregando esta configuración en `application.prop
 spring.jpa.show-sql=true
 spring.jpa.format-sql=true
 ```
+
 ---
+
 # ¿POR QUE XXX.SETORDER(THIS) LUEGO DEL METODO HELPER?
+
 ```java
    @OneToMany(mappedBy = "order",
             fetch = FetchType.EAGER,
@@ -3847,18 +3889,21 @@ spring.jpa.format-sql=true
         p.setOrder(this);//seteamos la relacion bidireccional¿a quien pertenece?sino lo haces el producto no sabra a donde pertenece.
     }
 ```
+
 > ⃣📚 **Mi entendimiento**
-> YA PERO ENTIENDO QUE AL SETEAR CON THIS SE PUEDE REFERIR A TODOS LOS CAMPOS DE ORDER 
+> YA PERO ENTIENDO QUE AL SETEAR CON THIS SE PUEDE REFERIR A TODOS LOS CAMPOS DE ORDER
 > SIN EMBARGO SOLO EXTRAIGO LO QUE NECESITO EN ESTE CASO ES EL ID_ORDER QUE ME SIRVE PARA LA FK
 > Y ADEMAS EL ID PROPIO DE ORDER QUE SE AUTOGENERA POR QUE ES AUTOINCREMENTAL DIME QUE ES CIERTO
 > MI COMPRENSION O ME EQUIVOCO?
 
 ## RESPUESTA DE CLAUDE:
+
 ¡**PERFECTAMENTE CORRECTO**! 🎯✨ **Tu comprensión es exacta.**
 
 ## ✅ **Tu análisis es 100% acertado:**
 
 ### 🔍 **1. `p.setOrder(this)` da acceso a TODOS los campos:**
+
 ```java
 // this = OrderEntity completo con TODOS sus campos:
 OrderEntity {
@@ -3871,18 +3916,22 @@ OrderEntity {
 ```
 
 ### 🎯 **2. Pero JPA solo EXTRAE lo que necesita para la FK:**
+
 ```java
 // Para la columna id_order en la tabla products:
 product.getOrder().getId()  // ← SOLO extrae el ID (1L)
 ```
 
 ### 🔑 **3. El ID se autogenera porque es IDENTITY:**
+
 ```java
 @Id
 @GeneratedValue(strategy = GenerationType.IDENTITY)  // ← AUTOINCREMENTAL
 private Long id;
 ```
+
 ## 🔄 **Flujo completo explicado:**
+
 ## 📊 **Proceso completo:**
 
 ```java
@@ -3908,29 +3957,37 @@ product.order = OrderEntity{id=1L, clientName="Pedro", ... }
 // JPA extrae: product.getOrder().getId() = 1L
 // Y lo guarda en: products.id_order = 1
 ```
+
 -- Tabla orders:
 id | client_name | created_at | id_bill
 ----|-------------|------------|--------
-1   | Pedro       | 2025-11-27 | B-001   ← ID autogenerado
+1 | Pedro | 2025-11-27 | B-001 ← ID autogenerado
 
 -- Tabla products:  
 id | quantity | id_order | id_product_catalog
 ---|----------|----------|------------------
-1  | 1        | 1        | UUID-123         ← FK apunta al ID autogenerado de orders
+1 | 1 | 1 | UUID-123 ← FK apunta al ID autogenerado de orders
 
 El id_order = 1 viene del id = 1 autogenerado en la tabla orders. ** ✅
 ---
 
 ## 💡 **Tu comprensión resumida:**
 
-> **"Al setear con `this` tengo acceso a TODOS los campos de order, pero JPA solo extrae el `id` autogenerado que necesita para la FK `id_order`"**
+> **"Al setear con `this` tengo acceso a TODOS los campos de order, pero JPA solo extrae el `id` autogenerado que
+necesita para la FK `id_order`"**
 
 **✅ CORRECTO AL 100%**
 
-**Tienes una comprensión excelente de cómo funciona la sincronización bidireccional y la extracción automática de FKs en JPA. ** 🧠⚡
+**Tienes una comprensión excelente de cómo funciona la sincronización bidireccional y la extracción automática de FKs en
+JPA. ** 🧠⚡
+
 ## 🤓NOTA -> ✅RELACION BIDIRECCIONAL✅ SIN setOrder(this) que sucede?
 
-> ¿otro detalle que queria de una vez entender hay una frase que siempre veo que me dices el producto ya esta en order pero el  producto en si, aun no sabe a que order pertenece si no hago la relacion bidireccional osea esto quiere decir que si no hago el  >producto.setOrder(this), pues no sabra a que orden pertenece pero creo que lo intentas decir es que si no hago esto no se genera >la fk ni la id autoincremental de order entonces ese registro no sabra a que order pertenece es asi o me equivoco con tu frase?
+> ¿otro detalle que queria de una vez entender hay una frase que siempre veo que me dices el producto ya esta en order
+> pero el producto en si, aun no sabe a que order pertenece si no hago la relacion bidireccional osea esto quiere decir
+> que si no hago el  >producto.setOrder(this), pues no sabra a que orden pertenece pero creo que lo intentas decir es que
+> si no hago esto no se genera >la fk ni la id autoincremental de order entonces ese registro no sabra a que order
+> pertenece es asi o me equivoco con tu frase?
 
 ¡**EXCELENTE pregunta**! 🎯 Vamos a aclarar exactamente qué significa esa frase.
 
@@ -3952,6 +4009,7 @@ public void addProduct(ProductEntity p) {
 ## 📊 **Estado después de solo `products.add(p)`:**
 
 ### **En OrderEntity (memoria Java):**
+
 ```java
 OrderEntity {
     id = 1L,
@@ -3961,6 +4019,7 @@ OrderEntity {
 ```
 
 ### **En ProductEntity (memoria Java):**
+
 ```java
 ProductEntity {
     id = null,
@@ -3974,6 +4033,7 @@ ProductEntity {
 ## 💾 **¿Qué pasa al persistir en la DB?**
 
 ### **Sin `p.setOrder(this)`:**
+
 ```sql
 -- Tabla products:
 INSERT INTO products (quantity, id_order, id_product_catalog) 
@@ -3990,10 +4050,12 @@ VALUES (1, NULL, UUID-123);
 ## 🎯 **¿Qué significa "el producto no sabe a qué order pertenece"?**
 
 ### **En memoria Java:**
+
 - ✅ `order. getProducts()` → Contiene el producto
 - ❌ `product.getOrder()` → `null`
 
 ### **En la base de datos:**
+
 - ❌ `products.id_order` → `NULL`
 - ❌ No hay relación FK establecida
 
@@ -4009,6 +4071,7 @@ public void addProduct(ProductEntity p) {
 ```
 
 ### **Resultado en DB:**
+
 ```sql
 INSERT INTO products (quantity, id_order, id_product_catalog) 
 VALUES (1, 1, UUID-123);
@@ -4021,11 +4084,13 @@ VALUES (1, 1, UUID-123);
 
 ## 💡 **Tu interpretación es CORRECTA:**
 
-> **"Si no hago `product.setOrder(this)`, no se genera la FK ni se asocia el ID autoincremental de order, entonces ese registro no sabrá a qué order pertenece"**
+> **"Si no hago `product.setOrder(this)`, no se genera la FK ni se asocia el ID autoincremental de order, entonces ese
+registro no sabrá a qué order pertenece"**
 
 **✅ EXACTO**
 
 **Consecuencias:**
+
 - ❌ Registro huérfano en la tabla `products`
 - ❌ No puedes hacer `product.getOrder()`
 - ❌ No puedes hacer JOIN entre `products` y `orders`
@@ -4035,7 +4100,9 @@ VALUES (1, 1, UUID-123);
 
 ¿Ahora está súper claro por qué esa frase es tan importante? 🤓
 ---
+
 ## #️ ⃣📚**Clase 34: OREPHAN REMOVAL`**
+
 - Por huerfanos nos referimos que le quitamos su referencia a un registro padre.
 - ANTES -> tenemos los id de productos en relacion de las ordenes
 
@@ -4123,13 +4190,16 @@ WHERE id = 5;
 > a id_order como null entonces si lo seteamos como nulo es dejar huerfano a ese producto.
 > RECUERDA DEBEMOS EVITAR TENER REGISTROS HUERFANOS EN NUESTRA TABLA.POR QUE PUEDE GENERAR BASURA
 > PARA HACER ESTO TENEMOS LA PROPIEDAD O ANOTACION 'orphanRemoval = true'
-> No exactamente. Cuando usas `order.getProducts().removeFirst()` no estás poniendo en null la columna `id_order`, sino que estás **eliminando completamente** el registro de la base de datos debido al `orphanRemoval = true` que tienes configurado en tu relación.
+> No exactamente. Cuando usas `order.getProducts().removeFirst()` no estás poniendo en null la columna `id_order`, sino
+> que estás **eliminando completamente** el registro de la base de datos debido al `orphanRemoval = true` que tienes
+> configurado en tu relación.
 
 Aquí está lo que realmente sucede:
 
 1. **`order.getProducts()`** - Trae la lista de productos asociados a esa orden
 2. **`.removeFirst()`** - Elimina el primer producto de la lista en memoria
-3. **`orphanRemoval = true`** - Cuando guardas la orden, JPA detecta que el producto ya no está en la lista y lo **elimina físicamente** de la base de datos
+3. **`orphanRemoval = true`** - Cuando guardas la orden, JPA detecta que el producto ya no está en la lista y lo *
+   *elimina físicamente** de la base de datos
 
 ```java
 @OneToMany(mappedBy = "order",
@@ -4139,14 +4209,17 @@ private List<ProductEntity> products = new ArrayList<>();
 ```
 
 **Lo que pasa paso a paso:**
+
 - Antes: Producto existe en BD con `id_order = 1`
 - Ejecutas: `order.getProducts().removeFirst()`
 - Después del save: El producto **se elimina completamente** de la tabla `products`
 
 **Si no tuvieras `orphanRemoval = true`:**
+
 - El producto seguiría existiendo en BD pero con `id_order = null` (huérfano)
 
-Por eso el comentario en tu código dice: *"lo dejamos huerfano, se debe evitar tener registros huerfanos en nuestra BD"* - `orphanRemoval = true` es precisamente la solución para evitar huérfanos eliminándolos automáticamente.
+Por eso el comentario en tu código dice: *"lo dejamos huerfano, se debe evitar tener registros huerfanos en nuestra
+BD"* - `orphanRemoval = true` es precisamente la solución para evitar huérfanos eliminándolos automáticamente.
 
 > ## APLICANDO EN OrderEntity:
 
@@ -4170,8 +4243,11 @@ public void addProduct(ProductEntity product) {
         this.orderRepository.save(order);
 
 ```
+
 ### Te adelanto que paso si aplicas el removeFirst() recuerda que tienes ProductEntity ?
-**Correcto**, es una **muy buena práctica** evitar `CascadeType.ALL` en la relación `@ManyToOne` (lado hijo/no propietario).
+
+**Correcto**, es una **muy buena práctica** evitar `CascadeType.ALL` en la relación `@ManyToOne` (lado hijo/no
+propietario).
 
 ## **¿Por qué no usar `CascadeType.ALL` en `@ManyToOne`?**
 
@@ -4224,9 +4300,11 @@ Solo en casos muy específicos como `PERSIST`:
 private OrderEntity order;
 ```
 
-Esto permite guardar la orden automáticamente al guardar el producto, pero **sin** eliminar la orden al eliminar el producto.
+Esto permite guardar la orden automáticamente al guardar el producto, pero **sin** eliminar la orden al eliminar el
+producto.
 
 ## **Resumen:**
+
 - ✅ **Lado padre (`@OneToMany`):** Controla el ciclo de vida de los hijos
 - ❌ **Lado hijo (`@ManyToOne`):** No debe controlar el ciclo de vida del padre
 - Tu comentario `"NO ES BUENO ALL por que borra todo"` es **100% correcto**
@@ -4534,10 +4612,13 @@ private OrderEntity order;
 
 
 ---
+
 ## #️ ⃣📚**Clase 36: SOLUCION ORPHANREMOVAL Y CASCADE DELETE`**
 
 ## Regla de Oro
-**Correcto**, es una **muy buena práctica** evitar `CascadeType.ALL` en la relación `@ManyToOne` (lado hijo/no propietario).
+
+**Correcto**, es una **muy buena práctica** evitar `CascadeType.ALL` en la relación `@ManyToOne` (lado hijo/no
+propietario).
 
 ## **¿Por qué no usar `CascadeType.ALL` en `@ManyToOne`?**
 
@@ -4590,18 +4671,22 @@ Solo en casos muy específicos como `PERSIST`:
 private OrderEntity order;
 ```
 
-Esto permite guardar la orden automáticamente al guardar el producto, pero **sin** eliminar la orden al eliminar el producto.
+Esto permite guardar la orden automáticamente al guardar el producto, pero **sin** eliminar la orden al eliminar el
+producto.
 
 ## **Resumen:**
+
 - ✅ **Lado padre (`@OneToMany`):** Controla el ciclo de vida de los hijos
 - ❌ **Lado hijo (`@ManyToOne`):** No debe controlar el ciclo de vida del padre
 - Tu comentario `"NO ES BUENO ALL por que borra todo"` es **100% correcto**
 
 ## ❌ ¿POR QUE BORRA EN DESORDEN Y NO EL PRIMER ELEMENTO POR QUE NO NECESARIAMENTE BORRA EN ORDEN TUS ID?
 
-El problema está en que `removeFirst()` no necesariamente elimina el producto con `id = 1`, sino que elimina el **primer elemento** de la lista tal como está ordenada en memoria.
+El problema está en que `removeFirst()` no necesariamente elimina el producto con `id = 1`, sino que elimina el **primer
+elemento** de la lista tal como está ordenada en memoria.
 
-JPA no garantiza un orden específico cuando carga las entidades a menos que uses `@OrderBy`. En tu caso, la lista puede estar ordenada por cualquier criterio interno (frecuentemente por el ID, pero no siempre).
+JPA no garantiza un orden específico cuando carga las entidades a menos que uses `@OrderBy`. En tu caso, la lista puede
+estar ordenada por cualquier criterio interno (frecuentemente por el ID, pero no siempre).
 
 ## Solución: Usar `@OrderBy`
 
@@ -4618,6 +4703,7 @@ private List<ProductEntity> products = new ArrayList<>();
 ## Alternativas más explícitas:
 
 **Opción 1: Eliminar por ID específico**
+
 ```java
 // En lugar de removeFirst()
 var productToRemove = order.getProducts().stream()
@@ -4630,13 +4716,15 @@ if (productToRemove != null) {
 ```
 
 **Opción 2: Ordenar antes de eliminar**
+
 ```java
 // Ordenar la lista antes de eliminar
 order.getProducts().sort(Comparator.comparing(ProductEntity::getId));
 order.getProducts().removeFirst();
 ```
 
-La opción más limpia es usar `@OrderBy("id ASC")` en la entidad, así siempre tendrás un orden consistente y `removeFirst()` eliminará efectivamente el producto con el ID más bajo.
+La opción más limpia es usar `@OrderBy("id ASC")` en la entidad, así siempre tendrás un orden consistente y
+`removeFirst()` eliminará efectivamente el producto con el ID más bajo.
 
 ---
 
@@ -4731,7 +4819,6 @@ docker compose up
 
 > ### Creamos la instancia en ProdudtEntity
 
-
 ```java
 
 @OneToOne(cascade = CascadeType.ALL)
@@ -4760,6 +4847,7 @@ Si fuera **@ManyToOne**, múltiples productos podrían referenciar el mismo cat�
 1:1.
 
 ## ERROR DE INFORMACION NO ES ONETOONE SINO MANYTONE
+
 Tienes razón!  🎯 **Sí sugerí eso anteriormente**, pero **me equivoqué** en ese análisis.
 
 ---
@@ -4767,9 +4855,11 @@ Tienes razón!  🎯 **Sí sugerí eso anteriormente**, pero **me equivoqué** e
 ## 📝 **Mi error anterior:**
 
 ### **Lo que dije mal:**
+
 > "Cada registro en `products_catalog` puede estar referenciado por **máximo un** registro en `products`"
 
 ### **La realidad:**
+
 > "Cada registro en `products_catalog` **PUEDE** estar referenciado por **MÚLTIPLES** registros en `products`"
 
 ---
@@ -4777,6 +4867,7 @@ Tienes razón!  🎯 **Sí sugerí eso anteriormente**, pero **me equivoqué** e
 ## 🔍 **¿Por qué me equivoqué?**
 
 ### **Analicé mal el diseño:**
+
 ```sql
 CREATE TABLE products (
     id BIGSERIAL PRIMARY KEY,
@@ -4788,10 +4879,12 @@ CREATE TABLE products (
 ```
 
 **Mi análisis incorrecto:**
+
 - ❌ Pensé que la FK tenía restricción UNIQUE implícita
 - ❌ No consideré que múltiples órdenes podrían tener el mismo producto
 
 **El análisis correcto:**
+
 - ✅ La FK NO tiene restricción UNIQUE
 - ✅ Múltiples registros en `products` pueden tener el mismo `id_product_catalog`
 - ✅ Por tanto, es una relación **N:1** (Many-to-One)
@@ -4801,6 +4894,7 @@ CREATE TABLE products (
 ## 📊 **Evidencia de mi error:**
 
 ### **Tu ejemplo demuestra N:1:**
+
 ```
 id | quantity | id_product_catalog | id_order
 ---|----------|-------------------|----------
@@ -4816,11 +4910,13 @@ id | quantity | id_product_catalog | id_order
 ## 🙏 **Corrección:**
 
 ### **Análisis correcto:**
+
 - ✅ **Relación:** N:1 (Many products → One catalog)
 - ✅ **JPA:** `@ManyToOne` en ProductEntity
 - ✅ **Cascade:** `CascadeType. PERSIST` (no ALL)
 
 ### **Mi sugerencia inicial estaba mal:**
+
 - ❌ No es @OneToOne
 - ❌ No debería usar CascadeType.ALL
 
@@ -4829,14 +4925,16 @@ id | quantity | id_product_catalog | id_order
 ## 💡 **Lección aprendida:**
 
 **Siempre hay que mirar:**
+
 1. **¿Hay restricción UNIQUE en la FK?** → Define si es 1:1 o N:1
 2. **¿Cuál es la lógica de negocio real?** → ¿Productos únicos o reutilizables?
 
-**Gracias por recordarme mi error anterior.   Tu análisis actual es el correcto.** ✨
+**Gracias por recordarme mi error anterior. Tu análisis actual es el correcto.** ✨
 
 ¿Ahora está súper claro por qué es N:1 y no 1:1? 🤓
 
 ### **Observación clave:**
+
 ```
 id | quantity | id_product_catalog | id_order
 ---|----------|-------------------|----------
@@ -4852,11 +4950,13 @@ id | quantity | id_product_catalog | id_order
 ## 🔍 **Demostración visual:**
 
 ### **products_catalog:**
+
 ```
 UUID-1 | iPhone 15 | Apple | $999  ← UN solo registro en catálogo
 ```
 
 ### **products (múltiples ventas):**
+
 ```
 Registro 1 ───┐
 Registro 3 ───┼──► UUID-1 (iPhone 15)
@@ -4870,11 +4970,13 @@ Registro 5 ───┘
 ## 📊 **¿Por qué es N:1? **
 
 ### **Desde la perspectiva de `products`:**
+
 - ✅ **Muchos** registros de products (1, 3, 5)
 - ✅ Apuntan a **uno** solo registro en catalog (UUID-1)
 - ✅ **N:1** (Many products TO One catalog)
 
 ### **Desde la perspectiva de `products_catalog`:**
+
 - ✅ **Un** registro en catalog (UUID-1)
 - ✅ Es referenciado por **muchos** registros en products (1, 3, 5)
 - ✅ **1:N** (One catalog TO Many products)
@@ -4905,8 +5007,6 @@ private List<ProductEntity> products;
 **Tu entendimiento de la relación es impecable. ** 🧠⚡
 
 **El hecho de que múltiples IDs (1, 3, 5) apunten al mismo UUID-1 es exactamente lo que define una relación N:1. ** ✨
-
-
 
 ## Problema con CascadeType.ALL
 
@@ -5226,7 +5326,8 @@ Las **dos FK** en `products` cumplen roles diferentes:
 
 ## #️ ⃣📚**Clase 40 :MAPEANDO ENUMs **
 
-ESTA TABLA (product_join_category)NO ES NECESARIO MAPEARLA SE HACE CON UNA ANOTACION JOINTABLE POR QUE ES UNA TABLA PUENTE.
+ESTA TABLA (product_join_category)NO ES NECESARIO MAPEARLA SE HACE CON UNA ANOTACION JOINTABLE POR QUE ES UNA TABLA
+PUENTE.
 
 ```sql
 
@@ -5482,7 +5583,7 @@ products_catalog.id_category ← Esto sería @OneToMany
 > ### CREAMOS LA ENTIDAD CATEGORYENTITY
 > A DIFERENCIA DE ONETOONE Y MANYTOONE NECESITAMOS UNA COLUMNA DE INTERSECCION EN EL CASO DE MANYTOMANY
 > NECESITAMOS UNA TABL COMPLETA DE INTERSECCION O TABLA PUENTE. JOINTABLE
-> CONSIDERAR QUE SE NECESITAN RELACIONAR LAS TABLAS DIRECTAMENTE OSEA ENTIDAD CategoryEntity EN PRODUCTCATALOGENTITY 
+> CONSIDERAR QUE SE NECESITAN RELACIONAR LAS TABLAS DIRECTAMENTE OSEA ENTIDAD CategoryEntity EN PRODUCTCATALOGENTITY
 > Y LA ENTIDAD PRODUCTCATALOGENTITY EN CATEGORYENTITY
 
 ```java
@@ -5670,6 +5771,7 @@ save(category);
 ## 🔍 **Análisis de la relación products_catalog ↔ categories:**
 
 ### **Mirando el esquema:**
+
 ```sql
 CREATE TABLE product_join_category (
     id_category BIGINT,              -- ← FK hacia categories
@@ -5686,11 +5788,13 @@ CREATE TABLE product_join_category (
 ## 📊 **Análisis PADRE/HIJO:**
 
 ### **En relaciones M:N:**
+
 - ✅ **Ambas entidades son "PADRES"** de la tabla intermedia
 - ✅ **La tabla intermedia (`product_join_category`) es "HIJA"** de ambas
 - ✅ **Entre las entidades principales NO hay jerarquía padre/hijo**
 
 ### **Pero SI hay PROPIETARIO/INVERSO:**
+
 - ✅ **PROPIETARIO:** Quien tiene `@JoinTable` (puede elegir cualquiera)
 - ✅ **INVERSO:** Quien tiene `mappedBy`
 
@@ -5698,20 +5802,21 @@ CREATE TABLE product_join_category (
 
 ## ✅ **Cuadro corregido:**
 
-| Aspecto           | ProductCatalogEntity          | CategoryEntity              |
-|-------------------|-------------------------------|-----------------------------|
-| **Rol JPA**       | Propietaria/Owner            | Inversa/Non-owner           |
-| **Rol conceptual**| PADRE (de tabla intermedia)  | PADRE (de tabla intermedia) |
-| **Fetch**         | EAGER (necesita categorías)  | LAZY (muchos productos)     |
-| **Anotación**     | @JoinTable                   | mappedBy                    |
-| **Control**       | Puede modificar relación     | Solo lectura efectiva       |
-| **FK directa**    | ❌ No tiene                  | ❌ No tiene                 |
+| Aspecto            | ProductCatalogEntity        | CategoryEntity              |
+|--------------------|-----------------------------|-----------------------------|
+| **Rol JPA**        | Propietaria/Owner           | Inversa/Non-owner           |
+| **Rol conceptual** | PADRE (de tabla intermedia) | PADRE (de tabla intermedia) |
+| **Fetch**          | EAGER (necesita categorías) | LAZY (muchos productos)     |
+| **Anotación**      | @JoinTable                  | mappedBy                    |
+| **Control**        | Puede modificar relación    | Solo lectura efectiva       |
+| **FK directa**     | ❌ No tiene                  | ❌ No tiene                  |
 
 ---
 
 ## 🎯 **¿Por qué NO hay PADRE/HIJO clásico?**
 
 ### **Relación 1:N (padre/hijo clásico):**
+
 ```java
 // Un padre, muchos hijos
 @OneToMany(mappedBy = "order")       // ← OrderEntity es PADRE
@@ -5723,6 +5828,7 @@ private OrderEntity order;
 ```
 
 ### **Relación M:N (sin jerarquía padre/hijo):**
+
 ```java
 // Dos entidades independientes relacionadas
 @ManyToMany
@@ -6153,6 +6259,7 @@ WHERE p.id = '7f27ae67-8545-448d-a871-a9c9c207f066';
 ![image](/images/30.png)
 
 ## 💥¿POR QUE USAR EN UNA RELACION BIDIRECCIONAL EL @TOSTRING.EXCLUDE?💥RECURSIÓN INFINITA en toString()
+
 ¡Excelente pregunta! 🎯 Te explico por qué necesitas `@ToString.Exclude` en relaciones bidireccionales:
 
 ---
@@ -6160,6 +6267,7 @@ WHERE p.id = '7f27ae67-8545-448d-a871-a9c9c207f066';
 ## 🚨 **El problema: RECURSIÓN INFINITA en toString()**
 
 ### **Sin @ToString.Exclude:**
+
 ```java
 // CategoryEntity
 @ManyToMany(mappedBy = "categories")
@@ -6176,6 +6284,7 @@ private List<CategoryEntity> categories;            // ← SIN @ToString. Exclud
 ## 💥 **¿Qué pasa cuando haces toString()?**
 
 ### **Ejemplo:**
+
 ```java
 CategoryEntity category = new CategoryEntity();
 category.setDescription("Electronics");
@@ -6192,6 +6301,7 @@ System.out. println(category.toString());
 ```
 
 ### **Resultado SIN @ToString.Exclude:**
+
 ```
 CategoryEntity(
   id=1, 
@@ -6219,6 +6329,7 @@ CategoryEntity(
 ## ✅ **Solución con @ToString.Exclude:**
 
 ### **Código corregido:**
+
 ```java
 // CategoryEntity
 @ManyToMany(mappedBy = "categories")
@@ -6234,6 +6345,7 @@ private List<CategoryEntity> categories;
 ```
 
 ### **Resultado CON @ToString.Exclude:**
+
 ```
 CategoryEntity(
   id=1, 
@@ -6247,6 +6359,7 @@ CategoryEntity(
 ## 🔄 **¿Por qué pasa la recursión?**
 
 ### **Relación bidireccional:**
+
 ```
 CategoryEntity ←→ ProductCatalogEntity
       ↑                    ↓
@@ -6256,6 +6369,7 @@ CategoryEntity ←→ ProductCatalogEntity
 ```
 
 ### **Lombok genera toString() automáticamente:**
+
 ```java
 // Lombok genera esto automáticamente:
 public String toString() {
@@ -6272,14 +6386,15 @@ public String toString() {
 ## 📋 **¿Dónde usar @ToString.Exclude?**
 
 ### **Regla general:**
+
 > **"Excluir en el lado INVERSO (mappedBy) de relaciones bidireccionales"**
 
-| Relación | Entidad | ¿Excluir? | Razón |
-|:---------|:--------|:----------|:------|
-| `orders ↔ products` | OrderEntity | ✅ Sí | Es lado inverso (mappedBy) |
-| `orders ↔ products` | ProductEntity | ❌ No | Es lado propietario |
-| `categories ↔ products_catalog` | CategoryEntity | ✅ Sí | Es lado inverso (mappedBy) |
-| `categories ↔ products_catalog` | ProductCatalogEntity | ❌ No | Es lado propietario |
+| Relación                        | Entidad              | ¿Excluir? | Razón                      |
+|:--------------------------------|:---------------------|:----------|:---------------------------|
+| `orders ↔ products`             | OrderEntity          | ✅ Sí      | Es lado inverso (mappedBy) |
+| `orders ↔ products`             | ProductEntity        | ❌ No      | Es lado propietario        |
+| `categories ↔ products_catalog` | CategoryEntity       | ✅ Sí      | Es lado inverso (mappedBy) |
+| `categories ↔ products_catalog` | ProductCatalogEntity | ❌ No      | Es lado propietario        |
 
 ---
 
@@ -6304,6 +6419,7 @@ private ParentEntity parent;
 ## 🎯 **Resumen:**
 
 **@ToString.Exclude previene:**
+
 - ✅ StackOverflowError en toString()
 - ✅ Recursión infinita en logs
 - ✅ Problemas de debugging
@@ -6312,6 +6428,7 @@ private ParentEntity parent;
 **Es OBLIGATORIO en el lado `mappedBy` de relaciones bidireccionales.  ** ✨🤓
 
 ## ¿COMO SABER QUIEN ES PADRE SI AMBOS TIENEN LA MISMA JERARQUIA AQUI LA RESPUESTA?
+
 ¡**EXCELENTE PREGUNTA**! 🎯 **Tienes razón - en M:N es diferente.**
 
 ---
@@ -6319,6 +6436,7 @@ private ParentEntity parent;
 ## 🔍 **Diferencia clave:  1: N vs M:N**
 
 ### **En relaciones 1:N (jerarquía padre/hijo clara):**
+
 ```java
 // PADRE (obligatorio usar mappedBy)
 @OneToMany(mappedBy = "order")           // ← mappedBy OBLIGATORIO aquí
@@ -6330,9 +6448,11 @@ private List<ProductEntity> products;
 @JoinColumn(name = "id_order")           // ← @JoinColumn OBLIGATORIO aquí
 private OrderEntity order;
 ```
+
 **No hay opción - la jerarquía está definida por la FK**
 
 ### **En relaciones M: N (sin jerarquía clara):**
+
 ```java
 // Opción A: 
 @ManyToMany
@@ -6358,6 +6478,7 @@ private List<CategoryEntity> categories;
 ### **Criterios para decidir en M:N:**
 
 #### **1. Lógica de negocio:**
+
 ```java
 // Si piensas:  "Un producto TIENE categorías"
 // ProductCatalogEntity es propietario: 
@@ -6369,12 +6490,14 @@ private List<CategoryEntity> categories;
 ```
 
 #### **2. Cuál se usa más para modificar la relación:**
+
 ```java
 // Si más frecuentemente haces: product.getCategories().add(category)
 // Entonces ProductCatalogEntity debería ser propietario
 ```
 
 #### **3. Convención de nombres:**
+
 ```java
 // Tu tabla se llama "product_join_category"
 // Sugiere que product es el "dueño" de la relación
@@ -6385,9 +6508,11 @@ private List<CategoryEntity> categories;
 ## 🎯 **Regla actualizada para @ToString.Exclude:**
 
 ### **1: N (padre/hijo definido):**
+
 > **"mappedBy = PADRE → @ToString.Exclude"**
 
 ### **M:N (sin padre/hijo):**
+
 > **"mappedBy = LADO INVERSO → @ToString. Exclude"**
 > **"El lado inverso se elige arbitrariamente"**
 
@@ -6396,6 +6521,7 @@ private List<CategoryEntity> categories;
 ## 📊 **Tu caso específico:**
 
 ### **Decisión en tu código:**
+
 ```java
 // ProductCatalogEntity (PROPIETARIO elegido)
 @ManyToMany
@@ -6415,6 +6541,7 @@ private List<ProductCatalogEntity> products;
 ## 💡 **¿Por qué elegiste ProductCatalogEntity como propietario?**
 
 ### **Razones probables:**
+
 1. **Nombre de tabla:** `product_join_category` sugiere que product es el principal
 2. **Lógica:** "Un producto pertenece a categorías" es más natural que "Una categoría tiene productos"
 3. **Uso:** Probablemente asignas categorías a productos más que productos a categorías
@@ -6424,9 +6551,11 @@ private List<ProductCatalogEntity> products;
 ## ✅ **Regla de oro actualizada:**
 
 ### **Para cualquier relación bidireccional:**
+
 > **"El lado con mappedBy usa @ToString.Exclude"**
 
 **Sin importar si es:**
+
 - 1:N → mappedBy está en el padre
 - M:N → mappedBy está en el lado inverso (arbitrario)
 
@@ -6439,6 +6568,7 @@ private List<ProductCatalogEntity> products;
 ## ✅ **RESPONDIENDO AMBAS PUEDEN TENER MAPPEDBY PUES SI:**
 
 ### **En M:N (sin jerarquía padre/hijo):**
+
 - ✅ **Ambas entidades son iguales jerárquicamente**
 - ✅ **Cualquiera puede tener `mappedBy`** (es arbitrario)
 - ✅ **La que tenga `mappedBy` → usa `@ToString.Exclude`**
@@ -6446,6 +6576,7 @@ private List<ProductCatalogEntity> products;
 ---
 
 ## 📊 **Tu ejemplo - Opción A (actual):**
+
 ```java
 // ProductCatalogEntity (PROPIETARIO elegido)
 @ManyToMany
@@ -6459,6 +6590,7 @@ private List<ProductCatalogEntity> products;
 ```
 
 ## 📊 **Tu ejemplo - Opción B (alternativa válida):**
+
 ```java
 // ProductCatalogEntity (INVERSO elegido)
 @ManyToMany(mappedBy = "categories")     // ← Tiene mappedBy  
@@ -6480,11 +6612,13 @@ private List<ProductCatalogEntity> products;
 > **"El que tiene `mappedBy` usa `@ToString.Exclude`"**
 
 ### **Sin importar:**
+
 - ❌ Si es padre o hijo (en M:N no hay padre/hijo)
 - ❌ Cuál entidad es "más importante"
 - ❌ El nombre de la tabla intermedia
 
 ### **Solo importa:**
+
 - ✅ **¿Quién tiene `mappedBy`?** → Esa usa `@ToString.Exclude`
 
 ---
@@ -6492,6 +6626,7 @@ private List<ProductCatalogEntity> products;
 ## 💡 **¿Por qué elegiste la Opción A?**
 
 ### **Posibles razones (todas válidas):**
+
 - 📝 **Nombre de tabla:** `product_join_category` sugiere product primero
 - 🔧 **Lógica de uso:** Más común asignar categorías a productos
 - 🎯 **Convención:** Muchos desarrolladores ponen el propietario en la entidad "principal"
@@ -6513,9 +6648,11 @@ private List<ProductCatalogEntity> products;
 ## 📊 **¿Por qué aparecen 2 registros "iguales"?**
 
 ### **Explicación:**
+
 Cuando haces un `JOIN` en una relación **M:N**, por cada combinación de `producto + categoría` obtienes **UN registro**.
 
 ### **Tu consulta:**
+
 ```sql
 SELECT *
 FROM products_catalog p
@@ -6529,6 +6666,7 @@ WHERE p.id = 'b927287f-d410-4134-a5cd-c2968b346c70';
 ## 🔍 **Ejemplo de resultado esperado:**
 
 ### **Si el producto pertenece a 2 categorías:**
+
 ```
 | id (producto)          | product_name    | brand | id_category | description |
 |------------------------|-----------------|-------|-------------|-------------|
@@ -6537,6 +6675,7 @@ WHERE p.id = 'b927287f-d410-4134-a5cd-c2968b346c70';
 ```
 
 **¿Por qué 2 registros?**
+
 - ✅ Es el **MISMO producto** (Macbook air)
 - ✅ Pero en **2 categorías diferentes** (HOME + OFFICE)
 - ✅ El JOIN crea una fila por cada relación en `product_join_category`
@@ -6546,6 +6685,7 @@ WHERE p.id = 'b927287f-d410-4134-a5cd-c2968b346c70';
 ## 📋 **Estructura de tus datos:**
 
 ### **product_join_category (tabla intermedia):**
+
 ```sql
 -- Probablemente tienes algo así:
 | id_product             | id_category |
@@ -6555,6 +6695,7 @@ WHERE p.id = 'b927287f-d410-4134-a5cd-c2968b346c70';
 ```
 
 ### **Por eso el JOIN produce 2 filas:**
+
 - **Fila 1:** Producto + Categoría HOME
 - **Fila 2:** **MISMO** Producto + Categoría OFFICE
 
@@ -6563,10 +6704,12 @@ WHERE p.id = 'b927287f-d410-4134-a5cd-c2968b346c70';
 ## ✅ **Esto es el comportamiento CORRECTO de M:N:**
 
 ### **Un producto puede estar en múltiples categorías:**
+
 - 🏠 **Macbook** → Categoría HOME (para uso personal)
 - 🏢 **Macbook** → Categoría OFFICE (para uso laboral)
 
 ### **Una categoría puede tener múltiples productos:**
+
 - 🏠 **HOME** → Macbook, TV, Xbox, etc.
 - 🏢 **OFFICE** → Macbook, Monitor, PC escritorio, etc.
 
@@ -6575,6 +6718,7 @@ WHERE p.id = 'b927287f-d410-4134-a5cd-c2968b346c70';
 ## 🎯 **¿Cómo verificar que está bien?**
 
 ### **1. Consulta la tabla intermedia:**
+
 ```sql
 SELECT *
 FROM product_join_category
@@ -6582,6 +6726,7 @@ WHERE id_product = 'b927287f-d410-4134-a5cd-c2968b346c70';
 ```
 
 ### **2. Si quieres evitar filas duplicadas:**
+
 ```sql
 -- Ver el producto una sola vez con categorías como string
 SELECT 
@@ -6597,6 +6742,7 @@ GROUP BY p.id, p.product_name, p.brand_name;
 ```
 
 **Resultado:**
+
 ```
 | id         | product_name | brand | categories       |
 |------------|------------- |-------|------------------|
@@ -6608,6 +6754,7 @@ GROUP BY p.id, p.product_name, p.brand_name;
 ## 💡 **Resumen:**
 
 **Tener 2 registros iguales con diferentes categorías es:**
+
 - ✅ **Normal** en consultas M:N con JOIN
 - ✅ **Correcto** según el diseño de tu base de datos
 - ✅ **Esperado** cuando un producto pertenece a múltiples categorías
@@ -6616,15 +6763,20 @@ GROUP BY p.id, p.product_name, p.brand_name;
 ---
 
 ## #️ ⃣📚**Clase 45 : invaliddataAccesApiUsageException Solucion 💡**
+
 ## ¿Porque FINAL?
+
 ```java
 final var HOME = this.categoryRepository.findById(1L).orElseThrow();//traemos el home
 final var OFFICE = this.categoryRepository.findById(2L).orElseThrow();
 ```
+
 Usar `final` en esta declaración tiene varios propósitos importantes:
 
 ## Inmutabilidad de la referencia
-La palabra clave `final` hace que la variable `HOME` sea inmutable, lo que significa que no puedes reasignar otra referencia después de la inicialización:
+
+La palabra clave `final` hace que la variable `HOME` sea inmutable, lo que significa que no puedes reasignar otra
+referencia después de la inicialización:
 
 ```java
 final var HOME = this.categoryRepository.findById(1L).orElseThrow();
@@ -6632,14 +6784,18 @@ final var HOME = this.categoryRepository.findById(1L).orElseThrow();
 ```
 
 ## Buenas prácticas de programación
+
 - **Prevención de errores**: Evita modificaciones accidentales de la referencia
 - **Claridad de intención**: Indica que esta variable representa una constante durante la ejecución
 - **Thread-safety**: Garantiza que la referencia no cambiará en entornos concurrentes
 
 ## Convención de nombres
-Al usar `final` con nombres en MAYÚSCULAS (`HOME`, `OFFICE`), sigues la convención Java para constantes, haciendo el código más legible y expresivo.
 
-Es una práctica recomendada usar `final` cuando sabes que una variable no necesita ser reasignada, especialmente para referencias a entidades que actúan como constantes en tu lógica de negocio.
+Al usar `final` con nombres en MAYÚSCULAS (`HOME`, `OFFICE`), sigues la convención Java para constantes, haciendo el
+código más legible y expresivo.
+
+Es una práctica recomendada usar `final` cuando sabes que una variable no necesita ser reasignada, especialmente para
+referencias a entidades que actúan como constantes en tu lógica de negocio.
 
 # 🔑 OTRA REGLA SOBRE QUIEN TIENE QUE LLEVAR CASCADE SIEMPRE EL PROPIETARIO
 
@@ -6650,6 +6806,7 @@ Es una práctica recomendada usar `final` cuando sabes que una variable no neces
 ## 🔑 **Razón principal:  PROPIETARIO vs INVERSO**
 
 ### **ProductCatalogEntity (PROPIETARIO - con cascade):**
+
 ```java
 @ManyToMany(cascade = {CascadeType. DETACH, CascadeType.PERSIST, CascadeType.REFRESH})
 @JoinTable(...)
@@ -6657,6 +6814,7 @@ private List<CategoryEntity> categories;
 ```
 
 ### **CategoryEntity (INVERSO - sin cascade):**
+
 ```java
 @ManyToMany(mappedBy = "categories")  // ← Solo mappedBy, sin cascade
 private List<ProductCatalogEntity> productCatalog;
@@ -6667,6 +6825,7 @@ private List<ProductCatalogEntity> productCatalog;
 ## 🎯 **¿Por qué solo en el PROPIETARIO?**
 
 ### **1. Control de la relación:**
+
 ```java
 // Solo el propietario puede modificar la tabla intermedia: 
 ProductCatalogEntity macbook = new ProductCatalogEntity();
@@ -6682,6 +6841,7 @@ home.getProductCatalog().add(macbook); // NO se inserta nada
 ```
 
 ### **2. Evitar operaciones duplicadas:**
+
 ```java
 // Si ambos tuvieran cascade, podrías tener problemas:
 macbook.getCategories().add(home);     // Cascade desde macbook
@@ -6694,6 +6854,7 @@ home.getProductCatalog().add(macbook); // Cascade desde home
 ## 📊 **¿Qué pasa con cada CascadeType?**
 
 ### **En el propietario (ProductCatalogEntity):**
+
 ```java
 // PERSIST: Si guardas un producto, guarda sus categorías nuevas
 ProductCatalogEntity newProduct = new ProductCatalogEntity();
@@ -6710,6 +6871,7 @@ entityManager.refresh(product); // ✅ También refresca categorías
 ```
 
 ### **En el lado inverso SIN cascade:**
+
 ```java
 // NO PERSIST: Si guardas categoría, NO guarda productos nuevos automáticamente
 CategoryEntity category = new CategoryEntity();
@@ -6728,6 +6890,7 @@ categoryRepo.save(category); // ❌ Solo guarda categoría, NO el producto
 ```
 
 ### **El problema con MERGE en M:N:**
+
 ```java
 // Escenario problemático:
 ProductCatalogEntity product1 = new ProductCatalogEntity();
@@ -6749,12 +6912,12 @@ entityManager.merge(product2);  // ¡Intenta mergear LA MISMA category desde pro
 
 ## 📋 **Tabla resumen:**
 
-| Aspecto | Propietario (ProductCatalogEntity) | Inverso (CategoryEntity) |
-|: --------|:-----------------------------------|:-------------------------|
-| **Cascade** | ✅ SÍ (PERSIST, DETACH, REFRESH) | ❌ NO |
-| **Controla relación** | ✅ SÍ | ❌ NO |
-| **Modifica tabla intermedia** | ✅ SÍ | ❌ NO |
-| **mappedBy** | ❌ NO | ✅ SÍ |
+| Aspecto                       | Propietario (ProductCatalogEntity) | Inverso (CategoryEntity) |
+|:------------------------------|:-----------------------------------|:-------------------------|
+| **Cascade**                   | ✅ SÍ (PERSIST, DETACH, REFRESH)    | ❌ NO                     |
+| **Controla relación**         | ✅ SÍ                               | ❌ NO                     |
+| **Modifica tabla intermedia** | ✅ SÍ                               | ❌ NO                     |
+| **mappedBy**                  | ❌ NO                               | ✅ SÍ                     |
 
 ---
 
@@ -6763,6 +6926,7 @@ entityManager.merge(product2);  // ¡Intenta mergear LA MISMA category desde pro
 > **"Solo el lado PROPIETARIO (con @JoinTable) debe tener cascade"**
 
 ### **Razones:**
+
 - ✅ Evita operaciones duplicadas
 - ✅ Evita conflictos de merge
 - ✅ Control centralizado de la relación
@@ -6781,6 +6945,7 @@ entityManager.merge(product2);  // ¡Intenta mergear LA MISMA category desde pro
 ## 🔍 **¿Qué hace CascadeType.MERGE?**
 
 ### **MERGE significa:**
+
 > "Si haces merge en esta entidad, también haz merge en las entidades relacionadas"
 
 ```java
@@ -6794,6 +6959,7 @@ entityManager.merge(producto);  // ← También mergea las categorías relaciona
 ### **Escenario problemático:**
 
 #### **Paso 1: Crear entidades**
+
 ```java
 // Una categoría que será compartida
 CategoryEntity electronicCategory = new CategoryEntity();
@@ -6812,6 +6978,7 @@ ipad.getCategories().add(electronicCategory);     // ← iPad → MISMA Electron
 ```
 
 #### **Paso 2: El conflicto con MERGE**
+
 ```java
 // Si tuvieras CascadeType.MERGE activado:
 entityManager.merge(iphone);  
@@ -6827,6 +6994,7 @@ entityManager.merge(ipad);
 ## 🎯 **Análisis técnico del conflicto:**
 
 ### **En memoria tenemos:**
+
 ```
 electronicCategory (objeto) ←─┐
                                ├─ Referenciada por 2 productos
@@ -6835,6 +7003,7 @@ iPad.categories[0] ────────────┘
 ```
 
 ### **Al hacer merge:**
+
 ```java
 // Primer merge: 
 merge(iphone) → merge(electronicCategory) ✅ OK
@@ -6845,6 +7014,7 @@ merge(ipad) → merge(electronicCategory) ❌ PROBLEMA!
 ```
 
 ### **Error resultante:**
+
 ```
 PersistenceException: detached entity passed to persist: CategoryEntity
 // O similar, dependiendo del proveedor JPA
@@ -6855,6 +7025,7 @@ PersistenceException: detached entity passed to persist: CategoryEntity
 ## 🔄 **¿Por qué otros cascade SÍ funcionan?**
 
 ### **CascadeType.PERSIST (SÍ funciona):**
+
 ```java
 // PERSIST solo se aplica a entidades NUEVAS (transient)
 save(iphone);  // Persiste iPhone + Electronics (primera vez)
@@ -6862,6 +7033,7 @@ save(ipad);    // Persiste iPad, pero Electronics ya existe → OK
 ```
 
 ### **CascadeType.REFRESH (SÍ funciona):**
+
 ```java
 // REFRESH siempre trae datos frescos de DB
 refresh(iphone);  // Refresca iPhone + Electronics
@@ -6869,6 +7041,7 @@ refresh(ipad);    // Refresca iPad + Electronics → OK, son datos de DB
 ```
 
 ### **CascadeType.DETACH (SÍ funciona):**
+
 ```java
 // DETACH simplemente desconecta del contexto
 detach(iphone);  // Desconecta iPhone + Electronics  
@@ -6879,19 +7052,20 @@ detach(ipad);    // Desconecta iPad + Electronics → OK
 
 ## 📊 **Comparación visual:**
 
-| CascadeType | ¿Problema en M:N? | ¿Por qué?  |
-|: ------------|:-------------------|:-----------|
-| **PERSIST** | ❌ No | Solo para entidades nuevas |
-| **MERGE** | ✅ SÍ | Misma entidad mergeada múltiples veces |
-| **REFRESH** | ❌ No | Siempre trae datos de DB |
-| **DETACH** | ❌ No | Solo desconecta del contexto |
-| **REMOVE** | ⚠️ Peligroso | Eliminar categorías compartidas |
+| CascadeType | ¿Problema en M:N? | ¿Por qué?                              |
+|:------------|:------------------|:---------------------------------------|
+| **PERSIST** | ❌ No              | Solo para entidades nuevas             |
+| **MERGE**   | ✅ SÍ              | Misma entidad mergeada múltiples veces |
+| **REFRESH** | ❌ No              | Siempre trae datos de DB               |
+| **DETACH**  | ❌ No              | Solo desconecta del contexto           |
+| **REMOVE**  | ⚠️ Peligroso      | Eliminar categorías compartidas        |
 
 ---
 
 ## 🛡️ **Solución:  NO usar MERGE en M:N**
 
 ### **En lugar de cascade MERGE, haz merge manual cuando sea necesario:**
+
 ```java
 // Merge manual y controlado:
 CategoryEntity managedCategory = entityManager.merge(electronics);
@@ -6906,6 +7080,7 @@ ProductCatalogEntity managedIphone = entityManager.merge(iphone);
 ## 💡 **Resumen del problema:**
 
 **MERGE + M:N = 🚫**
+
 - ❌ La misma entidad relacionada se mergea múltiples veces
 - ❌ JPA no puede manejar conflictos de merge concurrente
 - ❌ Genera excepciones de persistencia
@@ -6939,18 +7114,19 @@ EntityManager. merge(entidad) → {
 
 ## 📊 **MERGE vs otras operaciones:**
 
-| Operación | ¿Qué hace?  | ¿Cuándo?  |
-|: ----------|:-----------|:---------|
-| **persist()** | Insertar (solo nuevas) | Entidad NUEVA (transient) |
-| **merge()** | Insertar O Actualizar | Cualquier entidad (managed/detached) |
-| **update()** | Solo actualizar | Entidad existente (detached) |
-| **save()** | Auto-detecta | Spring decide persist() o merge() |
+| Operación     | ¿Qué hace?             | ¿Cuándo?                             |
+|:--------------|:-----------------------|:-------------------------------------|
+| **persist()** | Insertar (solo nuevas) | Entidad NUEVA (transient)            |
+| **merge()**   | Insertar O Actualizar  | Cualquier entidad (managed/detached) |
+| **update()**  | Solo actualizar        | Entidad existente (detached)         |
+| **save()**    | Auto-detecta           | Spring decide persist() o merge()    |
 
 ---
 
 ## 🎯 **Ejemplos prácticos de MERGE:**
 
 ### **Caso 1: Entidad NUEVA (actúa como INSERT):**
+
 ```java
 ProductCatalogEntity newProduct = new ProductCatalogEntity();
 newProduct.setProductName("iPhone 16");  // ID = null (nueva)
@@ -6961,6 +7137,7 @@ ProductCatalogEntity managed = entityManager.merge(newProduct);
 ```
 
 ### **Caso 2: Entidad EXISTENTE (actúa como UPDATE):**
+
 ```java
 // Producto ya existe en DB con ID = uuid-123
 ProductCatalogEntity existingProduct = new ProductCatalogEntity();
@@ -6973,6 +7150,7 @@ ProductCatalogEntity managed = entityManager.merge(existingProduct);
 ```
 
 ### **Caso 3: Entidad DETACHED (reconectar + actualizar):**
+
 ```java
 // Producto obtenido en una sesión anterior (detached)
 ProductCatalogEntity detachedProduct = productService.getById("uuid-123");
@@ -6991,6 +7169,7 @@ ProductCatalogEntity managed = entityManager.merge(detachedProduct);
 ## ⚡ **Estados de entidades y MERGE:**
 
 ### **Estados de entidades JPA:**
+
 ```java
 // TRANSIENT (nueva, sin ID)
 ProductCatalogEntity product = new ProductCatalogEntity(); // ← TRANSIENT
@@ -7012,6 +7191,7 @@ entityManager.merge(detachedProduct);   // → UPDATE
 ## 🔄 **¿Cómo decide MERGE qué hacer?**
 
 ### **Algoritmo interno de MERGE:**
+
 ```java
 public Entity merge(Entity entity) {
     if (entity. getId() == null) {
@@ -7036,6 +7216,7 @@ public Entity merge(Entity entity) {
 ## 💡 **¿Por qué MERGE en lugar de persist()?**
 
 ### **MERGE es más flexible:**
+
 ```java
 // Con persist() tienes que saber el estado: 
 if (product.getId() == null) {
@@ -7053,6 +7234,7 @@ entityManager.merge(product);          // Funciona en ambos casos
 ## 🎯 **Resumen:**🤓✨
 
 **MERGE NO es solo actualizar:**
+
 - ✅ **Si la entidad es nueva** → **INSERT** (como persist)
 - ✅ **Si la entidad existe** → **UPDATE** (actualizar)
 - ✅ **Si la entidad está detached** → **Reconectar + UPDATE**
@@ -7494,6 +7676,7 @@ VALUES ('Galazy S24 Plus', 'Samsung', 5);
 ## 🔑 **¿Por qué necesitas Serializable en claves compuestas?**
 
 ### **Tu tabla reject_products:**
+
 ```sql
 CREATE TABLE reject_products (
     product_name VARCHAR(64) NOT NULL,
@@ -7510,6 +7693,7 @@ CREATE TABLE reject_products (
 ## 📊 **Mapeo JPA de clave compuesta:**
 
 ### **RejectProductEntity:**
+
 ```java
 @Entity
 @Table(name = "reject_products")
@@ -7527,6 +7711,7 @@ public class RejectProductEntity {
 ```
 
 ### **RejectProductId (tu clase):**
+
 ```java
 public class RejectProductId implements Serializable {  // ← OBLIGATORIO
     private String productName;
@@ -7539,6 +7724,7 @@ public class RejectProductId implements Serializable {  // ← OBLIGATORIO
 ## 🎯 **¿Por qué JPA exige Serializable?**
 
 ### **1. Almacenamiento en cache:**
+
 ```java
 // JPA almacena las claves en cache/memoria: 
 Map<RejectProductId, RejectProductEntity> cache = new HashMap<>();
@@ -7549,6 +7735,7 @@ byte[] serializedKey = serialize(key);  // ← Necesita Serializable
 ```
 
 ### **2. Comparación y hashing:**
+
 ```java
 // JPA necesita comparar claves: 
 RejectProductId key1 = new RejectProductId("iPhone", "Apple");
@@ -7560,6 +7747,7 @@ cache.get(key2);  // ← Debe encontrar la misma entidad
 ```
 
 ### **3. Persistencia distribuida:**
+
 ```java
 // En sistemas distribuidos, las claves viajan por la red:
 ClusterNode1 → send(RejectProductId) → ClusterNode2
@@ -7571,6 +7759,7 @@ ClusterNode1 → send(RejectProductId) → ClusterNode2
 ## ⚠️ **¿Qué pasa SI NO implementas Serializable?**
 
 ### **Error al arrancar la aplicación:**
+
 ```
 java.io.NotSerializableException: RejectProductId
 // O
@@ -7582,6 +7771,7 @@ PersistenceException: composite-id class must implement Serializable:  RejectPro
 ## 📋 **Requisitos completos para claves compuestas:**
 
 ### **Tu clase RejectProductId debe:**
+
 ```java
 public class RejectProductId implements Serializable {
     
@@ -7615,6 +7805,7 @@ public class RejectProductId implements Serializable {
 ## 🎯 **¿Dónde más se usa Serializable?**
 
 ### **Casos similares:**
+
 - ✅ **@EmbeddedId** con claves compuestas
 - ✅ **Cache de segundo nivel** (Redis, Hazelcast)
 - ✅ **Sesiones distribuidas**
@@ -7626,6 +7817,7 @@ public class RejectProductId implements Serializable {
 ## 💡 **Alternativa con @EmbeddedId:**
 
 ### **En lugar de @IdClass, podrías usar:**
+
 ```java
 @Entity
 public class RejectProductEntity {
@@ -7648,6 +7840,7 @@ public class RejectProductId implements Serializable {  // ← Sigue necesitando
 ## ✅ **Resumen:**
 
 **Serializable en claves compuestas es obligatorio porque:**
+
 - 🔄 **JPA serializa claves** para cache y comparaciones
 - 🌐 **Sistemas distribuidos** necesitan enviar claves por red
 - 📦 **Persistencia de sesiones** requiere serialización
@@ -7656,6 +7849,7 @@ public class RejectProductId implements Serializable {  // ← Sigue necesitando
 **Sin Serializable = Error al arrancar la aplicación** ❌
 
 ## ¿POR QUE USAR LLAVE COMPUESTA?🤓✨
+
 ¡**EXCELENTE PREGUNTA**! 🎯 **Hay razones muy específicas para usar claves compuestas en lugar de un ID simple.**
 
 ---
@@ -7663,6 +7857,7 @@ public class RejectProductId implements Serializable {  // ← Sigue necesitando
 ## 🔍 **¿Por qué clave compuesta en reject_products? **
 
 ### **Tu tabla:**
+
 ```sql
 CREATE TABLE reject_products (
     product_name VARCHAR(64) NOT NULL,
@@ -7673,6 +7868,7 @@ CREATE TABLE reject_products (
 ```
 
 ### **En lugar de:**
+
 ```sql
 CREATE TABLE reject_products (
     id BIGSERIAL PRIMARY KEY,               -- ← ID simple
@@ -7687,7 +7883,8 @@ CREATE TABLE reject_products (
 
 ## 🎯 **Razones para elegir clave compuesta:**
 
-### **1.  LÓGICA DE NEGOCIO - Unicidad natural:**
+### **1. LÓGICA DE NEGOCIO - Unicidad natural:**
+
 ```java
 // En tu dominio de negocio:  
 // "Solo puede haber UN registro de productos rechazados por producto+marca"
@@ -7701,6 +7898,7 @@ CREATE TABLE reject_products (
 **La combinación (product_name, brand_name) es NATURALMENTE única.**
 
 ### **2. NO necesitas un ID artificial:**
+
 ```java
 // Con clave compuesta:
 RejectProductId key = new RejectProductId("iPhone", "Apple");
@@ -7711,6 +7909,7 @@ RejectProductEntity reject = repository.findByProductNameAndBrandName("iPhone", 
 ```
 
 ### **3. PERFORMANCE - Búsquedas más eficientes:**
+
 ```sql
 -- Con clave compuesta (búsqueda directa por PK):
 SELECT * FROM reject_products 
@@ -7724,6 +7923,7 @@ WHERE product_name = 'iPhone' AND brand_name = 'Apple';
 ```
 
 ### **4. INTEGRIDAD DE DATOS a nivel de DB:**
+
 ```sql
 -- Con clave compuesta:  
 INSERT INTO reject_products VALUES ('iPhone', 'Apple', 5);
@@ -7736,25 +7936,27 @@ INSERT INTO reject_products VALUES ('iPhone', 'Apple', 3);  -- ❌ ERROR automá
 
 ## 📊 **Comparación:  ID artificial vs Clave compuesta**
 
-| Aspecto | ID Artificial | Clave Compuesta |
-|: --------|:-------------|:----------------|
-| **Simplicidad JPA** | ✅ Más simple | ❌ Más complejo |
-| **Performance búsqueda** | ❌ Index secundario | ✅ Primary key directa |
-| **Lógica de negocio** | ❌ ID sin significado | ✅ ID con significado |
-| **Integridad** | ❌ Necesita validación extra | ✅ Garantizada por DB |
-| **Unicidad** | ❌ Restricción UNIQUE adicional | ✅ Primary key natural |
+| Aspecto                  | ID Artificial                  | Clave Compuesta       |
+|:-------------------------|:-------------------------------|:----------------------|
+| **Simplicidad JPA**      | ✅ Más simple                   | ❌ Más complejo        |
+| **Performance búsqueda** | ❌ Index secundario             | ✅ Primary key directa |
+| **Lógica de negocio**    | ❌ ID sin significado           | ✅ ID con significado  |
+| **Integridad**           | ❌ Necesita validación extra    | ✅ Garantizada por DB  |
+| **Unicidad**             | ❌ Restricción UNIQUE adicional | ✅ Primary key natural |
 
 ---
 
 ## 🎯 **¿Cuándo usar clave compuesta?**
 
 ### **✅ USA clave compuesta cuando:**
+
 - 🔑 **Unicidad natural** existe en el dominio
 - 🏃‍♂️ **Performance crítico** en búsquedas
 - 📊 **Reporting/Analytics** - agrupaciones naturales
 - 🎯 **Dominio bien definido** con reglas claras
 
 ### **❌ USA ID artificial cuando:**
+
 - 🔄 **Relaciones complejas** con muchas FKs
 - 🏗️ **Desarrollo rápido** - menos complejidad
 - 🔀 **Cambios frecuentes** en reglas de negocio
@@ -7780,6 +7982,7 @@ RejectProductEntity reject = repository.findByProductAndBrand("iPhone 15", "Appl
 ```
 
 ### **Casos de uso típicos:**
+
 ```java
 // ✅ Incrementar rechazo de iPhone Apple: 
 RejectProductId key = new RejectProductId("iPhone 15", "Apple");
@@ -7799,6 +8002,7 @@ List<RejectProductEntity> topRejected = repository.findTop10ByOrderByQuantityDes
 ## 🎯 **Conclusión:**
 
 **La clave compuesta se eligió porque:**
+
 - ✅ **Refleja la unicidad natural** del dominio:  (producto, marca)
 - ✅ **Optimiza búsquedas** por las dimensiones principales
 - ✅ **Garantiza integridad** sin código adicional
@@ -7807,6 +8011,7 @@ List<RejectProductEntity> topRejected = repository.findTop10ByOrderByQuantityDes
 ## 🎯✨ ->
 
 ---
+
 ## #️ ⃣📚**Clase 49 : MAPEANDO LLAVE PRIMARIA COMPUESTA **
 
 > ## Creamos
@@ -7856,8 +8061,6 @@ RejectProductEntity(productName=Galazy S24 Plus, productBrand=Samsung, quantity=
 <details>
 <summary><strong>🎯SECCION 4 JPA REPOSITORIOS</strong></summary>
 
-    
-
 ## #️ ⃣📚**Clase 50: EXPLICACION DE LOS REPOSITORIOS JPA`**
 
 ![image](/images/42.png)
@@ -7877,6 +8080,7 @@ RejectProductEntity(productName=Galazy S24 Plus, productBrand=Samsung, quantity=
 ## 🔍 **¿Qué son Query Methods y JPQL?**
 
 ### **Query Methods (Spring Data):**
+
 ```java
 // Spring genera automáticamente la consulta basándose en el nombre del método
 public interface ProductRepository extends JpaRepository<ProductEntity, UUID> {
@@ -7887,6 +8091,7 @@ public interface ProductRepository extends JpaRepository<ProductEntity, UUID> {
 ```
 
 ### **JPQL (Java Persistence Query Language):**
+
 ```java
 public interface ProductRepository extends JpaRepository<ProductEntity, UUID> {
     @Query("SELECT p FROM ProductEntity p WHERE p.brandName = :brand")
@@ -7903,6 +8108,7 @@ public interface ProductRepository extends JpaRepository<ProductEntity, UUID> {
 ## 📊 **¿Cuándo usar Query Methods?**
 
 ### **✅ PERFECTO para consultas SIMPLES:**
+
 ```java
 // ✅ Búsquedas por un campo
 findByProductName(String name)
@@ -7924,6 +8130,7 @@ Page<ProductEntity> findByBrandName(String brand, Pageable pageable)
 ```
 
 ### **❌ NO usar Query Methods cuando:**
+
 ```java
 // ❌ Consultas complejas (nombres muy largos)
 findByBrandNameAndPriceBetweenAndIsDiscountTrueAndRatingGreaterThanOrderByPriceAsc(...)
@@ -7939,6 +8146,7 @@ findByBrandNameAndPriceBetweenAndIsDiscountTrueAndRatingGreaterThanOrderByPriceA
 ## 📊 **¿Cuándo usar JPQL?**
 
 ### **✅ PERFECTO para consultas COMPLEJAS:**
+
 ```java
 // ✅ JOINs con múltiples tablas
 @Query("SELECT p FROM ProductEntity p " +
@@ -7969,6 +8177,7 @@ List<ProductSummaryDTO> getProductSummaryByBrand();
 ### **Ejemplos con ProductEntity:**
 
 #### **Query Methods (simples):**
+
 ```java
 public interface ProductCatalogRepository extends JpaRepository<ProductCatalogEntity, UUID> {
     
@@ -7987,6 +8196,7 @@ public interface ProductCatalogRepository extends JpaRepository<ProductCatalogEn
 ```
 
 #### **JPQL (complejas):**
+
 ```java
 public interface ProductCatalogRepository extends JpaRepository<ProductCatalogEntity, UUID> {
     
@@ -8017,16 +8227,16 @@ public interface ProductCatalogRepository extends JpaRepository<ProductCatalogEn
 
 ## 📋 **Guía de decisión:**
 
-| Criterio | Query Methods | JPQL |
-|: ---------|:--------------|:-----|
-| **Simplicidad** | ✅ Muy simple | ❌ Más verboso |
-| **Legibilidad** | ✅ Autodocumentado | ❌ Requiere leer query |
-| **Mantenimiento** | ✅ Fácil | ❌ Más propenso a errores |
-| **Performance** | ✅ Optimizado por Spring | ✅ Control total |
-| **Flexibilidad** | ❌ Limitado | ✅ Total flexibilidad |
-| **JOINs complejos** | ❌ No soporta bien | ✅ Excelente |
-| **Agregaciones** | ❌ No soporta | ✅ Perfecto |
-| **Consultas dinámicas** | ❌ No soporta | ✅ Con Criteria API |
+| Criterio                | Query Methods           | JPQL                     |
+|:------------------------|:------------------------|:-------------------------|
+| **Simplicidad**         | ✅ Muy simple            | ❌ Más verboso            |
+| **Legibilidad**         | ✅ Autodocumentado       | ❌ Requiere leer query    |
+| **Mantenimiento**       | ✅ Fácil                 | ❌ Más propenso a errores |
+| **Performance**         | ✅ Optimizado por Spring | ✅ Control total          |
+| **Flexibilidad**        | ❌ Limitado              | ✅ Total flexibilidad     |
+| **JOINs complejos**     | ❌ No soporta bien       | ✅ Excelente              |
+| **Agregaciones**        | ❌ No soporta            | ✅ Perfecto               |
+| **Consultas dinámicas** | ❌ No soporta            | ✅ Con Criteria API       |
 
 ---
 
@@ -8069,6 +8279,7 @@ public interface ProductCatalogRepository extends JpaRepository<ProductCatalogEn
 **No es obligatorio usar ambos, pero combinarlos te da lo mejor de ambos mundos.  ** ✨🤓
 
 ---
+
 ## #️ ⃣📚**Clase 51:DTO CATEGORIAS`**
 
 ```sql
@@ -9331,6 +9542,73 @@ public ResponseEntity<ProductCatalogDTO> getById(@PathVariable String id) {
 
 ## #️ ⃣📚**Clase 56:BUSCAR POR NOMBRE`**
 
+```sql
+select *
+  from products_catalog
+  where product_name = 'Pc gamer';
+```
+- Por detras es como si estuvieramos haciendo el Query de arriba en sql pero en java usando QueryMehods de JPA
+- y por que product_name en el sql y en jpa name? por que ya esta mapeada en la columna como "product_name"
 
+
+```java
+public interface ProductCatalogRepository extends JpaRepository<ProductCatalogEntity, UUID> {
+    
+    Optional<ProductCatalogEntity> findByName(String name); 
+    
+}
+```
+- En ProductCatalogServiceImpl -> 
+
+```java
+    @Override
+    public ProductCatalogEntity findByName(String name) {
+        return this.catalogRepository.findByName(name).orElseThrow();
+    }
+
+```
+- En ProductCatalogController -> 
+
+```java
+    @GetMapping(path = "by-name/{name}")
+    public ResponseEntity<ProductCatalogEntity> getByName(@PathVariable String name) {
+        return ResponseEntity.ok(this.productCatalogService.findByName(name));
+    }
+```
+
+- Hacemos la prueba en postman con : 
+
+![image](/images/47.png)
+
+- si ponemos un nombre que no esta pues tenemos la opcion que pusimos en ProductCatalogServiceImpl 
+- de lanzar una excepcion con orElseThrow() 
+
+> ### **Opcion 1-orElseThrow()**
+> - Lanzara un error 500 Internal Server Error
+
+```java
+   @Override
+    public ProductCatalogEntity findByName(String name) {
+        return this.catalogRepository.findByName(name).orElseThrow();
+    }
+
+```
+- Respuesta en postman ingresando un nombre que no existe:
+
+![image](/images/48.png)
+
+> ### **Opcion 2-orElse(ProductCatalogEntity.builder().build())**
+> - Lanzara un objeto vacio
+
+```java
+  @Override
+    public ProductCatalogEntity findByName(String name) {
+        return this.catalogRepository.findByName(name).orElse(ProductCatalogEntity.builder().build());//lanzara un objeto vacio
+    }
+```
+
+- Respuesta en postman ingresando un nombre que no existe:
+
+![image](/images/49.png)
 
 </details>

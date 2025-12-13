@@ -31,7 +31,8 @@ public class ProductCatalogServiceImpl implements ProductCatalogService {
 
     @Override
     public ProductCatalogEntity findByName(String name) {
-        return null;
+        return this.catalogRepository.findByName(name).orElseThrow();
+        //return this.catalogRepository.findByName(name).orElse(ProductCatalogEntity.builder().build());//lanzara un objeto vacio
     }
 
     @Override
