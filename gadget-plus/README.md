@@ -254,7 +254,7 @@ private List<ChildEntity> children;
 <details>
 <summary><strong>🚀 CARDINALIDAD ENTRE LAS TABLAS </strong></summary>
 
-![img](images/diagrama.png)
+
 
 ## 📊RESUMEN Y EXPLICACION
 
