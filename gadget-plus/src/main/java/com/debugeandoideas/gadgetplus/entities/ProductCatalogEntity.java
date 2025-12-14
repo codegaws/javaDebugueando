@@ -10,7 +10,9 @@ import java.util.List;
 import java.util.UUID;
 
 @Entity(name = "productCatalog")
-@Table(name = "products_catalog")
+@Table(name = "products_catalog", indexes = {
+        @Index(name = "idx_product_name", columnList = "product_name"),
+})
 @Getter
 @Setter
 @ToString

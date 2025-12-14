@@ -19,4 +19,7 @@ public interface ProductCatalogRepository extends JpaRepository<ProductCatalogEn
     @Query("from productCatalog p where p.price between :min and :max")
     List<ProductCatalogEntity> findByBetweenTwoPrices(BigDecimal min, BigDecimal max);
 
+    @Query("from productCatalog p left join fetch p.categories c where c.id= :categoryId")
+    List<ProductCatalogEntity> getByCategory(Long categoryId);
+
 }

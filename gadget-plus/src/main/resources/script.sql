@@ -133,3 +133,16 @@ select *
 from products_catalog pc
 where pc.price between 100 and 1000;
 
+-- INDICES CLASE 61
+create index idx_product_name on products_catalog (product_name);
+
+-- joins con JPQL
+select *
+from categories;
+
+SELECT *
+FROM products_catalog pc -- Tabla principal: productos
+         JOIN product_join_category pjc ON pjc.id_product = pc.id -- Unir con tabla puente
+         JOIN categories c ON pjc.id_category = c.id
+where c.id = 1;-- trae todo lo que es HOME
+

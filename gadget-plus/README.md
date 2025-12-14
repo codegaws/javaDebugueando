@@ -9781,4 +9781,106 @@ public class ProductCatalogEntity {
 
 ![image](images/53.png)
 
+
+## #️ ⃣📚**Clase 61:INDICES**
+
+### ¿Qué es un índice en bases de datos?
+- Un índice es una estructura de datos que mejora la velocidad de las operaciones de consulta en una tabla a costa de espacio adicional 
+- y tiempo extra para las operaciones de escritura (inserciones, actualizaciones, eliminaciones).
+- Los índices funcionan como un índice en un libro, permitiendo un acceso rápido a los datos sin tener que escanear toda la tabla.
+
+```sql
+create index idx_product_name on products_catalog (product_name);
+```
+
+- Primero vamos a ProductCatalogEntity agregamos index en la tabla ->
+
+```java
+@Table(name = "products_catalog", indexes = {
+        @Index(name = "idx_product_name", columnList = "product_name"),
+})
+```
+- Luego hacemos una prueba en postman ->
+
+![image](images/54.png)
+
+## #️ ⃣📚**Clase 62:JOINS EN JPQL**
+
+> Vamos a recrear en JPQL este query SQL con JOIN
+
+```sql
+SELECT *
+FROM products_catalog pc -- Tabla principal: productos
+         JOIN product_join_category pjc ON pjc.id_product = pc.id -- Unir con tabla puente
+         JOIN categories c ON pjc.id_category = c.id
+where c.id = 1;-- trae todo lo que es HOME
+
+```
+### Recuerda que en ProductCatalogEntity ya tenemos una tabla intermedia por eso no necesitamos especificar en el Query
+### La tabla intermedia -  ese fetch representa el EAGER para cargar las categorias
+
+```java
+ @Query("from productCatalog p left join fetch p.categories c where c.id= :categoryId")
+    List<ProductCatalogEntity> getByCategory(Long categoryId);
+```
+
+### Explicacion
+## Explicación de la Query `getByCategory`
+
+Esta consulta JPQL utiliza **JOIN FETCH** para obtener productos junto con sus categorías de forma eficiente:
+
+### Componentes de la Query
+
+```java
+@Query("from productCatalog p left join fetch p.categories c where c.id= :categoryId")
+```
+
+- **`from productCatalog p`**: Selecciona de la entidad `ProductCatalogEntity` (alias `p`)
+- **`left join fetch p.categories c`**: Realiza un LEFT JOIN con la relación `categories` y **carga eagerly** los datos
+- **`where c.id= :categoryId`**: Filtra por el ID de categoría específico
+- **`:categoryId`**: Parámetro que recibe el método
+
+### ¿Qué hace el FETCH?
+
+El **`fetch`** evita el problema **N+1** cargando las categorías en la misma consulta SQL en lugar de hacer consultas separadas:
+
+**Sin FETCH:**
+```sql
+-- Query principal
+SELECT * FROM product_catalog WHERE category_id = ?
+-- N queries adicionales (una por producto)
+SELECT * FROM categories WHERE id = ?
+SELECT * FROM categories WHERE id = ?
+-- ... más queries
+```
+
+**Con FETCH:**
+```sql
+-- Una sola query optimizada
+SELECT p.*, c.* 
+FROM product_catalog p 
+LEFT JOIN categories c ON p.category_id = c.id 
+WHERE c.id = ?
+```
+
+### ¿Por qué LEFT JOIN?
+
+- **LEFT JOIN**: Retorna productos **incluso si no tienen categorías** asignadas
+- Si fuera **INNER JOIN**: Solo retornaría productos que **sí tienen** categorías
+
+### Resultado del Método
+
+```java
+List<ProductCatalogEntity> getByCategory(Long categoryId);
+```
+
+Retorna una lista de productos que pertenecen a la categoría especificada, con sus objetos `categories` 
+**ya cargados** en memoria, evitando lazy loading posterior.
+
+---
+
+## #️ ⃣📚**Clase 63:PROBANDO JOINS EN JPQL**
+
+
+
 </details>
