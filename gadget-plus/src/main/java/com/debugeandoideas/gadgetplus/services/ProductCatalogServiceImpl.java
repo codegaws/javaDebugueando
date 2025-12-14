@@ -1,5 +1,6 @@
 package com.debugeandoideas.gadgetplus.services;
 
+import com.debugeandoideas.gadgetplus.dto.DateEval;
 import com.debugeandoideas.gadgetplus.entities.ProductCatalogEntity;
 import com.debugeandoideas.gadgetplus.repositories.ProductCatalogRepository;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -48,6 +50,15 @@ public class ProductCatalogServiceImpl implements ProductCatalogService {
     @Override
     public List<ProductCatalogEntity> findByCategory(Long id) {
         return this.catalogRepository.getByCategory(id);
+    }
+
+    @Override
+    public List<ProductCatalogEntity> findByLauchingDate(LocalDate date, DateEval key) {
+        if (key.equals(DateEval.AFTER)) {
+            return this.catalogRepository.findByLaunchingDateAfter(date);
+        } else {
+            return this.catalogRepository.findByLaunchingDateBefore(date);
+        }
     }
 
     @Override

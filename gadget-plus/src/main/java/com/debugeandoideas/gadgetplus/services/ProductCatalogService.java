@@ -1,5 +1,6 @@
 package com.debugeandoideas.gadgetplus.services;
 
+import com.debugeandoideas.gadgetplus.dto.DateEval;
 import com.debugeandoideas.gadgetplus.entities.ProductCatalogEntity;
 import org.springframework.data.domain.Page;
 
@@ -22,7 +23,8 @@ public interface ProductCatalogService {
 
     List<ProductCatalogEntity> findByCategory(Long id);
 
-    //List<ProductCatalogEntity> findByLauchingDate(LocalDate date,DateEval key);
+    List<ProductCatalogEntity> findByLauchingDate(LocalDate date, DateEval key);
+
     List<ProductCatalogEntity> findByBrandAndRating(String brand, Short rating);
     //List<StaticsProduct> findStatistics();
 

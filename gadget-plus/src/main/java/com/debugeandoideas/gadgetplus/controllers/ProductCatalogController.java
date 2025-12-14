@@ -1,6 +1,7 @@
 package com.debugeandoideas.gadgetplus.controllers;
 
 import com.debugeandoideas.gadgetplus.Enum.LikeKey;
+import com.debugeandoideas.gadgetplus.dto.DateEval;
 import com.debugeandoideas.gadgetplus.entities.ProductCatalogEntity;
 import com.debugeandoideas.gadgetplus.services.ProductCatalogService;
 import lombok.RequiredArgsConstructor;
@@ -8,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -59,6 +61,11 @@ public class ProductCatalogController {
     @GetMapping(path = "category")
     public ResponseEntity<List<ProductCatalogEntity>> getByCategory(@RequestParam Long id) {
         return ResponseEntity.ok(this.productCatalogService.findByCategory(id));
+    }
+
+    @GetMapping(path = "date-launch/{key}")
+    public ResponseEntity<List<ProductCatalogEntity>> getByDate(@PathVariable DateEval key, @RequestParam LocalDate date) {
+        return ResponseEntity.ok(this.productCatalogService.findByLauchingDate(date, key));
     }
 
 

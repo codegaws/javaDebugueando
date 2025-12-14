@@ -144,5 +144,11 @@ SELECT *
 FROM products_catalog pc -- Tabla principal: productos
          JOIN product_join_category pjc ON pjc.id_product = pc.id -- Unir con tabla puente
          JOIN categories c ON pjc.id_category = c.id
-where c.id = 1;-- trae todo lo que es HOME
+where c.id = 1;
+-- trae todo lo que es HOME
+
+-- CLASE TRABAJANDO CON FECHAS
+select *
+from products_catalog
+where launching_date > '2017-01-01';
 

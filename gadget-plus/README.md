@@ -9912,7 +9912,26 @@ Retorna una lista de productos que pertenecen a la categoría especificada, con 
 --- 
 
 ## #️ ⃣📚**Clase 64:TRABAJANDO CON FECHAS PARTE 1**
+- VAMOS A INTERPRETAR AHORA ESTE QUERY EN LENGUAJE DE SPRING JPA SE PUEDE HACER DE LAS 2 FORMAS
 
+```sql
+select *
+from products_catalog
+where launching_date > '2017-01-01';
+```
+![image](images/56.png)
 
+- En el ProductCatalogRepository ->
+
+```java
+    //APLICANDO LENGUAJE DE SPRING JPA
+    List<ProductCatalogEntity> findByLaunching_dateBefore(LocalDate date);
+
+    List<ProductCatalogEntity> findByLaunching_dateAfter(LocalDate date);
+```
+
+## #️ ⃣📚**Clase 65:TRABAJANDO CON FECHAS PARTE 2**
+- Creamos en Dto un enumerador llamado DateEval
+- 
 
 </details>
