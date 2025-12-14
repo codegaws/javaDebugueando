@@ -9540,7 +9540,11 @@ public ResponseEntity<ProductCatalogDTO> getById(@PathVariable String id) {
 }
 ```
 
-## #️ ⃣📚**Clase 56:BUSCAR POR NOMBRE`**
+## #️ ⃣📚**Clase 56:BUSCAR POR NOMBRE**
+
+### findByName = Esta bajo convencion de QueryMethods de JPA el nombre si existe en la lista de JPA QueryMethods
+ - Esto quiere decir que no tienes que inventar nada solo seguir la convencion de nombres que JPA tiene predefinida
+![image](images/51.png)
 
 ```sql
 select *
@@ -9578,7 +9582,7 @@ public interface ProductCatalogRepository extends JpaRepository<ProductCatalogEn
 
 - Hacemos la prueba en postman con :
 
-![image](/images/47.png)
+![image](images/47.png)
 
 - si ponemos un nombre que no esta pues tenemos la opcion que pusimos en ProductCatalogServiceImpl
 - de lanzar una excepcion con orElseThrow()
@@ -9595,7 +9599,7 @@ public interface ProductCatalogRepository extends JpaRepository<ProductCatalogEn
 ```
 - Respuesta en postman ingresando un nombre que no existe:
 
-![image](/images/48.png)
+![image](images/48.png)
 
 > ### **Opcion 2-orElse(ProductCatalogEntity.builder().build())**
 > - Lanzara un objeto vacio
@@ -9609,6 +9613,172 @@ public interface ProductCatalogRepository extends JpaRepository<ProductCatalogEn
 
 - Respuesta en postman ingresando un nombre que no existe:
 
-![image](/images/49.png)
+![image](images/49.png)
+
+## #️ ⃣📚**Clase 57:OPERADOR LIKE**
+
+### findByNameLike = Esta bajo convencion de QueryMethods de JPA el nombre si existe en la lista de JPA QueryMethods
+- Esto quiere decir que no tienes que inventar nada solo seguir la convencion de nombres que JPA tiene predefinida
+  ![image](images/52.png)
+
+- En el repository -> aplicamos los Querymethods
+
+```java
+List<ProductCatalogEntity> findByNameLike(String key);
+```
+
+```sql
+select *
+from products_catalog pc
+where pc.product_name like '%series%';
+
+```
+- Creamos un Enum -> 
+
+```java
+public enum LikeKey {
+    AFTER,
+    BETWEEN,
+    BEFORE
+}
+
+```
+- Al controlador mandamos el "key"
+- en el controlador ->
+```java
+    @GetMapping(path = "like/{key}")
+    public ResponseEntity<List<ProductCatalogEntity>> getByNameLike(@PathVariable LikeKey key, @RequestParam String word) {
+        // comodin
+        final var placeholder = "%";
+        if (key.equals(LikeKey.AFTER)) {
+            return ResponseEntity.ok(this.productCatalogService.findNameLike(placeholder + word));
+        }
+        if (key.equals(LikeKey.BEFORE)) {
+            return ResponseEntity.ok(this.productCatalogService.findNameLike(word + placeholder));
+        }
+        if (key.equals(LikeKey.BETWEEN)) {
+            return ResponseEntity.ok(this.productCatalogService.findNameLike(placeholder + word + placeholder));
+        }
+        return ResponseEntity.badRequest().build();
+    }
+``` 
+## Explicacion sobre el codigo 
+## Análisis del Endpoint `getByNameLike`
+
+### 1. ¿Por qué `<List<ProductCatalogEntity>>`?
+
+Se usa `List<ProductCatalogEntity>` porque este endpoint está diseñado para realizar **búsquedas con patrones LIKE**, las cuales pueden retornar **múltiples resultados**. A diferencia de una búsqueda por ID o nombre exacto que retorna un único elemento, las búsquedas con comodines (`%`) pueden encontrar varios productos que coincidan con el patrón especificado.
+
+### 2. ¿Por qué dos parámetros?
+
+Sí, necesitas ambos parámetros porque cada uno tiene un **propósito específico**:
+
+- **`@PathVariable LikeKey key`**: Define la **estrategia de búsqueda** (antes, después o entre el término)
+- **`@RequestParam String word`**: Contiene la **palabra o término** que se va a buscar
+
+**Ejemplo de uso:**
+```
+GET /product-catalog/like/BETWEEN?word=phone
+```
+
+### 3. ¿Cómo funcionan las condicionales?
+
+Las condicionales implementan **tres estrategias de búsqueda** usando comodines SQL:
+
+```java
+// AFTER: busca productos que TERMINEN con la palabra
+// Ejemplo: "%phone" encuentra "smartphone", "iPhone"
+if (key.equals(LikeKey.AFTER)) {
+    return ResponseEntity.ok(this.productCatalogService.findNameLike(placeholder + word));
+}
+
+// BEFORE: busca productos que COMIENCEN con la palabra  
+// Ejemplo: "phone%" encuentra "phone case", "phone charger"
+if (key.equals(LikeKey.BEFORE)) {
+    return ResponseEntity.ok(this.productCatalogService.findNameLike(word + placeholder));
+}
+
+// BETWEEN: busca productos que CONTENGAN la palabra en cualquier posición
+// Ejemplo: "%phone%" encuentra "smartphone", "phone case", "iPhone charger"
+if (key.equals(LikeKey.BETWEEN)) {
+    return ResponseEntity.ok(this.productCatalogService.findNameLike(placeholder + word + placeholder));
+}
+```
+
+### 4. ¿Por qué `badRequest()` y `build()`?
+
+- **`badRequest()`**: Retorna un código de estado HTTP **400 (Bad Request)** cuando el valor de `key` no coincide con ninguna de las opciones válidas del enum `LikeKey`
+
+- **`build()`**: Es necesario porque `badRequest()` retorna un **builder** de `ResponseEntity`. El método `build()` **construye** la respuesta HTTP final sin cuerpo (body vacío)
+
+**Flujo completo:**
+```java
+// Si key no es AFTER, BEFORE o BETWEEN
+return ResponseEntity.badRequest().build(); // HTTP 400 sin contenido
+```
+
+Esto proporciona un **manejo defensivo** para valores inválidos del enum y comunica claramente al cliente que la petición es incorrecta.
+
+## #️ ⃣📚**Clase 58:OPERADOR LIKE PROBANDO**
+
+## 🔍 Haciendo pruebas 🔍
+
+- localhost:8080/product-catalog/like/BETWEEN?word=Air
+
+![image](images/50.png)
+
+---
+## #️ ⃣📚**Clase 59:OPERADOR BETWEEN**
+
+- ### ⚠️ Recomendacion :
+  - Usar Like %% cuando sean String preferentemente. 
+  - Utilizar el operador BETWEEN solo en campos numericos, fecha, o cantidades no en String.
+
+## ⚠️Nota Importante 
+
+> ✅ Esta vez no usaremos la convencion de la lista que nos otorga JPA QueryMethods,
+> ✅ si no que haremos una consulta personalizada con @Query
+> ✅ @Query nos permite escribir consultas JPQL o SQL nativas directamente en el repositorio.
+> ✅ Esto es útil cuando las consultas son complejas o no se pueden expresar fácilmente con los métodos de consulta derivados de JPA.
+
+- 📦Primero pongo nombre a mi entidad ProductCatalogEntity
+```java
+
+@Entity(name = "productCatalog")
+public class ProductCatalogEntity {
+...
+}
+
+```
+- 📦Segundo ProductCatalogRepository ->
+
+```java
+
+    // el select * se omite en JPQL y viene por defecto
+    @Query("from productCatalog p where p.price between :min and :max")
+    List<ProductCatalogEntity> findByBetweenTwoPrices(BigDecimal min, BigDecimal max);
+```
+
+- 📦Tercero ProductCatalogServiceImpl ->
+
+```java
+     @Override
+    public List<ProductCatalogEntity> findNameBetween(BigDecimal min, BigDecimal max) {
+        return this.catalogRepository.findByBetweenTwoPrices(min, max);
+    }
+```
+
+- Cuarto en el controlador ->
+
+```java
+    @GetMapping(path = "between")
+    public ResponseEntity<List<ProductCatalogEntity>> getBetween(@RequestParam BigDecimal min, @RequestParam BigDecimal max) {
+        return ResponseEntity.ok(this.productCatalogService.findNameBetween(min, max));
+    }
+```
+
+## #️ ⃣📚**Clase 60:PROBANDO OPERADOR BETWEEN**
+
+![image](images/53.png)
 
 </details>

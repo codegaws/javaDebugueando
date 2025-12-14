@@ -37,12 +37,12 @@ public class ProductCatalogServiceImpl implements ProductCatalogService {
 
     @Override
     public List<ProductCatalogEntity> findNameLike(String key) {
-        return List.of();
+        return this.catalogRepository.findByNameLike(key);
     }
 
     @Override
     public List<ProductCatalogEntity> findNameBetween(BigDecimal min, BigDecimal max) {
-        return List.of();
+        return this.catalogRepository.findByBetweenTwoPrices(min, max);
     }
 
     @Override

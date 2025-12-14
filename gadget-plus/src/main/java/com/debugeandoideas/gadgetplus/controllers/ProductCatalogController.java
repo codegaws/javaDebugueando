@@ -1,14 +1,14 @@
 package com.debugeandoideas.gadgetplus.controllers;
 
+import com.debugeandoideas.gadgetplus.Enum.LikeKey;
 import com.debugeandoideas.gadgetplus.entities.ProductCatalogEntity;
 import com.debugeandoideas.gadgetplus.services.ProductCatalogService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -32,6 +32,27 @@ public class ProductCatalogController {
     @GetMapping(path = "name/{name}")
     public ResponseEntity<ProductCatalogEntity> getByname(@PathVariable String name) {
         return ResponseEntity.ok(this.productCatalogService.findByName(name));
+    }
+
+    @GetMapping(path = "like/{key}")
+    public ResponseEntity<List<ProductCatalogEntity>> getByNameLike(@PathVariable LikeKey key, @RequestParam String word) {
+        // comodin
+        final var placeholder = "%";
+        if (key.equals(LikeKey.AFTER)) {
+            return ResponseEntity.ok(this.productCatalogService.findNameLike(placeholder + word));
+        }
+        if (key.equals(LikeKey.BEFORE)) {
+            return ResponseEntity.ok(this.productCatalogService.findNameLike(word + placeholder));
+        }
+        if (key.equals(LikeKey.BETWEEN)) {
+            return ResponseEntity.ok(this.productCatalogService.findNameLike(placeholder + word + placeholder));
+        }
+        return ResponseEntity.badRequest().build();
+    }
+
+    @GetMapping(path = "between")
+    public ResponseEntity<List<ProductCatalogEntity>> getBetween(@RequestParam BigDecimal min, @RequestParam BigDecimal max) {
+        return ResponseEntity.ok(this.productCatalogService.findNameBetween(min, max));
     }
 
 }

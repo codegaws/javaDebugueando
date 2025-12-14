@@ -116,10 +116,20 @@ from products p
          join orders o on p.id_order = o.id
          join products_catalog pc on pc.id = p.id_product_catalog;
 
--- PRUEBAS
+-- PRUEBAS CLASE 55
 select *
 from products_catalog;
 
 select *
 from products_catalog
 where product_name = 'Pc gamer';
+
+-- PRUEBAS CLASE 56-57-58-59 OPERADOR LIKE
+select *
+from products_catalog pc
+where pc.product_name like '%65';
+
+select *
+from products_catalog pc
+where pc.price between 100 and 1000;
+
