@@ -46,8 +46,8 @@ public class ProductCatalogServiceImpl implements ProductCatalogService {
     }
 
     @Override
-    public List<ProductCatalogEntity> findByCategoryName(BigInteger id) {
-        return List.of();
+    public List<ProductCatalogEntity> findByCategory(Long id) {
+        return this.catalogRepository.getByCategory(id);
     }
 
     @Override

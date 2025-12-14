@@ -20,7 +20,7 @@ public interface ProductCatalogService {
 
     List<ProductCatalogEntity> findNameBetween(BigDecimal min, BigDecimal max);
 
-    List<ProductCatalogEntity> findByCategoryName(BigInteger id);
+    List<ProductCatalogEntity> findByCategory(Long id);
 
     //List<ProductCatalogEntity> findByLauchingDate(LocalDate date,DateEval key);
     List<ProductCatalogEntity> findByBrandAndRating(String brand, Short rating);

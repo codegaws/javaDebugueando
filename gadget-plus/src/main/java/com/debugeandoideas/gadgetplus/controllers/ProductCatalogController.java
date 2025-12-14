@@ -55,4 +55,11 @@ public class ProductCatalogController {
         return ResponseEntity.ok(this.productCatalogService.findNameBetween(min, max));
     }
 
+    // Por Categoria aplicando JPQL
+    @GetMapping(path = "category")
+    public ResponseEntity<List<ProductCatalogEntity>> getByCategory(@RequestParam Long id) {
+        return ResponseEntity.ok(this.productCatalogService.findByCategory(id));
+    }
+
+
 }

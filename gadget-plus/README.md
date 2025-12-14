@@ -9881,6 +9881,38 @@ Retorna una lista de productos que pertenecen a la categoría especificada, con 
 
 ## #️ ⃣📚**Clase 63:PROBANDO JOINS EN JPQL**
 
+- En ProductCatalogRepository interface ->
+
+```java
+    @Query("from productCatalog p left join fetch p.categories c where c.id= :categoryId")
+    List<ProductCatalogEntity> getByCategory(Long categoryId);
+```
+- En ProductCatalogService ->
+```java
+    List<ProductCatalogEntity> findByCategory(Long id);
+```
+- En ProductCatalogServiceImpl ->
+```java
+    @Override
+    public List<ProductCatalogEntity> findByCategory(Long id) {
+        return this.catalogRepository.getByCategory(id);
+    }
+```
+- En el controlador -> 
+```java
+// Por Categoria aplicando JPQL
+    @GetMapping(path = "category")
+    public ResponseEntity<List<ProductCatalogEntity>> getByCategory(@RequestParam Long id) {
+        return ResponseEntity.ok(this.productCatalogService.findByCategory(id));
+    }
+```
+
+![image](images/55.png)
+
+--- 
+
+## #️ ⃣📚**Clase 64:TRABAJANDO CON FECHAS PARTE 1**
+
 
 
 </details>
