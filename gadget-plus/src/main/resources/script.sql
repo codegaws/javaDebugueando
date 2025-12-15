@@ -147,8 +147,14 @@ FROM products_catalog pc -- Tabla principal: productos
 where c.id = 1;
 -- trae todo lo que es HOME
 
--- CLASE TRABAJANDO CON FECHAS
+-- CLASE 65 TRABAJANDO CON FECHAS
 select *
 from products_catalog
 where launching_date > '2017-01-01';
+
+-- CLASE 66 TRABAJANDO OPERADOR AND
+
+select * from products_catalog
+where brand_name = 'Apple'
+and rating > 5;
 

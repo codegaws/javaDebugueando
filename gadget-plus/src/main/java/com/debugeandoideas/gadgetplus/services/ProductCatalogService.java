@@ -26,6 +26,7 @@ public interface ProductCatalogService {
     List<ProductCatalogEntity> findByLauchingDate(LocalDate date, DateEval key);
 
     List<ProductCatalogEntity> findByBrandAndRating(String brand, Short rating);
+
     //List<StaticsProduct> findStatistics();
 
     Page<ProductCatalogEntity> findAll(String field, Boolean desc);

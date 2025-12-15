@@ -9933,5 +9933,104 @@ where launching_date > '2017-01-01';
 ## #️ ⃣📚**Clase 65:TRABAJANDO CON FECHAS PARTE 2**
 - Creamos en Dto un enumerador llamado DateEval
 - 
+```java
+
+public enum DateEval {
+    BEFORE,
+    AFTER
+}
+```
+### - ✅En el ProductCatalogRepository
+
+```java
+    //APLICANDO LENGUAJE DE SPRING JPA
+    List<ProductCatalogEntity> findByLaunchingDateAfter(LocalDate date);
+
+    List<ProductCatalogEntity> findByLaunchingDateBefore(LocalDate date);
+
+```
+### 📝 Nota -> 
+- Los nombres de los métodos en el repositorio deben coincidir exactamente con los nombres de los campos en la entidad. 
+- Si el campo en la entidad es `launchingDate`, los métodos deben ser `findBylaunchingDatefter` y `findBylaunchingDateBefore`.
+- Ovbiamente lo adapto para que este nombre funcione ya que con el underline al parecer no funciona los metodos de JPA
+
+![image](images/57.png)
+
+### - ✅En el ProductoCatalogService
+
+```java
+List<ProductCatalogEntity> findByLauchingDate(LocalDate date, DateEval key);
+```
+### - ✅En el ProductCatalogServiceImpl
+
+```java
+    @Override
+    public List<ProductCatalogEntity> findByLauchingDate(LocalDate date, DateEval key) {
+        if (key.equals(DateEval.BEFORE)) {
+            return this.catalogRepository.findByLaunching_dateBefore(date);
+        }
+        if (key.equals(DateEval.AFTER)) {
+            return this.catalogRepository.findByLaunching_dateAfter(date);
+        }
+        return Collections.emptyList();
+    }
+```
+### - ✅En el ProductCatalogController ->
+
+```java
+    @GetMapping(path = "date-launch/{key}")
+    public ResponseEntity<List<ProductCatalogEntity>> getByDate(@PathVariable DateEval key, @RequestParam LocalDate date) {
+        return ResponseEntity.ok(this.productCatalogService.findByLauchingDate(date, key));
+    }
+
+```
+![image](images/58.png)
+
+---
+
+## #️ ⃣📚**Clase 66:OPERADOR AND**
+
+```sql
+-- CLASE 66 TRABAJANDO OPERADOR AND
+
+select * from products_catalog
+where brand_name = 'Apple'
+and rating > 5;
+```
+## Nota : 
+> Considerar que los nombres Brand y Rating en el sql son brand_name y rating en la entidad ProductCatalogEntity
+> deben ser iguales en el metodo del repositorio para que se puedan mapear.
+> 
+
+
+### - ✅En el ProductCatalogRepository creamos un nuevo Metodo -> findByBrandAndRatingGreaterThan
+### ️⚠️⚠️ OJITO ------> "GreaterThan"
+```java
+//CLASE 66 BUSCAMOS POR MARCA Y RATING MAYOR A..."GreaterThan" 
+    List<ProductCatalogEntity> findByBrandAndRatingGreaterThan(String brand, Short rating);
+```
+### - ✅En el ProductCatalogService creamos un nuevo Metodo ->
+
+```java
+    @Override
+    public List<ProductCatalogEntity> findByBrandAndRating(String brand, Short rating) {
+        return this.catalogRepository.findByBrandAndRatingGreaterThan(brand, rating);
+    }
+```
+## ⚠️⚠️⚠️ OJITO ------>
+
+### - ✅En el ProductCatalogController  -> Algo importante es que el nombre findByBrandAndRating debe ser igual al de la entidad
+### - ✅para que el controlador pueda mapear correctamente. ⚠️""brand y rating" ⚠️son los nombres de los campos en la entidad ProductCatalogEntity
+
+```java
+    @GetMapping(path = "brand-rating")
+    public ResponseEntity<List<ProductCatalogEntity>> getByBrandAndRating(@RequestParam String brand, @RequestParam Short rating) {
+        return ResponseEntity.ok(this.productCatalogService.findByBrandAndRating(brand, rating));
+    }
+```
+
+### - ✅En Postman  ->
+
+![image](images/59.png)
 
 </details>

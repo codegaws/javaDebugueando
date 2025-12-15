@@ -23,8 +23,11 @@ public interface ProductCatalogRepository extends JpaRepository<ProductCatalogEn
     @Query("from productCatalog p left join fetch p.categories c where c.id= :categoryId")
     List<ProductCatalogEntity> getByCategory(Long categoryId);
 
-    //APLICANDO LENGUAJE DE SPRING JPA
+    //CLASE 65 APLICANDO LENGUAJE DE SPRING JPA
     List<ProductCatalogEntity> findByLaunchingDateAfter(LocalDate date);
 
     List<ProductCatalogEntity> findByLaunchingDateBefore(LocalDate date);
+
+    //CLASE 66 BUSCAMOS POR MARCA Y RATING MAYOR A...
+    List<ProductCatalogEntity> findByBrandAndRatingGreaterThan(String brand, Short rating);
 }
