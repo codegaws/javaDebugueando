@@ -1,6 +1,7 @@
 package com.debugeandoideas.gadgetplus.services;
 
 import com.debugeandoideas.gadgetplus.dto.DateEval;
+import com.debugeandoideas.gadgetplus.dto.ReportProduct;
 import com.debugeandoideas.gadgetplus.entities.ProductCatalogEntity;
 import org.springframework.data.domain.Page;
 
@@ -29,9 +30,9 @@ public interface ProductCatalogService {
 
     List<ProductCatalogEntity> findByBrandOrRating(String brand, Short rating);
 
-    //List<StaticsProduct> findStatistics();
+    List<ReportProduct> makeReport();// clase 69
 
-    Page<ProductCatalogEntity> findAll(String field, Boolean desc);
+    Page<ProductCatalogEntity> findAll(String field, Boolean desc,Integer page );//clase 71 paginacion
 
     Page<ProductCatalogEntity> findAllByBrand(String brand);
 

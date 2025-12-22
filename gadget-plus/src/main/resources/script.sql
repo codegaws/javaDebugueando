@@ -185,3 +185,10 @@ GROUP BY pc.brand_name;
 -- SAMSUNG PROMEDIO, TOTALPRECIOS
 -- LG PROMEDIO, TOTALPRECIOS
 -- APPLE PROMEDIO, TOTALPRECIOS
+
+-- CLASE 70 PAGINAR LIMIT OFFSET
+SELECT pc.product_name, pc.price, pc.brand_name
+FROM products_catalog pc
+ORDER BY pc.price desc
+LIMIT 5 OFFSET 0;
+

@@ -1,11 +1,13 @@
 package com.debugeandoideas.gadgetplus.services;
 
 import com.debugeandoideas.gadgetplus.dto.DateEval;
+import com.debugeandoideas.gadgetplus.dto.ReportProduct;
 import com.debugeandoideas.gadgetplus.entities.ProductCatalogEntity;
 import com.debugeandoideas.gadgetplus.repositories.ProductCatalogRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +26,8 @@ import java.util.UUID;
 public class ProductCatalogServiceImpl implements ProductCatalogService {
 
     private final ProductCatalogRepository catalogRepository;
+
+    private static final int PAGE_SIZE = 5;
 
     @Override
     public ProductCatalogEntity findById(UUID id) {
@@ -72,8 +76,13 @@ public class ProductCatalogServiceImpl implements ProductCatalogService {
     }
 
     @Override
-    public Page<ProductCatalogEntity> findAll(String field, Boolean desc) {
-        return null;
+    public List<ReportProduct> makeReport() {
+        return this.catalogRepository.findAndMakeReport();
+    }
+
+    @Override
+    public Page<ProductCatalogEntity> findAll(String field, Boolean desc, Integer page) {// paginacion
+        return this.catalogRepository.findAll(PageRequest.of(page, PAGE_SIZE));
     }
 
     @Override

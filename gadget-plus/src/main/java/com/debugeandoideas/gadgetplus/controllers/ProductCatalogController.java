@@ -2,9 +2,11 @@ package com.debugeandoideas.gadgetplus.controllers;
 
 import com.debugeandoideas.gadgetplus.Enum.LikeKey;
 import com.debugeandoideas.gadgetplus.dto.DateEval;
+import com.debugeandoideas.gadgetplus.dto.ReportProduct;
 import com.debugeandoideas.gadgetplus.entities.ProductCatalogEntity;
 import com.debugeandoideas.gadgetplus.services.ProductCatalogService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -72,6 +74,22 @@ public class ProductCatalogController {
     public ResponseEntity<List<ProductCatalogEntity>> getByBrandAndRating(@RequestParam String brand, @RequestParam Short rating) {
         //return ResponseEntity.ok(this.productCatalogService.findByBrandAndRating(brand, rating));
         return ResponseEntity.ok(this.productCatalogService.findByBrandOrRating(brand, rating));
+    }
+
+    // aplicando el reporte CLASE 69
+    @GetMapping(path = "report")
+    public ResponseEntity<List<ReportProduct>> getReport() {
+        return ResponseEntity.ok(this.productCatalogService.makeReport());
+    }
+
+    // aplicando el reporte CLASE 71
+    @GetMapping(path = "all")
+    public ResponseEntity<Page<ProductCatalogEntity>> getAll(
+            @RequestParam(required = false) String field,
+            @RequestParam(required = false) Boolean desc,
+            @RequestParam(required = true) Integer page
+    ) {
+        return ResponseEntity.ok(this.productCatalogService.findAll(field, desc, page));
     }
 
 }

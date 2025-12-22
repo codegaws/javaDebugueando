@@ -2477,10 +2477,12 @@ public class ReportProduct {
  }
 
 ```
+
 > #### - ✅Paso 2 : ProductCatalogRepository
 > El query SQL que seleccionaste y la query JPQL que tienes en tu código hacen exactamente lo mismo, solo
 > que están escritos en diferentes sintaxis:
-````java
+
+```java
  @Query("select new com.debugeandoideas.gadgetplus.dto.ReportProduct("
             + "pc.brand, "
             + "avg(pc.price), " // avg se mapea como double no bigdecimal 
@@ -2489,6 +2491,7 @@ public class ReportProduct {
             + "group by pc.brand")
     List<ReportProduct> findAndMakeReport();
 ```
+
 ```sql
 SELECT pc.brand_name,
        AVG(pc.price) as average,
@@ -2496,9 +2499,161 @@ SELECT pc.brand_name,
 from products_catalog pc
 GROUP BY pc.brand_name;
 ```
-> #### - ✅Paso 3 : ProductCatalogRepository
 
+> #### - ✅Paso 3 : Implementamos
 
+> En Service ProductCatalogService
+
+```java
+List<ReportProduct> findStatistics();
+```
+
+> En la implementacion ProductCatalogServiceImpl
+
+```java
+   @Override
+    public List<ReportProduct> findStatistics() {
+        return this.catalogRepository.findAndMakeReport();
+    }
+```
+
+> #### - ✅Paso 4 : En el controlador ProductCatalogController
+
+```java
+    @GetMapping(path = "report")
+    public ResponseEntity<List<ReportProduct>> getReport() {
+        return ResponseEntity.ok(this.productCatalogService.makeReport());
+    }
+```
+
+![image](images/61.png)
+
+### AHORA SABEMOS COMO CREAR OBJETOS REPORTES CON JPQL Y SQL OSEA DTO PERSONALIZADOS CON SELECT YA NO SOLO
+
+CON "*"
+
+## #️ ⃣📚**Clase 70 ¿COMO SE PAGINA EN SQL?*
+
+> ## Usando ordenamiento descendente con limites
+
+```sql
+SELECT pc.product_name, pc.price, pc.brand_name
+FROM products_catalog pc
+ORDER BY pc.price desc
+LIMIT 5 OFFSET 0;
+
+```
+
+Te explico **LIMIT** y **OFFSET** con tu ejemplo:
+
+## 🔍 Cómo funciona LIMIT y OFFSET
+
+```sql
+SELECT pc.product_name, pc.price, pc.brand_name
+FROM products_catalog pc
+LIMIT 5 OFFSET 5;
+```
+
+### **LIMIT 5:**
+
+- **Limita** el resultado a **5 filas máximo**
+- Es como decir "dame solo 5 productos"
+
+### **OFFSET 5:**
+
+- **Salta** las primeras **5 filas**
+- Es como decir "ignora los primeros 5 productos"
+
+## 📊 Ejemplo visual con tu tabla:
+
+**Sin LIMIT/OFFSET (todos los productos):**
+
+```
+Fila 1: iPhone 15, $999, Apple
+Fila 2: Galaxy S24, $899, Samsung  
+Fila 3: LG TV 55", $599, LG
+Fila 4: MacBook Pro, $1999, Apple
+Fila 5: Sony WH-1000XM5, $349, Sony
+Fila 6: Pc gamer, $1200, MSI        ← OFFSET 5 empieza aquí
+Fila 7: Monitor 4K, $450, Dell
+Fila 8: Teclado RGB, $89, Corsair
+Fila 9: Mouse gaming, $65, Razer
+Fila 10: Webcam HD, $120, Logitech  ← LIMIT 5 termina aquí
+Fila 11: Tablet Pro, $799, Apple
+```
+
+**Con LIMIT 5 OFFSET 5:**
+
+```
+Resultado:
+Fila 6: Pc gamer, $1200, MSI
+Fila 7: Monitor 4K, $450, Dell  
+Fila 8: Teclado RGB, $89, Corsair
+Fila 9: Mouse gaming, $65, Razer
+Fila 10: Webcam HD, $120, Logitech
+```
+
+## 🎯 Uso práctico - Paginación:
+
+```sql
+-- Página 1 (primeros 5 productos)
+LIMIT 5 OFFSET 0;
+
+-- Página 2 (productos 6-10)
+LIMIT 5 OFFSET 5;
+
+-- Página 3 (productos 11-15)  
+LIMIT 5 OFFSET 10;
+```
+
+**Fórmula:** `OFFSET = (página - 1) * tamaño_página`
+
+## ⚡ Con ORDER BY (recomendado):
+
+```sql
+SELECT pc.product_name, pc.price, pc.brand_name
+FROM products_catalog pc
+ORDER BY price DESC  -- Ordena por precio descendente
+LIMIT 5 OFFSET 5;    -- Los productos del 6° al 10° más caros
+```
+
+Sin `ORDER BY` el resultado puede ser **impredecible** entre consultas.
+
+---
+
+## #️ ⃣📚**Clase 71 ¿como se pagina en JPA?**
+
+> ## Usando Pageable en Spring Data JPA
+> ### Paso 1: Modificar el ProductCatalogService
+
+```java
+        Page<ProductCatalogEntity> findAll(String field, Boolean desc,Integer page );//clase 71 paginacion
+```
+
+> ### Paso 2: Modificar el ProductCatalogServiceImpl
+
+- Creamos una variable estatica y final PAGE_SIZE
+
+```java
+ private static final int PAGE_SIZE = 5;//clase 71 paginacion
+
+ @Override
+    public Page<ProductCatalogEntity> findAll(String field, Boolean desc, Integer page) {// paginacion
+        return this.catalogRepository.findAll(PageRequest.of(page, PAGE_SIZE));
+    }
+    
+```
+> ### Paso 3: controlador
+```java
+    @GetMapping(path = "all")
+    public ResponseEntity<Page<ProductCatalogEntity>> getAll(
+            @RequestParam(required = false) String field,
+            @RequestParam(required = false) Boolean desc,
+            @RequestParam(required = true) Integer page
+    ) {
+        return ResponseEntity.ok(this.productCatalogService.findAll(field, desc, page));
+    }
+```
 
 
 </details>
