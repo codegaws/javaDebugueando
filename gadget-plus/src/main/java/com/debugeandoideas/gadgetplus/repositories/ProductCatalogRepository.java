@@ -1,5 +1,6 @@
 package com.debugeandoideas.gadgetplus.repositories;
 
+import com.debugeandoideas.gadgetplus.dto.ReportProduct;
 import com.debugeandoideas.gadgetplus.entities.ProductCatalogEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -30,4 +31,17 @@ public interface ProductCatalogRepository extends JpaRepository<ProductCatalogEn
 
     //CLASE 66 BUSCAMOS POR MARCA Y RATING MAYOR A...
     List<ProductCatalogEntity> findByBrandAndRatingGreaterThan(String brand, Short rating);
+
+    List<ProductCatalogEntity> findByBrandOrRatingGreaterThan(String brand, Short rating);
+
+    //clase 68 GROUP BY
+    @Query("select new com.debugeandoideas.gadgetplus.dto.ReportProduct("
+            + "pc.brand, "
+            + "avg(pc.price), " // avg se mapea como double no bigdecimal
+            + "sum(pc.price)) "
+            + "from productCatalog pc "
+            + "group by pc.brand")
+    List<ReportProduct> findAndMakeReport();
+
+
 }

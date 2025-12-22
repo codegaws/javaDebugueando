@@ -1,18 +1,17 @@
-
 <details>
 <summary><strong>🎯SECCION 4 JPA REPOSITORIOS</strong></summary>
 
 ## #️ ⃣📚**Clase 50: EXPLICACION DE LOS REPOSITORIOS JPA`**
 
-![image](images/42.png)
+![image](/images/42.png)
 
-![image](images/43.png)
+![image](/images/43.png)
 
 ## 🎯JPQL le hace QUERY a la Entidad no a la tabla 🎯
 
-![image](images/44.png)
+![image](/images/44.png)
 
-![image](images/45.png)
+![image](/images/45.png)
 
 ¡**EXCELENTE PREGUNTA**! 🎯 **Puedes elegir entre ambos según el caso de uso. ** Te explico cuándo usar cada uno:
 
@@ -335,21 +334,25 @@ Define el **contrato** para operaciones de consulta del catálogo de productos:
 ### Tipos de operaciones definidas:
 
 1. **Búsquedas básicas**:
-    - `findById(UUID)` - Por ID único
-    - `findByName(String)` - Por nombre exacto
+
+- `findById(UUID)` - Por ID único
+- `findByName(String)` - Por nombre exacto
 
 2. **Búsquedas con filtros**:
-    - `findNameLike(String)` - Nombres similares (LIKE)
-    - `findNameBetween(BigDecimal, BigDecimal)` - Por rango de precios
-    - `findByCategoryName(BigInteger)` - Por categoría
-    - `findByBrandAndRating(String, Short)` - Por marca y calificación
+
+- `findNameLike(String)` - Nombres similares (LIKE)
+- `findNameBetween(BigDecimal, BigDecimal)` - Por rango de precios
+- `findByCategoryName(BigInteger)` - Por categoría
+- `findByBrandAndRating(String, Short)` - Por marca y calificación
 
 3. **Operaciones paginadas**:
-    - `findAll(String, Boolean)` - Todos con ordenamiento
-    - `findAllByBrand(String)` - Por marca con paginación
+
+- `findAll(String, Boolean)` - Todos con ordenamiento
+- `findAllByBrand(String)` - Por marca con paginación
 
 4. **Operaciones de agregación**:
-    - `countByBrand(String)` - Contar productos por marca
+
+- `countByBrand(String)` - Contar productos por marca
 
 ## ProductCatalogServiceImpl (Implementación)
 
@@ -1481,16 +1484,21 @@ public ResponseEntity<ProductCatalogDTO> getById(@PathVariable String id) {
 }
 ```
 
-## #️ ⃣📚**Clase 56:BUSCAR POR NOMBRE`**
+## #️ ⃣📚**Clase 56:BUSCAR POR NOMBRE**
+
+### findByName = Esta bajo convencion de QueryMethods de JPA el nombre si existe en la lista de JPA QueryMethods
+
+- Esto quiere decir que no tienes que inventar nada solo seguir la convencion de nombres que JPA tiene predefinida
+  ![image](images/51.png)
 
 ```sql
 select *
   from products_catalog
   where product_name = 'Pc gamer';
 ```
+
 - Por detras es como si estuvieramos haciendo el Query de arriba en sql pero en java usando QueryMehods de JPA
 - y por que product_name en el sql y en jpa name? por que ya esta mapeada en la columna como "product_name"
-
 
 ```java
 public interface ProductCatalogRepository extends JpaRepository<ProductCatalogEntity, UUID> {
@@ -1499,6 +1507,7 @@ public interface ProductCatalogRepository extends JpaRepository<ProductCatalogEn
     
 }
 ```
+
 - En ProductCatalogServiceImpl ->
 
 ```java
@@ -1508,6 +1517,7 @@ public interface ProductCatalogRepository extends JpaRepository<ProductCatalogEn
     }
 
 ```
+
 - En ProductCatalogController ->
 
 ```java
@@ -1534,6 +1544,7 @@ public interface ProductCatalogRepository extends JpaRepository<ProductCatalogEn
     }
 
 ```
+
 - Respuesta en postman ingresando un nombre que no existe:
 
 ![image](images/48.png)
@@ -1551,5 +1562,943 @@ public interface ProductCatalogRepository extends JpaRepository<ProductCatalogEn
 - Respuesta en postman ingresando un nombre que no existe:
 
 ![image](images/49.png)
+
+## #️ ⃣📚**Clase 57:OPERADOR LIKE**
+
+### findByNameLike = Esta bajo convencion de QueryMethods de JPA el nombre si existe en la lista de JPA QueryMethods
+
+- Esto quiere decir que no tienes que inventar nada solo seguir la convencion de nombres que JPA tiene predefinida
+  ![image](images/52.png)
+
+- En el repository -> aplicamos los Querymethods
+
+```java
+List<ProductCatalogEntity> findByNameLike(String key);
+```
+
+```sql
+select *
+from products_catalog pc
+where pc.product_name like '%series%';
+
+```
+
+- Creamos un Enum ->
+
+```java
+public enum LikeKey {
+    AFTER,
+    BETWEEN,
+    BEFORE
+}
+
+```
+
+- Al controlador mandamos el "key"
+- en el controlador ->
+
+```java
+    @GetMapping(path = "like/{key}")
+    public ResponseEntity<List<ProductCatalogEntity>> getByNameLike(@PathVariable LikeKey key, @RequestParam String word) {
+        // comodin
+        final var placeholder = "%";
+        if (key.equals(LikeKey.AFTER)) {
+            return ResponseEntity.ok(this.productCatalogService.findNameLike(placeholder + word));
+        }
+        if (key.equals(LikeKey.BEFORE)) {
+            return ResponseEntity.ok(this.productCatalogService.findNameLike(word + placeholder));
+        }
+        if (key.equals(LikeKey.BETWEEN)) {
+            return ResponseEntity.ok(this.productCatalogService.findNameLike(placeholder + word + placeholder));
+        }
+        return ResponseEntity.badRequest().build();
+    }
+``` 
+
+## Explicacion sobre el codigo
+
+## Análisis del Endpoint `getByNameLike`
+
+### 1. ¿Por qué `<List<ProductCatalogEntity>>`?
+
+Se usa `List<ProductCatalogEntity>` porque este endpoint está diseñado para realizar **búsquedas con patrones LIKE**,
+las cuales pueden retornar **múltiples resultados**. A diferencia de una búsqueda por ID o nombre exacto que retorna un
+único elemento, las búsquedas con comodines (`%`) pueden encontrar varios productos que coincidan con el patrón
+especificado.
+
+### 2. ¿Por qué dos parámetros?
+
+Sí, necesitas ambos parámetros porque cada uno tiene un **propósito específico**:
+
+- **`@PathVariable LikeKey key`**: Define la **estrategia de búsqueda** (antes, después o entre el término)
+- **`@RequestParam String word`**: Contiene la **palabra o término** que se va a buscar
+
+**Ejemplo de uso:**
+
+```
+GET /product-catalog/like/BETWEEN?word=phone
+```
+
+### 3. ¿Cómo funcionan las condicionales?
+
+Las condicionales implementan **tres estrategias de búsqueda** usando comodines SQL:
+
+```java
+// AFTER: busca productos que TERMINEN con la palabra
+// Ejemplo: "%phone" encuentra "smartphone", "iPhone"
+if (key.equals(LikeKey.AFTER)) {
+    return ResponseEntity.ok(this.productCatalogService.findNameLike(placeholder + word));
+}
+
+// BEFORE: busca productos que COMIENCEN con la palabra  
+// Ejemplo: "phone%" encuentra "phone case", "phone charger"
+if (key.equals(LikeKey.BEFORE)) {
+    return ResponseEntity.ok(this.productCatalogService.findNameLike(word + placeholder));
+}
+
+// BETWEEN: busca productos que CONTENGAN la palabra en cualquier posición
+// Ejemplo: "%phone%" encuentra "smartphone", "phone case", "iPhone charger"
+if (key.equals(LikeKey.BETWEEN)) {
+    return ResponseEntity.ok(this.productCatalogService.findNameLike(placeholder + word + placeholder));
+}
+```
+
+### 4. ¿Por qué `badRequest()` y `build()`?
+
+- **`badRequest()`**: Retorna un código de estado HTTP **400 (Bad Request)** cuando el valor de `key` no coincide con
+  ninguna de las opciones válidas del enum `LikeKey`
+
+- **`build()`**: Es necesario porque `badRequest()` retorna un **builder** de `ResponseEntity`. El método `build()` *
+  *construye** la respuesta HTTP final sin cuerpo (body vacío)
+
+**Flujo completo:**
+
+```java
+// Si key no es AFTER, BEFORE o BETWEEN
+return ResponseEntity.badRequest().build(); // HTTP 400 sin contenido
+```
+
+Esto proporciona un **manejo defensivo** para valores inválidos del enum y comunica claramente al cliente que la
+petición es incorrecta.
+
+## #️ ⃣📚**Clase 58:OPERADOR LIKE PROBANDO**
+
+## 🔍 Haciendo pruebas 🔍
+
+- localhost:8080/product-catalog/like/BETWEEN?word=Air
+
+![image](images/50.png)
+
+---
+
+## #️ ⃣📚**Clase 59:OPERADOR BETWEEN**
+
+- ### ⚠️ Recomendacion :
+    - Usar Like %% cuando sean String preferentemente.
+    - Utilizar el operador BETWEEN solo en campos numericos, fecha, o cantidades no en String.
+
+## ⚠️Nota Importante
+
+> ✅ Esta vez no usaremos la convencion de la lista que nos otorga JPA QueryMethods,
+> ✅ si no que haremos una consulta personalizada con @Query
+> ✅ @Query nos permite escribir consultas JPQL o SQL nativas directamente en el repositorio.
+> ✅ Esto es útil cuando las consultas son complejas o no se pueden expresar fácilmente con los métodos de consulta
+> derivados de JPA.
+
+- 📦Primero pongo nombre a mi entidad ProductCatalogEntity
+
+```java
+
+@Entity(name = "productCatalog")
+public class ProductCatalogEntity {
+...
+}
+
+```
+
+- 📦Segundo ProductCatalogRepository ->
+
+```java
+
+    // el select * se omite en JPQL y viene por defecto
+    @Query("from productCatalog p where p.price between :min and :max")
+    List<ProductCatalogEntity> findByBetweenTwoPrices(BigDecimal min, BigDecimal max);
+```
+
+- 📦Tercero ProductCatalogServiceImpl ->
+
+```java
+     @Override
+    public List<ProductCatalogEntity> findNameBetween(BigDecimal min, BigDecimal max) {
+        return this.catalogRepository.findByBetweenTwoPrices(min, max);
+    }
+```
+
+- Cuarto en el controlador ->
+
+```java
+    @GetMapping(path = "between")
+    public ResponseEntity<List<ProductCatalogEntity>> getBetween(@RequestParam BigDecimal min, @RequestParam BigDecimal max) {
+        return ResponseEntity.ok(this.productCatalogService.findNameBetween(min, max));
+    }
+```
+
+## #️ ⃣📚**Clase 60:PROBANDO OPERADOR BETWEEN**
+
+![image](images/53.png)
+
+## #️ ⃣📚**Clase 61:INDICES**
+
+### ¿Qué es un índice en bases de datos?
+
+- Un índice es una estructura de datos que mejora la velocidad de las operaciones de consulta en una tabla a costa de
+  espacio adicional
+- y tiempo extra para las operaciones de escritura (inserciones, actualizaciones, eliminaciones).
+- Los índices funcionan como un índice en un libro, permitiendo un acceso rápido a los datos sin tener que escanear toda
+  la tabla.
+
+```sql
+create index idx_product_name on products_catalog (product_name);
+```
+
+- Primero vamos a ProductCatalogEntity agregamos index en la tabla ->
+
+```java
+@Table(name = "products_catalog", indexes = {
+        @Index(name = "idx_product_name", columnList = "product_name"),
+})
+```
+
+- Luego hacemos una prueba en postman ->
+
+![image](images/54.png)
+
+## #️ ⃣📚**Clase 62:JOINS EN JPQL**
+
+> Vamos a recrear en JPQL este query SQL con JOIN
+
+```sql
+SELECT *
+FROM products_catalog pc -- Tabla principal: productos
+         JOIN product_join_category pjc ON pjc.id_product = pc.id -- Unir con tabla puente
+         JOIN categories c ON pjc.id_category = c.id
+where c.id = 1;-- trae todo lo que es HOME
+
+```
+
+### Recuerda que en ProductCatalogEntity ya tenemos una tabla intermedia por eso no necesitamos especificar en el Query
+
+### La tabla intermedia - ese fetch representa el EAGER para cargar las categorias
+
+```java
+ @Query("from productCatalog p left join fetch p.categories c where c.id= :categoryId")
+    List<ProductCatalogEntity> getByCategory(Long categoryId);
+```
+
+### Explicacion
+
+## Explicación de la Query `getByCategory`
+
+Esta consulta JPQL utiliza **JOIN FETCH** para obtener productos junto con sus categorías de forma eficiente:
+
+### Componentes de la Query
+
+```java
+@Query("from productCatalog p left join fetch p.categories c where c.id= :categoryId")
+```
+
+- **`from productCatalog p`**: Selecciona de la entidad `ProductCatalogEntity` (alias `p`)
+- **`left join fetch p.categories c`**: Realiza un LEFT JOIN con la relación `categories` y **carga eagerly** los datos
+- **`where c.id= :categoryId`**: Filtra por el ID de categoría específico
+- **`:categoryId`**: Parámetro que recibe el método
+
+### ¿Qué hace el FETCH?
+
+El **`fetch`** evita el problema **N+1** cargando las categorías en la misma consulta SQL en lugar de hacer consultas
+separadas:
+
+**Sin FETCH:**
+
+```sql
+-- Query principal
+SELECT * FROM product_catalog WHERE category_id = ?
+-- N queries adicionales (una por producto)
+SELECT * FROM categories WHERE id = ?
+SELECT * FROM categories WHERE id = ?
+-- ... más queries
+```
+
+**Con FETCH:**
+
+```sql
+-- Una sola query optimizada
+SELECT p.*, c.* 
+FROM product_catalog p 
+LEFT JOIN categories c ON p.category_id = c.id 
+WHERE c.id = ?
+```
+
+### ¿Por qué LEFT JOIN?
+
+- **LEFT JOIN**: Retorna productos **incluso si no tienen categorías** asignadas
+- Si fuera **INNER JOIN**: Solo retornaría productos que **sí tienen** categorías
+
+### Resultado del Método
+
+```java
+List<ProductCatalogEntity> getByCategory(Long categoryId);
+```
+
+Retorna una lista de productos que pertenecen a la categoría especificada, con sus objetos `categories`
+**ya cargados** en memoria, evitando lazy loading posterior.
+
+---
+
+## #️ ⃣📚**Clase 63:PROBANDO JOINS EN JPQL**
+
+## Vamos a representar una @Query JPQL con su equivalente SQL
+
+```java
+ @Query("from productCatalog p left join fetch p.categories c where c.id= :categoryId")
+```
+
+Equivalente SQL de la Query JPQL:
+
+```sql
+SELECT p.*, c.*
+FROM products_catalog p
+         LEFT JOIN product_join_category pjc ON p.id = pjc.id_product
+         LEFT JOIN categories c ON pjc.id_category = c.id
+WHERE c.id = :categoryId;
+```
+
+- En ProductCatalogRepository interface ->
+
+```java
+    @Query("from productCatalog p left join fetch p.categories c where c.id= :categoryId")
+    List<ProductCatalogEntity> getByCategory(Long categoryId);
+```
+
+- En ProductCatalogService ->
+
+```java
+    List<ProductCatalogEntity> findByCategory(Long id);
+```
+
+- En ProductCatalogServiceImpl ->
+
+```java
+    @Override
+    public List<ProductCatalogEntity> findByCategory(Long id) {
+        return this.catalogRepository.getByCategory(id);
+    }
+```
+
+- En el controlador ->
+
+```java
+// Por Categoria aplicando JPQL
+    @GetMapping(path = "category")
+    public ResponseEntity<List<ProductCatalogEntity>> getByCategory(@RequestParam Long id) {
+        return ResponseEntity.ok(this.productCatalogService.findByCategory(id));
+    }
+```
+
+![image](images/55.png)
+
+## Explicacion del @Query
+
+Mi compresion y le pido que me confirme esto a IA
+
+```java
+ah creo que entiendo cuando tu dices left join fetch p.categories c -> c se convierte en un alias 
+del resultado de los join que serian segun el script de sql la union con 
+productcatalog,product_join_category,categories , correcto por eso es que como es una entidad 
+esta puede acceder al objeto resultante a cualquiera de sus atributos incluyendo el id y por eso 
+puede hacer c.id = : aqui le asignamos el id que querramos de categoria
+```
+
+**¡Exactamente correcto!** Has entendido perfectamente el concepto.
+
+## El flujo completo:
+
+### 1. **`left join fetch p.categories c`**:
+
+```java
+// JPA internamente hace estos joins:
+// products_catalog p
+// LEFT JOIN product_join_category pjc ON p.id = pjc.id_product  
+// LEFT JOIN categories c ON pjc.id_category = c.id
+```
+
+### 2. **`c` es el alias del resultado final**:
+
+- **`c`** representa cada **`CategoryEntity`** obtenida después de todos los joins
+- **NO** es la tabla intermedia `product_join_category`
+- Es el **objeto entidad** resultante con todos sus atributos
+
+### 3. **`c.id = :categoryId`**:
+
+- Como `c` es una **`CategoryEntity`** completa, puedes acceder a:
+    - `c.id`
+    - `c.name`
+    - `c.description`
+    - Cualquier atributo de `CategoryEntity`
+
+## Visualización:
+
+```java
+@Query("from productCatalog p left join fetch p.categories c where c.id= :categoryId")
+//                                                      ↑
+//                                              c = CategoryEntity
+//                                              con todos sus campos
+```
+
+## Por eso funciona:
+
+```java
+List<ProductCatalogEntity> getByCategory(Long categoryId);
+//                                           ↑
+//                                    Se filtra por c.id
+```
+
+El resultado son **productos** con sus **categorías ya cargadas** (fetch), pero filtrados por
+la categoría específica que buscas.
+
+**Has comprendido perfectamente cómo JPA maneja los aliases y las entidades resultantes de los
+joins.**
+
+## Ademas ->
+
+Excelente pregunta. Te explico la diferencia entre **`p.categories`** y **`c`**:
+
+## `p.categories` vs `c`
+
+### **`p.categories`**:
+
+- Es una **propiedad/relación** de la entidad `ProductCatalogEntity`
+- **NO** es una tabla directa
+- Representa la relación `@ManyToMany` configurada en la entidad
+- JPA sabe que debe usar la tabla intermedia `product_join_category` por el `@JoinTable`
+
+### **`c`**:
+
+- Es el **alias** que se asigna al resultado del join
+- Representa **cada objeto Category** obtenido después del join
+- Es una referencia a la entidad `CategoryEntity`, no a `product_join_category`
+
+## ¿Cómo reconoce JPA que `c` es `categories`?
+
+```java
+@Query("from productCatalog p left join fetch p.categories c where c.id= :categoryId")
+```
+
+### Paso a paso:
+
+1. **`p.categories`** → JPA lee la configuración `@ManyToMany` en ProductCatalogEntity
+2. **JPA automáticamente resuelve**:
+
+- Tabla origen: `products_catalog`
+- Tabla intermedia: `product_join_category` (del `@JoinTable`)
+- Tabla destino: `categories` (del `@JoinColumn inverseJoinColumns`)
+
+3. **`c`** → Es el alias para **cada CategoryEntity** resultante del join
+4. **`c.id`** → Accede al campo `id` de la entidad `CategoryEntity`
+
+## El mapeo interno de JPA:
+
+```java
+// En ProductCatalogEntity probablemente tienes:
+@ManyToMany
+@JoinTable(
+    name = "product_join_category",           // ← Tabla intermedia
+    joinColumns = @JoinColumn(name = "id_product"),
+    inverseJoinColumns = @JoinColumn(name = "id_category") // ← Apunta a categories
+)
+private List<CategoryEntity> categories;      // ← Tipo: CategoryEntity
+```
+
+## Resultado:
+
+- **`p.categories`** = "la relación configurada con `@ManyToMany`"
+- **`c`** = "cada CategoryEntity individual del resultado"
+- JPA sabe que `c` es `CategoryEntity` porque es el tipo de la colección `List<CategoryEntity>
+- categories`
+
+Por eso `c.id` funciona: JPA sabe que `c` representa objetos `CategoryEntity` que tienen un
+campo `id`.
+
+---
+Excelente pregunta. Te explico la diferencia entre **`p.categories`** y **`c`**:
+
+## `p.categories` vs `c`
+
+### **`p.categories`**:
+
+- Es una **propiedad/relación** de la entidad `ProductCatalogEntity`
+- **NO** es una tabla directa
+- Representa la relación `@ManyToMany` configurada en la entidad
+- JPA sabe que debe usar la tabla intermedia `product_join_category` por el `@JoinTable`
+
+### **`c`**:
+
+- Es el **alias** que se asigna al resultado del join
+- Representa **cada objeto Category** obtenido después del join
+- Es una referencia a la entidad `CategoryEntity`, no a `product_join_category`
+
+## ¿Cómo reconoce JPA que `c` es `categories`?
+
+```java
+@Query("from productCatalog p left join fetch p.categories c where c.id= :categoryId")
+```
+
+### Paso a paso:
+
+1. **`p.categories`** → JPA lee la configuración `@ManyToMany` en ProductCatalogEntity
+2. **JPA automáticamente resuelve**:
+
+- Tabla origen: `products_catalog`
+- Tabla intermedia: `product_join_category` (del `@JoinTable`)
+- Tabla destino: `categories` (del `@JoinColumn inverseJoinColumns`)
+
+3. **`c`** → Es el alias para **cada CategoryEntity** resultante del join
+4. **`c.id`** → Accede al campo `id` de la entidad `CategoryEntity`
+
+## El mapeo interno de JPA:
+
+```java
+// En ProductCatalogEntity probablemente tienes:
+@ManyToMany
+@JoinTable(
+    name = "product_join_category",           // ← Tabla intermedia
+    joinColumns = @JoinColumn(name = "id_product"),
+    inverseJoinColumns = @JoinColumn(name = "id_category") // ← Apunta a categories
+)
+private List<CategoryEntity> categories;      // ← Tipo: CategoryEntity
+```
+
+## Resultado:
+
+- **`p.categories`** = "la relación configurada con `@ManyToMany`"
+- **`c`** = "cada CategoryEntity individual del resultado"
+- JPA sabe que `c` es `CategoryEntity` porque es el tipo de la colección `List<CategoryEntity> categories`
+
+Por eso `c.id` funciona: JPA sabe que `c` representa objetos `CategoryEntity` que tienen un campo `id`.
+--- 
+
+## #️ ⃣📚**Clase 64:TRABAJANDO CON FECHAS PARTE 1**
+
+- VAMOS A INTERPRETAR AHORA ESTE QUERY EN LENGUAJE DE SPRING JPA SE PUEDE HACER DE LAS 2 FORMAS
+
+```sql
+select *
+from products_catalog
+where launching_date > '2017-01-01';
+```
+
+![image](images/56.png)
+
+- En el ProductCatalogRepository ->
+
+```java
+    //APLICANDO LENGUAJE DE SPRING JPA
+    List<ProductCatalogEntity> findByLaunching_dateBefore(LocalDate date);
+
+    List<ProductCatalogEntity> findByLaunching_dateAfter(LocalDate date);
+```
+
+## #️ ⃣📚**Clase 65:TRABAJANDO CON FECHAS PARTE 2**
+
+- Creamos en Dto un enumerador llamado DateEval
+-
+
+```java
+
+public enum DateEval {
+    BEFORE,
+    AFTER
+}
+```
+
+### - ✅En el ProductCatalogRepository
+
+```java
+    //APLICANDO LENGUAJE DE SPRING JPA
+    List<ProductCatalogEntity> findByLaunchingDateAfter(LocalDate date);
+
+    List<ProductCatalogEntity> findByLaunchingDateBefore(LocalDate date);
+
+```
+
+### 📝 Nota ->
+
+- Los nombres de los métodos en el repositorio deben coincidir exactamente con los nombres de los campos en la entidad.
+- Si el campo en la entidad es `launchingDate`, los métodos deben ser `findBylaunchingDatefter` y
+  `findBylaunchingDateBefore`.
+- Ovbiamente lo adapto para que este nombre funcione ya que con el underline al parecer no funciona los metodos de JPA
+
+![image](images/57.png)
+
+### - ✅En el ProductoCatalogService
+
+```java
+List<ProductCatalogEntity> findByLauchingDate(LocalDate date, DateEval key);
+```
+
+### - ✅En el ProductCatalogServiceImpl
+
+```java
+    @Override
+    public List<ProductCatalogEntity> findByLauchingDate(LocalDate date, DateEval key) {
+        if (key.equals(DateEval.BEFORE)) {
+            return this.catalogRepository.findByLaunching_dateBefore(date);
+        }
+        if (key.equals(DateEval.AFTER)) {
+            return this.catalogRepository.findByLaunching_dateAfter(date);
+        }
+        return Collections.emptyList();
+    }
+```
+
+### - ✅En el ProductCatalogController ->
+
+```java
+    @GetMapping(path = "date-launch/{key}")
+    public ResponseEntity<List<ProductCatalogEntity>> getByDate(@PathVariable DateEval key, @RequestParam LocalDate date) {
+        return ResponseEntity.ok(this.productCatalogService.findByLauchingDate(date, key));
+    }
+
+```
+
+![image](images/58.png)
+
+---
+
+## #️ ⃣📚**Clase 66:OPERADOR AND**
+
+## NOTA IMPORTANTE QUE DEBEN SER IGUALES LOS NOMBRES DE LOS METODOS PARA QUE JPA LOS DETECTE ASI FUNCIONA
+
+**Exacto**, JPA **automáticamente detecta** los nombres de los atributos de tu entidad. **NO** pueden ser nombres
+cualquiera.
+
+## ✅ Reglas de Query Methods:
+
+### **1. Los nombres DEBEN coincidir exactamente**:
+
+```java
+// En tu ProductCatalogEntity tienes:
+private String brand;     // ← Atributo en la entidad
+private Short rating;     // ← Atributo en la entidad
+
+// Por eso funciona:
+List<ProductCatalogEntity> findByBrandAndRating(String brand, Short rating);
+//                               ↑       ↑
+//                            Coincide Coincide
+```
+
+### **2. Si cambias el nombre, falla**:
+
+```java
+// ❌ ESTO NO FUNCIONARÍA:
+findByMarcaAndCalificacion(String brand, Short rating);
+//     ↑       ↑
+// No existen estos atributos en la entidad
+```
+
+## 🔍 Cómo funciona el reconocimiento:
+
+### **Parsing automático**:
+
+```java
+findByBrandAndRatingGreaterThan(String brand, Short rating);
+//   ↑   ↑   ↑      ↑
+//   |   |   |      └─ Palabra clave: GreaterThan
+//   |   |   └─ Atributo: rating
+//   |   └─ Palabra clave: And  
+//   └─ Atributo: brand
+```
+
+### **JPA genera automáticamente**:
+
+```sql
+SELECT * FROM products_catalog 
+WHERE brand = ? AND rating > ?
+```
+
+## 📋 Ejemplos válidos vs inválidos:
+
+### **✅ Válidos** (nombres exactos de atributos):
+
+```java
+findByBrand(String brand)
+findByRating(Short rating)  
+findByBrandAndRating(String brand, Short rating)
+findByNameContaining(String name)
+findByPriceGreaterThan(BigDecimal price)
+```
+
+### **❌ Inválidos** (nombres que no existen):
+
+```java
+findByMarca(String brand)           // No existe "marca"
+findByProductName(String name)      // No existe "productName" 
+findByPrecio(BigDecimal price)      // No existe "precio"
+```
+
+## 🎯 Conclusión:
+
+- **JPA es estricto** con los nombres de atributos
+- **Debe coincidir exactamente** con los fields de la entidad
+- **Case sensitive**: `Brand` ≠ `brand`
+- **Solo las palabras clave** (`And`, `Or`, `GreaterThan`, etc.) son flexibles
+
+Por eso es importante conocer bien los nombres exactos de los atributos en tu entidad `ProductCatalogEntity`.
+
+**Exactamente correcto!** 🎯 Has entendido perfectamente la diferencia.
+
+## 🏗️ Métodos que ya existen por defecto en JPA:
+
+### **Heredados automáticamente**:
+
+```java
+// Estos YA EXISTEN en JpaRepository<ProductCatalogEntity, UUID>:
+Optional<ProductCatalogEntity> findById(UUID id);
+List<ProductCatalogEntity> findAll();
+ProductCatalogEntity save(ProductCatalogEntity entity);
+void deleteById(UUID id);
+long count();
+boolean existsById(UUID id);
+```
+
+## 🔧 Métodos personalizados en tu proyecto:
+
+### **Creados específicamente para tu entidad**:
+
+```java
+// Estos son PERSONALIZADOS según tus atributos:
+ProductCatalogEntity findByName(String name);        // ← Tu atributo "name"
+List<ProductCatalogEntity> findNameLike(String key); // ← Tu atributo "name" 
+List<ProductCatalogEntity> findByBrandAndRating(String brand, Short rating); // ← Tus atributos
+List<ProductCatalogEntity> findByCategory(Long id);   // ← Tu relación "categories"
+```
+
+## 📋 Comparación:
+
+| Tipo               | Origen                | Ejemplos                            |
+|--------------------|-----------------------|-------------------------------------|
+| **Por defecto**    | `JpaRepository`       | `findById()`, `findAll()`, `save()` |
+| **Personalizados** | Tu entidad específica | `findByName()`, `findByBrand()`     |
+
+## 🎯 En tu caso:
+
+### **Interface que extiendes**:
+
+```java
+public interface ProductCatalogRepository extends JpaRepository<ProductCatalogEntity, UUID> {
+    // Métodos por defecto: findById, findAll, save, etc.
+    
+    // Métodos personalizados basados en TUS atributos:
+    List<ProductCatalogEntity> findByBrandAndRating(String brand, Short rating);
+}
+```
+
+### **Tu Service adapta ambos**:
+
+```java
+public interface ProductCatalogService {
+    ProductCatalogEntity findById(UUID id);        // ← Usa el por defecto
+    ProductCatalogEntity findByName(String name);  // ← Usa tu personalizado
+}
+```
+
+## ✅ Resultado:
+
+- **Métodos por defecto** → Funcionan con cualquier entidad
+- **Métodos personalizados** → Se adaptan a TUS atributos específicos
+- **JPA combina ambos** para darte máxima flexibilidad
+
+¡Perfecto entendimiento de cómo JPA combina lo genérico con lo específico! 🚀
+
+## 🎯REPRESENTACION DE SQL
+---
+
+```sql
+
+
+select * from products_catalog
+where brand_name = 'Apple'
+and rating > 5;
+```
+
+## Nota :
+
+> Considerar que los nombres Brand y Rating en el sql son brand_name y rating en la entidad ProductCatalogEntity
+> deben ser iguales en el metodo del repositorio para que se puedan mapear.
+>
+
+### - ✅En el ProductCatalogRepository creamos un nuevo Metodo -> findByBrandAndRatingGreaterThan
+
+### ️⚠️⚠️ OJITO ------> "GreaterThan"
+
+```java
+//CLASE 66 BUSCAMOS POR MARCA Y RATING MAYOR A..."GreaterThan" 
+    List<ProductCatalogEntity> findByBrandAndRatingGreaterThan(String brand, Short rating);
+```
+
+### - ✅En el ProductCatalogService creamos un nuevo Metodo ->
+
+```java
+    @Override
+    public List<ProductCatalogEntity> findByBrandAndRating(String brand, Short rating) {
+        return this.catalogRepository.findByBrandAndRatingGreaterThan(brand, rating);
+    }
+```
+
+## ⚠️⚠️⚠️ OJITO ------>
+
+### - ✅En el ProductCatalogController -> Algo importante es que el nombre findByBrandAndRating debe ser igual al de la entidad
+
+### - ✅para que el controlador pueda mapear correctamente. ⚠️""brand y rating" ⚠️son los nombres de los campos en la entidad ProductCatalogEntity
+
+```java
+    @GetMapping(path = "brand-rating")
+    public ResponseEntity<List<ProductCatalogEntity>> getByBrandAndRating(@RequestParam String brand, @RequestParam Short rating) {
+        return ResponseEntity.ok(this.productCatalogService.findByBrandAndRating(brand, rating));
+    }
+```
+
+### - ✅En Postman ->
+
+![image](images/59.png)
+
+---
+
+## #️ ⃣📚**Clase 67:OPERADOR OR **
+
+#### ESTA ES LA REPRESENTACION DEL EJERCICIO ANTERIOR CON EL AND
+
+> Considerar que en el ejericio anterior usamos el AND pero si lo hacemos con el OR
+> pues va a traer muchos mas resultados.
+
+```java
+    List<ProductCatalogEntity> findByBrandAndRatingGreaterThan(String brand, Short rating);
+
+```
+
+DE ESTE QUERY -> SOLO CAMBIAMOS EL AND POR EL OR
+
+```java
+    List<ProductCatalogEntity> findByBrandOrRatingGreaterThan(String brand, Short rating);
+    
+```
+
+## REPRESENTACION EN SQL DEL OPERADOR OR
+
+```sql
+SELECT *
+FROM products_catalog pc
+WHERE pc.rating > 10
+   OR pc.brand_name = 'LG';
+```
+
+```sql
+SELECT *
+FROM products_catalog pc
+WHERE pc.rating > ?
+   OR pc.brand_name = ?;
+```
+
+### - ✅En el ProductCatalogRepository creamos un nuevo Metodo -> findByBrandOrRatingGreaterThan
+
+```java
+ List<ProductCatalogEntity> findByBrandOrRatingGreaterThan(String brand, Short rating);
+```
+
+### ✅Paso 1 - ProductCatalogService :
+
+```java
+    List<ProductCatalogEntity> findByBrandOrRating(String brand, Short rating);
+```
+
+### ✅Paso 2 - ProductCatalogServiceImpl :
+
+```java
+    @Override
+    public List<ProductCatalogEntity> findByBrandOrRating(String brand, Short rating) {
+        return this.catalogRepository.findByBrandOrRatingGreaterThan(brand, rating);
+    }
+```
+
+### ✅Paso 3 - ProductCatalogController :
+
+```java
+    @GetMapping(path = "brand-rating")
+    public ResponseEntity<List<ProductCatalogEntity>> getByBrandAndRating(@RequestParam String brand, @RequestParam Short rating) {
+        //return ResponseEntity.ok(this.productCatalogService.findByBrandAndRating(brand, rating));
+        return ResponseEntity.ok(this.productCatalogService.findByBrandOrRating(brand, rating));
+    }
+```
+
+#### En postman
+
+![image](images/60.png)
+
+---
+
+## #️ ⃣📚**Clase 68-69:OPERADOR GROUP BY PARTE 1 Y PARTE 2**
+
+```sql
+SELECT pc.brand_name,
+       AVG(pc.price) as average,
+       SUM(pc.price) as totalPrice
+from products_catalog pc
+GROUP BY pc.brand_name;
+
+--SONY PROMEDIO, TOTALPRECIOS
+-- SAMSUNG PROMEDIO, TOTALPRECIOS
+-- LG PROMEDIO, TOTALPRECIOS
+-- APPLE PROMEDIO, TOTALPRECIOS
+```
+
+> #### - ✅Paso 1 :
+> - Creamos un DTO por que no estamos haciendo un Select * , entonces lo convertimos a un DTO
+> - para convertirse en un objeto mas manejable.
+
+```java
+ @Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class ReportProduct {
+
+    private String brandName;
+   private BigDecimal averagePrices;
+   private BigDecimal sumPrices;
+
+ }
+
+```
+> #### - ✅Paso 2 : ProductCatalogRepository
+> El query SQL que seleccionaste y la query JPQL que tienes en tu código hacen exactamente lo mismo, solo
+> que están escritos en diferentes sintaxis:
+````java
+ @Query("select new com.debugeandoideas.gadgetplus.dto.ReportProduct("
+            + "pc.brand, "
+            + "avg(pc.price), " // avg se mapea como double no bigdecimal 
+            + "sum(pc.price)) "
+            + "from productCatalog pc "
+            + "group by pc.brand")
+    List<ReportProduct> findAndMakeReport();
+```
+```sql
+SELECT pc.brand_name,
+       AVG(pc.price) as average,
+       SUM(pc.price) as totalPrice
+from products_catalog pc
+GROUP BY pc.brand_name;
+```
+> #### - ✅Paso 3 : ProductCatalogRepository
+
+
+
 
 </details>

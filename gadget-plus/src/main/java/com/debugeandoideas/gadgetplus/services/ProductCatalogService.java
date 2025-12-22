@@ -27,6 +27,8 @@ public interface ProductCatalogService {
 
     List<ProductCatalogEntity> findByBrandAndRating(String brand, Short rating);
 
+    List<ProductCatalogEntity> findByBrandOrRating(String brand, Short rating);
+
     //List<StaticsProduct> findStatistics();
 
     Page<ProductCatalogEntity> findAll(String field, Boolean desc);

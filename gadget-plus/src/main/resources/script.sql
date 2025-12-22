@@ -136,6 +136,15 @@ where pc.price between 100 and 1000;
 -- INDICES CLASE 61
 create index idx_product_name on products_catalog (product_name);
 
+
+-- CLASE 63
+
+SELECT p.*, c.*
+FROM products_catalog p
+         LEFT JOIN product_join_category pjc ON p.id = pjc.id_product
+         LEFT JOIN categories c ON pjc.id_category = c.id
+WHERE c.id = :categoryId;
+
 -- joins con JPQL
 select *
 from categories;
@@ -154,7 +163,25 @@ where launching_date > '2017-01-01';
 
 -- CLASE 66 TRABAJANDO OPERADOR AND
 
-select * from products_catalog
+select *
+from products_catalog
 where brand_name = 'Apple'
-and rating > 5;
+  and rating > 5;
 
+-- CLASE 67 OR
+SELECT *
+FROM products_catalog pc
+WHERE pc.rating > 5
+   OR pc.brand_name = 'LG';
+
+-- CLASE 68 GROUPBY
+SELECT pc.brand_name,
+       AVG(pc.price) as average,
+       SUM(pc.price) as totalPrice
+from products_catalog pc
+GROUP BY pc.brand_name;
+
+--SONY PROMEDIO, TOTALPRECIOS
+-- SAMSUNG PROMEDIO, TOTALPRECIOS
+-- LG PROMEDIO, TOTALPRECIOS
+-- APPLE PROMEDIO, TOTALPRECIOS
