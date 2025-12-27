@@ -85,7 +85,7 @@ public class ProductCatalogController {
     // aplicando el reporte CLASE 71
     @GetMapping(path = "all")
     public ResponseEntity<Page<ProductCatalogEntity>> getAll(
-            @RequestParam(required = false) String field,
+            @RequestParam(required = true) String field,
             @RequestParam(required = false) Boolean desc,
             @RequestParam(required = true) Integer page
     ) {

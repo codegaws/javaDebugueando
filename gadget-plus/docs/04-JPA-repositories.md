@@ -2654,6 +2654,9 @@ Sin `ORDER BY` el resultado puede ser **impredecible** entre consultas.
         return ResponseEntity.ok(this.productCatalogService.findAll(field, desc, page));
     }
 ```
+---
+## #️ ⃣📚**Clase 72 ¿ordenamiento en JPA**
+
 
 
 </details>
