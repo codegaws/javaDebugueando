@@ -85,8 +85,8 @@ public class ProductCatalogController {
     // aplicando el reporte CLASE 71
     @GetMapping(path = "all")
     public ResponseEntity<Page<ProductCatalogEntity>> getAll(
-            @RequestParam(required = true) String field,
-            @RequestParam(required = false) Boolean desc,
+            @RequestParam(required = false) String field,// como este parametro puede ser nulo importante validar su nulabilidad en el service
+            @RequestParam(required = true) Boolean desc,
             @RequestParam(required = true) Integer page
     ) {
         return ResponseEntity.ok(this.productCatalogService.findAll(field, desc, page));

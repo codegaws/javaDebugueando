@@ -8,16 +8,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.LocalDate;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -82,8 +80,24 @@ public class ProductCatalogServiceImpl implements ProductCatalogService {
 
     @Override
     public Page<ProductCatalogEntity> findAll(String field, Boolean desc, Integer page) {// paginacion
-        return this.catalogRepository.findAll(PageRequest.of(page, PAGE_SIZE));
+        var sorting = Sort.by("name");// lo ordenamos por nombre por defecto
+
+        if (Objects.nonNull(field)) {
+            switch (field) {
+                case "brand" -> sorting = Sort.by("brand");
+                case "price" -> sorting = Sort.by("price");
+                case "launchingDate" -> sorting = Sort.by("launchingDate");
+                case "rating" -> sorting = Sort.by("rating");
+
+                default -> throw new IllegalArgumentException("Invalid field: " + field);
+            }
+        }
+        return (desc) ?
+                this.catalogRepository.findAll(PageRequest.of(page, PAGE_SIZE, sorting.descending()))
+                :
+                this.catalogRepository.findAll(PageRequest.of(page, PAGE_SIZE, sorting.ascending()));
     }
+
 
     @Override
     public Page<ProductCatalogEntity> findAllByBrand(String brand) {
