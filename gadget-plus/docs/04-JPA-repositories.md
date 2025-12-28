@@ -2862,6 +2862,218 @@ localhost:8080/product-catalog/all?field=launchingDate&desc=true&page=7
 5. Crea `PageRequest.of(7, 5, Sort.by("launchingDate").descending())`
 6. Trae la página 7 (elementos 36-40) ordenados por fecha de lanzamiento, del más reciente al más antiguo
 7. Retorna un objeto `Page` con los 5 productos y metadatos de paginación
+---
+## otra forma con optional y stream
+¡Excelente idea! Sí, se puede usar `Optional` con `Stream` para hacer el código más funcional y limpio. Te muestro cómo:
 
+## Refactorización usando Optional y Stream
 
+```java
+@Override
+public Page<ProductCatalogEntity> findAll(String field, Boolean desc, Integer page) {
+    var sorting = Optional.ofNullable(field)
+            .map(f -> switch (f) {
+                case "brand" -> Sort.by("brand");
+                case "price" -> Sort.by("price");
+                case "launchingDate" -> Sort.by("launchingDate");
+                case "rating" -> Sort.by("rating");
+                default -> throw new IllegalArgumentException("Invalid field: " + f);
+            })
+            .orElse(Sort.by("name"));
+
+    sorting = desc ? sorting.descending() : sorting.ascending();
+
+    return this.catalogRepository.findAll(PageRequest.of(page, PAGE_SIZE, sorting));
+}
+```
+
+## O con Stream (si tienes múltiples campos):
+
+```java
+@Override
+public Page<ProductCatalogEntity> findAll(String field, Boolean desc, Integer page) {
+    Map<String, String> validFields = Map.of(
+        "brand", "brand",
+        "price", "price",
+        "launchingDate", "launchingDate",
+        "rating", "rating"
+    );
+
+    var sorting = Optional.ofNullable(field)
+            .filter(validFields::containsKey)
+            .map(validFields::get)
+            .map(Sort::by)
+            .orElse(Sort.by("name"));
+
+    sorting = desc ? sorting.descending() : sorting.ascending();
+
+    return this.catalogRepository.findAll(PageRequest.of(page, PAGE_SIZE, sorting));
+}
+```
+
+## Ventajas de esta refactorización:
+
+✅ **Más conciso**: Elimina el `if` y múltiples líneas de código  
+✅ **Más funcional**: Usa programación funcional  
+✅ **Más seguro**: `Optional` maneja automáticamente el caso `null`  
+✅ **Más legible**: El flujo de datos es más claro  
+✅ **Validación automática**: Con `filter()` puedes validar campos válidos
+
+---
+
+## #️ ⃣📚**Clase 73 paginacion personalizada**
+
+# Paginación Personalizada: `findAllByBrand`
+
+## ¿Qué significa "personalizada"?
+
+Sí, **"personalizada"** significa que **TÚ inventas el nombre del método** según tus necesidades de negocio. Spring Data JPA lo interpreta automáticamente.
+
+---
+
+## Flujo Completo de tu Código
+
+### 1️⃣ **Repositorio** (`ProductCatalogRepository`)
+
+```java
+Page<ProductCatalogEntity> findAllByBrand(String brand, Pageable pageable);
+```
+
+**Explicación:**
+- ✅ `findAllByBrand` **NO es un método predefinido de JPA**
+- ✅ **Tú lo inventaste** siguiendo las convenciones de Spring Data JPA
+- ✅ Spring **genera automáticamente** esta consulta SQL:
+
+```sql
+SELECT * FROM product_catalog 
+WHERE brand = ? 
+LIMIT ? OFFSET ?
+```
+
+**Desglose del nombre:**
+- `findAllBy` → Buscar todos los registros por...
+- `Brand` → ...el atributo `brand` de tu entidad
+- `Pageable pageable` → Información de paginación (página, tamaño, ordenamiento)
+- `Page<>` → Retorna resultados paginados con metadata (total de páginas, elementos, etc.)
+
+---
+
+### 2️⃣ **Service Interface** (`ProductCatalogService`)
+
+```java
+Page<ProductCatalogEntity> findAllByBrand(String brand, Integer page);
+```
+
+**Explicación:**
+- Defines el contrato del servicio
+- Recibes solo `Integer page` (más simple para el usuario del servicio)
+- El `Pageable` se creará dentro de la implementación
+
+---
+
+### 3️⃣ **Service Implementation** (`ProductCatalogServiceImpl`)
+
+```java
+@Override
+public Page<ProductCatalogEntity> findAllByBrand(String brand, Integer page) {
+    return this.catalogRepository.findAllByBrand(
+        brand,
+        PageRequest.of(page, MIN_PAGE_SIZE)
+    );
+}
+```
+
+**Explicación:**
+- `PageRequest.of(page, MIN_PAGE_SIZE)` crea el objeto `Pageable`
+  - `page` → Número de página (0, 1, 2, ...)
+  - `MIN_PAGE_SIZE` → Cantidad de elementos por página (ejemplo: 10)
+- Llamas al método del repositorio pasando el `Pageable` construido
+
+---
+
+### 4️⃣ **Controller** (`ProductCatalogController`)
+
+```java
+@GetMapping(path = "all-ByBrand")
+public ResponseEntity<Page<ProductCatalogEntity>> getAllByBrand(
+    @RequestParam String brand,
+    @RequestParam Integer page
+) {
+    return ResponseEntity.ok(this.productCatalogService.findAllByBrand(brand, page));
+}
+```
+
+**Explicación:**
+- **Endpoint:** `GET /product-catalog/all-ByBrand?brand=Samsung&page=0`
+- `brand` → **Obligatorio** (no tiene `required = false`)
+- `page` → Número de página que quieres obtener
+- Retorna un objeto `Page` con:
+  - Lista de productos
+  - Total de páginas
+  - Total de elementos
+  - Información de navegación
+
+---
+
+## ¿Puedo "inventar" otros nombres?
+
+**¡SÍ!** Ejemplos válidos:
+
+```java
+// Por precio mayor a X
+Page<ProductCatalogEntity> findByPriceGreaterThan(BigDecimal price, Pageable pageable);
+
+// Por nombre que contenga X
+Page<ProductCatalogEntity> findByNameContaining(String keyword, Pageable pageable);
+
+// Por fecha de lanzamiento entre dos fechas
+Page<ProductCatalogEntity> findByLaunchingDateBetween(
+    LocalDate start, 
+    LocalDate end, 
+    Pageable pageable
+);
+
+// Por marca Y rating mayor a X
+Page<ProductCatalogEntity> findByBrandAndRatingGreaterThan(
+    String brand,
+    Short rating,
+    Pageable pageable
+);
+```
+
+---
+
+## Palabras Clave que Puedes Usar
+
+| Palabra | Ejemplo | SQL Generado |
+|---------|---------|--------------|
+| `And` | `findByBrandAndPrice` | `WHERE brand = ? AND price = ?` |
+| `Or` | `findByBrandOrRating` | `WHERE brand = ? OR rating = ?` |
+| `GreaterThan` | `findByPriceGreaterThan` | `WHERE price > ?` |
+| `LessThan` | `findByPriceLessThan` | `WHERE price < ?` |
+| `Between` | `findByPriceBetween` | `WHERE price BETWEEN ? AND ?` |
+| `Like` / `Containing` | `findByNameContaining` | `WHERE name LIKE %?%` |
+| `Before` / `After` | `findByDateAfter` | `WHERE date > ?` |
+| `IsNull` / `IsNotNull` | `findByDescriptionIsNull` | `WHERE description IS NULL` |
+
+---
+
+## Resumen
+
+✅ **`findAllByBrand` es un método personalizado** que TÚ inventas  
+✅ Spring Data JPA lo traduce automáticamente a SQL  
+✅ Solo debes seguir las convenciones de nombres  
+✅ El `Pageable` es **obligatorio** si retornas `Page<>`  
+✅ Puedes crear métodos similares para otros atributos
+
+**Ejemplo de respuesta JSON:**
+```json
+{
+  "content": [...],
+  "totalPages": 5,
+  "totalElements": 50,
+  "size": 10,
+  "number": 0
+}
+```
 </details>

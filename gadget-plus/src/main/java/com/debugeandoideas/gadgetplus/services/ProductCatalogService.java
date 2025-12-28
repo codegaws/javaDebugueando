@@ -34,7 +34,7 @@ public interface ProductCatalogService {
 
     Page<ProductCatalogEntity> findAll(String field, Boolean desc,Integer page );//clase 71 paginacion
 
-    Page<ProductCatalogEntity> findAllByBrand(String brand);
+    Page<ProductCatalogEntity> findAllByBrand(String brand,Integer page);//clase 73 paginacion personalizada
 
     Integer countByBrand(String brand);
 

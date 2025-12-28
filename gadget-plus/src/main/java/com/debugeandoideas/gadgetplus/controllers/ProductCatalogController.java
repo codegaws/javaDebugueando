@@ -92,4 +92,13 @@ public class ProductCatalogController {
         return ResponseEntity.ok(this.productCatalogService.findAll(field, desc, page));
     }
 
+    // aplicando el reporte CLASE 73 paginacion personalizada
+    @GetMapping(path = "all-ByBrand")
+    public ResponseEntity<Page<ProductCatalogEntity>> getAllByBrand(
+            @RequestParam String brand,// no pongo required = false porque es obligatorio
+            @RequestParam Integer page
+    ) {
+        return ResponseEntity.ok(this.productCatalogService.findAllByBrand(brand, page));
+    }
+
 }

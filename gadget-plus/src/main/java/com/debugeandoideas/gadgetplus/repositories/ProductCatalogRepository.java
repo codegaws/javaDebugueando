@@ -2,6 +2,8 @@ package com.debugeandoideas.gadgetplus.repositories;
 
 import com.debugeandoideas.gadgetplus.dto.ReportProduct;
 import com.debugeandoideas.gadgetplus.entities.ProductCatalogEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -43,5 +45,7 @@ public interface ProductCatalogRepository extends JpaRepository<ProductCatalogEn
             + "group by pc.brand")
     List<ReportProduct> findAndMakeReport();
 
+    //clase 73 paginacion personalizada
+    Page<ProductCatalogEntity> findAllByBrand(String brand, Pageable pageable);//siempre debe ir el pageable con el Page
 
 }
