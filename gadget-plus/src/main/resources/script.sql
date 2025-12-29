@@ -53,7 +53,7 @@ SELECT column_name,
        is_nullable,
        column_default
 FROM information_schema.columns
-WHERE table_name = 'product_join_category';
+WHERE table_name = 'products_catalog';
 
 SELECT *
 FROM products_catalog p -- Tabla principal: productos
@@ -192,3 +192,35 @@ FROM products_catalog pc
 ORDER BY pc.price desc
 LIMIT 5 OFFSET 0;
 
+
+SELECT *
+FROM products_catalog
+WHERE launching_date < '2024-01-01';
+
+--  clase 74 procedimientos almacenados--**************************************************
+CREATE OR REPLACE PROCEDURE count_total_products_by_brand(IN brand VARCHAR, OUT response INTEGER)
+    LANGUAGE plpgsql
+AS
+$$
+BEGIN
+    SELECT COUNT(*)
+    INTO response
+    FROM products_catalog
+    WHERE brand_name = brand
+    GROUP BY brand_name;
+END;
+$$;
+--llamas
+CALL count_total_products_by_brand('Lenovo', null);
+--**************************************************
+-- esto es lo que haria el procedimiento almacenado
+
+-- haciendo pruebas
+SELECT COUNT(*) AS total
+FROM products_catalog
+WHERE brand_name = 'Amazon'
+GROUP BY brand_name;
+-- rpta 4
+--**************************************************
+SELECT *
+FROM products_catalog;

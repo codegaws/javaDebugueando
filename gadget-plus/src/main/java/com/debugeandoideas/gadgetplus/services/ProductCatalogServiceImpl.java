@@ -55,6 +55,21 @@ public class ProductCatalogServiceImpl implements ProductCatalogService {
         return this.catalogRepository.getByCategory(id);
     }
 
+    //*********************//****************************
+    //-> prueba de clase 65 personalizada usando JPQL el nombre de mi metodo
+    @Override
+    public List<ProductCatalogEntity> buscarAnterioresA(LocalDate fecha) {
+        return this.catalogRepository.buscarAnterioresA(fecha);
+    }
+
+    @Override
+    public List<ProductCatalogEntity> buscarDespuesDe(LocalDate fecha) {
+        return this.catalogRepository.buscarDespuesDe(fecha);
+    }
+
+    //*********************//****************************
+
+
     @Override
     public List<ProductCatalogEntity> findByLauchingDate(LocalDate date, DateEval key) {
         if (key.equals(DateEval.AFTER)) {
@@ -100,12 +115,13 @@ public class ProductCatalogServiceImpl implements ProductCatalogService {
     }
 
     @Override
-    public Page<ProductCatalogEntity> findAllByBrand(String brand,Integer page) {
-        return this.catalogRepository.findAllByBrand(brand,PageRequest.of(page,MIN_PAGE_SIZE));
+    public Page<ProductCatalogEntity> findAllByBrand(String brand, Integer page) {
+        return this.catalogRepository.findAllByBrand(brand, PageRequest.of(page, MIN_PAGE_SIZE));
     }
 
+    //CLASE 75
     @Override
     public Integer countByBrand(String brand) {
-        return 0;
+        return this.catalogRepository.countTotalProductsByBrandStoredProcedure(brand);
     }
 }

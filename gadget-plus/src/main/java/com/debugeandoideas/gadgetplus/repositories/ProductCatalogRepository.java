@@ -6,6 +6,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.query.Procedure;
+import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -26,10 +28,21 @@ public interface ProductCatalogRepository extends JpaRepository<ProductCatalogEn
     @Query("from productCatalog p left join fetch p.categories c where c.id= :categoryId")
     List<ProductCatalogEntity> getByCategory(Long categoryId);
 
-    //CLASE 65 APLICANDO LENGUAJE DE SPRING JPA
+    //CLASE 64-65 APLICANDO LENGUAJE DE SPRING JPA
+    //practiquita usando nombre personalizado a mi metodo fechita usando JPQL
+
+    @Query("SELECT p FROM productCatalog p WHERE p.launchingDate < :fecha")
+    List<ProductCatalogEntity> buscarAnterioresA(@Param("fecha") LocalDate fecha);
+
+    @Query("SELECT p FROM productCatalog p WHERE p.launchingDate > :fecha")
+    List<ProductCatalogEntity> buscarDespuesDe(@Param("fecha") LocalDate fecha);
+
+    //**************BUSCANDO FECHAS CON QUERYMETHOS*****************
+
     List<ProductCatalogEntity> findByLaunchingDateAfter(LocalDate date);
 
     List<ProductCatalogEntity> findByLaunchingDateBefore(LocalDate date);
+
 
     //CLASE 66 BUSCAMOS POR MARCA Y RATING MAYOR A...
     List<ProductCatalogEntity> findByBrandAndRatingGreaterThan(String brand, Short rating);
@@ -47,5 +60,11 @@ public interface ProductCatalogRepository extends JpaRepository<ProductCatalogEn
 
     //clase 73 paginacion personalizada
     Page<ProductCatalogEntity> findAllByBrand(String brand, Pageable pageable);//siempre debe ir el pageable con el Page
+
+    //🎯Metodo especial que llama a un procedimiento almacenado (stored procedure) en la base de datos
+    // clase 75 stored procedure -> llamando storedprocedure✅
+    //devuelve la cantidad de elementos que hay con esa misma marca o brand✅
+    @Procedure(procedureName = "count_total_products_by_brand", outputParameterName = "response")//asi se llama el output parameter
+    Integer countTotalProductsByBrandStoredProcedure(@Param(value="brand") String brand);//recibe un string que es la marca
 
 }

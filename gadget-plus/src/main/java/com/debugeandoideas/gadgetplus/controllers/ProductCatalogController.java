@@ -7,6 +7,7 @@ import com.debugeandoideas.gadgetplus.entities.ProductCatalogEntity;
 import com.debugeandoideas.gadgetplus.services.ProductCatalogService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -65,6 +66,20 @@ public class ProductCatalogController {
         return ResponseEntity.ok(this.productCatalogService.findByCategory(id));
     }
 
+    //clase 64 prueba personalizada usando JPQL - > es el mismo que el de abajo
+    @GetMapping(path = "/anteriores-a/{fecha}")
+    public ResponseEntity<List<ProductCatalogEntity>> getAnterioresA(@PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha) {
+        System.out.println("📅 Fecha recibida: " + fecha);
+        return ResponseEntity.ok(this.productCatalogService.buscarAnterioresA(fecha));
+    }
+
+    @GetMapping(path = "/despues-de/{fecha}")
+    public ResponseEntity<List<ProductCatalogEntity>> getDespuesDe(@PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha) {
+        System.out.println("📅 Fecha recibida: " + fecha);
+        return ResponseEntity.ok(this.productCatalogService.buscarDespuesDe(fecha));
+    }
+    //***********************************************************************/
+
     @GetMapping(path = "date-launch/{key}")
     public ResponseEntity<List<ProductCatalogEntity>> getByDate(@PathVariable DateEval key, @RequestParam LocalDate date) {
         return ResponseEntity.ok(this.productCatalogService.findByLauchingDate(date, key));
@@ -101,4 +116,10 @@ public class ProductCatalogController {
         return ResponseEntity.ok(this.productCatalogService.findAllByBrand(brand, page));
     }
 
+    //clase 75
+    // aplicando el reporte CLASE 69
+    @GetMapping(path = "brand-count/{brand}")
+    public ResponseEntity<Integer> getCountByBrand(@PathVariable String brand) {//Aqui devuelve una lista de enteros
+        return ResponseEntity.ok(this.productCatalogService.countByBrand(brand));
+    }
 }

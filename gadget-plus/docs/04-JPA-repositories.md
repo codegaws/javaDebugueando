@@ -2102,11 +2102,174 @@ where launching_date > '2017-01-01';
 
 ```java
     //APLICANDO LENGUAJE DE SPRING JPA
-    List<ProductCatalogEntity> findByLaunching_dateBefore(LocalDate date);
+    List<ProductCatalogEntity> findByLaunchingDateBefore(LocalDate date);
 
-    List<ProductCatalogEntity> findByLaunching_dateAfter(LocalDate date);
+    List<ProductCatalogEntity> findByLaunchingDateAfter(LocalDate date);
+```
+## ⚠️REGLA GENERAL PARA LOS @QUERYMETHODS y NOMBRES DE LOS ATRIBUTOS DE LA ENTIDAD⚠️
+
+Exacto, entendiste correctamente. Te explico cómo funciona:
+
+## Query Methods de Spring Data JPA
+
+Los **Query Methods** son métodos que **tú defines** siguiendo una convención de nombres específica. Spring Data JPA los interpreta y genera automáticamente la consulta SQL.
+
+### Reglas importantes:
+
+1. **El nombre del método debe coincidir con los nombres de los atributos de tu entidad**
+  - Si tu entidad tiene `launchingDate`, debes usar `findByLaunchingDate`
+  - Si tienes `brand`, usas `findByBrand`
+  - Si tienes `name`, usas `findByName`
+
+2. **Spring Data JPA respeta el camelCase**
+  - `findByLaunchingDate` → busca por el campo `launchingDate`
+  - `findByLaunchingDateAfter` → busca fechas posteriores a la indicada
+  - `findByLaunchingDateBefore` → busca fechas anteriores a la indicada
+
+3. **No uses guiones bajos (_) en los nombres de métodos** (excepto casos especiales)
+  - ❌ `findBy_launching_date`
+  - ✅ `findByLaunchingDate`
+
+### Ejemplo con tu entidad:
+
+Basándome en `ProductCatalogEntity`, puedes crear métodos como:
+
+```java
+// Basados en los campos de tu entidad
+Page<ProductCatalogEntity> findByBrand(String brand, Pageable pageable);
+Page<ProductCatalogEntity> findByName(String name, Pageable pageable);
+Page<ProductCatalogEntity> findByPriceGreaterThan(BigDecimal price, Pageable pageable);
+Page<ProductCatalogEntity> findByLaunchingDateAfter(LocalDate date, Pageable pageable);
+Page<ProductCatalogEntity> findByLaunchingDateBefore(LocalDate date, Pageable pageable);
+Page<ProductCatalogEntity> findByIsDiscountTrue(Pageable pageable);
+Page<ProductCatalogEntity> findByRatingGreaterThanEqual(Short rating, Pageable pageable);
 ```
 
+### ¿Estás sobrescribiendo algo?
+
+**No**, no estás sobrescribiendo nada. Estos métodos **no existen previamente**, los estás **creando tú** siguiendo la convención de Spring Data JPA. El framework lee el nombre, lo interpreta y genera la implementación automáticamente.
+
+**No hay riesgo de sobrescribir** porque Spring Data JPA no tiene métodos predefinidos con nombres específicos de tu dominio como `findByBrand` o `findByLaunchingDate`.
+
+### 📝📝 ¿Que pasa si no pongo el mismo nombre findByLauchingDate y
+### pongo findByLaunchingDateBef, o no pongo el findByLaunchingDateBefore 
+### sino bucarPorLauchingDate??📝📝
+
+Te explico qué pasa en cada caso:
+
+## 1. `findByLaunchingDateBef` (nombre incompleto)
+
+```java
+List<ProductCatalogEntity> findByLaunchingDateBef(LocalDate date);
+```
+
+❌ **Error en tiempo de ejecución**
+
+Spring Data JPA intentará interpretar el nombre pero **no reconocerá** `Bef` como palabra clave válida. Obtendrás un error similar a:
+
+```
+org.springframework.data.mapping.PropertyReferenceException: 
+No property 'bef' found for type 'ProductCatalogEntity'
+```
+
+**Las palabras clave válidas son:**
+- `Before` (no `Bef`)
+- `After`
+- `Between`
+- `GreaterThan`
+- `LessThan`
+- etc.
+
+## 2. `buscarPorLaunchingDate` (español)
+
+```java
+List<ProductCatalogEntity> buscarPorLaunchingDate(LocalDate date);
+```
+
+❌ **Error en tiempo de ejecución**
+
+Spring Data JPA **solo entiende inglés**. No reconocerá `buscarPor` como `findBy`. Obtendrás:
+
+```
+Caused by: java.lang.IllegalArgumentException: 
+Failed to create query for method public abstract ...buscarPorLaunchingDate
+```
+
+**Nombres válidos:**
+- ✅ `findBy...`
+- ✅ `getBy...`
+- ✅ `queryBy...`
+- ✅ `readBy...`
+- ✅ `countBy...`
+- ❌ `buscarPor...`
+- ❌ `obtenerPor...`
+
+## 3. Si cambias el nombre del campo en la entidad
+
+Si en `ProductCatalogEntity` cambias:
+
+```java
+// De:
+private LocalDate launchingDate;
+
+// A:
+private LocalDate fechaLanzamiento;
+```
+
+Entonces **debes cambiar** el método a:
+
+```java
+// ✅ Correcto
+List<ProductCatalogEntity> findByFechaLanzamientoBefore(LocalDate date);
+
+// ❌ Incorrecto (lanzará error)
+List<ProductCatalogEntity> findByLaunchingDateBefore(LocalDate date);
+```
+
+## Reglas fundamentales:
+
+| Componente del método | ¿Puedes cambiar? | Debe coincidir con |
+|----------------------|------------------|-------------------|
+| `findBy` / `getBy` | ❌ No (inglés obligatorio) | Palabras clave de Spring Data |
+| `LaunchingDate` | ✅ Sí | **Nombre exacto del campo** en la entidad |
+| `Before` / `After` | ❌ No | Palabras clave de Spring Data |
+
+## Ejemplo completo:
+
+### En `ProductCatalogEntity`:
+```java
+@Column(name = "launching_date")
+private LocalDate launchingDate;  // ← Este nombre importa
+```
+
+### En `ProductCatalogRepository`:
+```java
+// ✅ Correcto: coincide con 'launchingDate'
+List<ProductCatalogEntity> findByLaunchingDateBefore(LocalDate date);
+List<ProductCatalogEntity> findByLaunchingDateAfter(LocalDate date);
+
+// ❌ Incorrecto: no existe 'lanchDate' en la entidad
+List<ProductCatalogEntity> findByLanchDateBefore(LocalDate date);
+
+// ❌ Incorrecto: 'Bef' no es palabra clave válida
+List<ProductCatalogEntity> findByLaunchingDateBef(LocalDate date);
+
+// ❌ Incorrecto: Spring Data solo entiende inglés
+List<ProductCatalogEntity> buscarPorLaunchingDate(LocalDate date);
+```
+
+## Alternativa: Usa `@Query`
+
+Si quieres nombres personalizados en español, usa `@Query`:
+
+```java
+@Query("SELECT p FROM ProductCatalogEntity p WHERE p.launchingDate < :fecha")
+List<ProductCatalogEntity> buscarAnterioresA(@Param("fecha") LocalDate fecha);
+```
+
+✅ Esto sí funciona porque defines explícitamente la consulta JPQL.
+
+---
 ## #️ ⃣📚**Clase 65:TRABAJANDO CON FECHAS PARTE 2**
 
 - Creamos en Dto un enumerador llamado DateEval
@@ -2171,6 +2334,119 @@ List<ProductCatalogEntity> findByLauchingDate(LocalDate date, DateEval key);
 ```
 
 ![image](images/58.png)
+
+---
+
+### buscarAnterioresA : EJEMPLO USANDO JPQL NO USANDO QUERYMETHODS LE DOY EL NOMBRE A MI METODO COMO YO QUIERA 
+
+# 📋 Resumen del Proceso Completo
+
+## 🎯 Flujo de Ejecución (Controller → Service → Repository → DB)
+
+```
+🌐 HTTP Request
+    ↓
+🎮 Controller (getAnterioresA)
+    ↓
+⚙️ Service (buscarAnterioresA)
+    ↓
+🗄️ Repository (buscarAnterioresA con @Query JPQL)
+    ↓
+💾 Base de Datos
+```
+
+---
+
+## 📦 Componentes del Sistema
+
+### 1️⃣ **Controller** (Capa de Presentación)
+```java
+@GetMapping(path = "/anteriores-a/{fecha}")
+public ResponseEntity<List<ProductCatalogEntity>> getAnterioresA(
+    @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha
+)
+```
+
+**Función:**
+- ✅ Recibe petición HTTP GET: `GET /product-catalog/anteriores-a/2024-01-01`
+- ✅ Convierte el `String` de la URL a `LocalDate` usando formato ISO (`yyyy-MM-dd`)
+- ✅ Delega la lógica al **Service**
+- ✅ Retorna respuesta HTTP 200 con lista de productos
+
+---
+
+### 2️⃣ **Service** (Capa de Negocio)
+```java
+public List<ProductCatalogEntity> buscarAnterioresA(LocalDate fecha) {
+    return this.catalogRepository.buscarAnterioresA(fecha);
+}
+```
+
+**Función:**
+- 🔄 Intermediario entre Controller y Repository
+- 🔄 Aquí podrías agregar validaciones o transformaciones de datos
+- 🔄 Llama al **Repository** para obtener datos
+
+---
+
+### 3️⃣ **Repository** (Capa de Datos)
+```java
+@Query("SELECT p FROM productCatalog p WHERE p.launchingDate < :fecha")
+List<ProductCatalogEntity> buscarAnterioresA(@Param("fecha") LocalDate fecha);
+```
+
+**Función:**
+- 📊 Ejecuta query **JPQL** en la base de datos
+- 📊 Filtra productos con `launchingDate` **anterior** a la fecha dada
+- 📊 Retorna lista de `ProductCatalogEntity`
+
+---
+
+## 🔑 Puntos Clave
+
+### ⚡ Ventaja de JPQL con `@Query`
+
+| Aspecto | Query Methods | JPQL con `@Query` |
+|---------|--------------|-------------------|
+| **Nombre del método** | ❌ Debe seguir convención: `findByLaunchingDateBefore` | ✅ **Nombre libre**: `buscarAnterioresA` |
+| **Legibilidad** | ❌ Nombres largos y confusos | ✅ Nombres descriptivos en español/inglés |
+| **Flexibilidad** | ❌ Limitado a convenciones de Spring | ✅ SQL personalizado y complejo |
+
+---
+
+### 📌 Ejemplo Comparativo
+
+#### ❌ **Sin `@Query` (Query Method)**
+```java
+// Nombre obligatorio según convención de Spring Data JPA
+List<ProductCatalogEntity> findByLaunchingDateBefore(LocalDate date);
+```
+
+#### ✅ **Con `@Query` JPQL**
+```java
+// Nombre personalizado + Query explícito
+@Query("SELECT p FROM productCatalog p WHERE p.launchingDate < :fecha")
+List<ProductCatalogEntity> buscarAnterioresA(@Param("fecha") LocalDate fecha);
+```
+
+---
+
+## 🎓 Conclusión
+
+**Tu implementación demuestra:**
+
+1. ✨ **Flexibilidad**: Usas nombres de métodos descriptivos (`buscarAnterioresA`) en lugar de seguir convenciones rígidas
+2. ✨ **Control**: JPQL te da control total sobre la query
+3. ✨ **Mantenibilidad**: Código más legible y fácil de entender
+4. ✨ **Consistencia**: El mismo nombre (`buscarAnterioresA`) se usa en toda la arquitectura (Controller → Service → Repository)
+
+**Resultado SQL ejecutado:**
+```sql
+SELECT * 
+FROM products_catalog 
+WHERE launching_date < '2024-01-01';
+```
+
 
 ---
 
@@ -3076,4 +3352,285 @@ Page<ProductCatalogEntity> findByBrandAndRatingGreaterThan(
   "number": 0
 }
 ```
+---
+# 📋 Resumen del Proceso Completo
+
+## 🎯 Flujo de Ejecución (Controller → Service → Repository → DB)
+
+```
+🌐 HTTP Request
+    ↓
+🎮 Controller (getAnterioresA)
+    ↓
+⚙️ Service (buscarAnterioresA)
+    ↓
+🗄️ Repository (buscarAnterioresA con @Query JPQL)
+    ↓
+💾 Base de Datos
+```
+
+---
+
+## 📦 Componentes del Sistema
+
+### 1️⃣ **Controller** (Capa de Presentación)
+```java
+@GetMapping(path = "/anteriores-a/{fecha}")
+public ResponseEntity<List<ProductCatalogEntity>> getAnterioresA(
+    @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha
+)
+```
+
+**Función:**
+- ✅ Recibe petición HTTP GET: `GET /product-catalog/anteriores-a/2024-01-01`
+- ✅ Convierte el `String` de la URL a `LocalDate` usando formato ISO (`yyyy-MM-dd`)
+- ✅ Delega la lógica al **Service**
+- ✅ Retorna respuesta HTTP 200 con lista de productos
+
+---
+
+### 2️⃣ **Service** (Capa de Negocio)
+```java
+public List<ProductCatalogEntity> buscarAnterioresA(LocalDate fecha) {
+    return this.catalogRepository.buscarAnterioresA(fecha);
+}
+```
+
+**Función:**
+- 🔄 Intermediario entre Controller y Repository
+- 🔄 Aquí podrías agregar validaciones o transformaciones de datos
+- 🔄 Llama al **Repository** para obtener datos
+
+---
+
+### 3️⃣ **Repository** (Capa de Datos)
+```java
+@Query("SELECT p FROM productCatalog p WHERE p.launchingDate < :fecha")
+List<ProductCatalogEntity> buscarAnterioresA(@Param("fecha") LocalDate fecha);
+```
+
+**Función:**
+- 📊 Ejecuta query **JPQL** en la base de datos
+- 📊 Filtra productos con `launchingDate` **anterior** a la fecha dada
+- 📊 Retorna lista de `ProductCatalogEntity`
+
+---
+
+## 🔑 Puntos Clave
+
+### ⚡ Ventaja de JPQL con `@Query`
+
+| Aspecto | Query Methods | JPQL con `@Query` |
+|---------|--------------|-------------------|
+| **Nombre del método** | ❌ Debe seguir convención: `findByLaunchingDateBefore` | ✅ **Nombre libre**: `buscarAnterioresA` |
+| **Legibilidad** | ❌ Nombres largos y confusos | ✅ Nombres descriptivos en español/inglés |
+| **Flexibilidad** | ❌ Limitado a convenciones de Spring | ✅ SQL personalizado y complejo |
+
+---
+
+### 📌 Ejemplo Comparativo
+
+#### ❌ **Sin `@Query` (Query Method)**
+```java
+// Nombre obligatorio según convención de Spring Data JPA
+List<ProductCatalogEntity> findByLaunchingDateBefore(LocalDate date);
+```
+
+#### ✅ **Con `@Query` JPQL**
+```java
+// Nombre personalizado + Query explícito
+@Query("SELECT p FROM productCatalog p WHERE p.launchingDate < :fecha")
+List<ProductCatalogEntity> buscarAnterioresA(@Param("fecha") LocalDate fecha);
+```
+
+---
+
+## 🎓 Conclusión
+
+**Tu implementación demuestra:**
+
+1. ✨ **Flexibilidad**: Usas nombres de métodos descriptivos (`buscarAnterioresA`) en lugar de seguir convenciones rígidas
+2. ✨ **Control**: JPQL te da control total sobre la query
+3. ✨ **Mantenibilidad**: Código más legible y fácil de entender
+4. ✨ **Consistencia**: El mismo nombre (`buscarAnterioresA`) se usa en toda la arquitectura (Controller → Service → Repository)
+
+**Resultado SQL ejecutado:**
+```sql
+SELECT * 
+FROM products_catalog 
+WHERE launching_date < '2024-01-01';
+```
+fin 73
+--- 
+## #️ ⃣📚**Clase 73 paginacion personalizada**
+
+# 📚 Clase 74: Procedimientos Almacenados en PostgreSQL
+
+## 🔧 Definición del Procedimiento
+
+```sql
+-- Crear procedimiento almacenado para contar productos por marca
+CREATE OR REPLACE PROCEDURE count_total_products_by_brand(
+    IN brand VARCHAR,           -- Parámetro de entrada: nombre de la marca
+    OUT response INTEGER        -- Parámetro de salida: total de productos
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    SELECT COUNT(*)
+    INTO response
+    FROM products_catalog
+    WHERE brand_name = brand
+    GROUP BY brand_name;
+END;
+$$;
+```
+
+---
+
+## 🚀 Ejecución del Procedimiento
+
+```sql
+-- Llamar al procedimiento almacenado
+CALL count_total_products_by_brand('Lenovo', null);
+```
+
+---
+
+## ✅ Validación Manual (Equivalente SQL)
+
+```sql
+-- Consulta directa para verificar el resultado
+SELECT COUNT(*) AS total
+FROM products_catalog
+WHERE brand_name = 'Amazon'
+GROUP BY brand_name;
+-- Resultado esperado: 4
+```
+
+---
+
+## 📊 Consulta Completa de la Tabla
+
+```sql
+-- Ver todos los productos del catálogo
+SELECT *
+FROM products_catalog;
+```
+
+---
+
+## 🎯 ¿Qué hace este procedimiento?
+
+| Componente | Descripción |
+|------------|-------------|
+| **`IN brand VARCHAR`** | 📥 Recibe el nombre de la marca como entrada |
+| **`OUT response INTEGER`** | 📤 Retorna el total de productos encontrados |
+| **`SELECT COUNT(*) INTO response`** | 🔢 Cuenta los productos y guarda el resultado en `response` |
+| **`WHERE brand_name = brand`** | 🔍 Filtra por la marca especificada |
+| **`GROUP BY brand_name`** | 📦 Agrupa por marca (aunque solo busca una marca específica) |
+
+---
+
+## 💡 Ventajas de los Procedimientos Almacenados
+
+✨ **Reutilización**: Puedes llamarlo múltiples veces con diferentes marcas  
+✨ **Encapsulación**: La lógica está en la base de datos  
+✨ **Rendimiento**: Se ejecuta directamente en el servidor de BD  
+✨ **Mantenimiento**: Cambias la lógica en un solo lugar
+
+---
+
+## 🔄 Ejemplo de Uso
+
+```sql
+-- Contar productos Samsung
+CALL count_total_products_by_brand('Samsung', null);
+
+-- Contar productos Apple
+CALL count_total_products_by_brand('Apple', null);
+
+-- Contar productos LG
+CALL count_total_products_by_brand('LG', null);
+```
+
+
+fin 74
+---
+# 📚 Clase 75: Llamando a stored procedures  desde los repositorios de JPA ⚠️⚠️
+### ⚠️
+- Cramos un metodo en ProductCatalogRepository para llamar al procedimiento almacenado
+- Recuerda que devuelve un Integer
+- "response" es el nombre de la variable de la salida en SP
+
+Claro, aquí tienes la explicación:
+
+---
+
+### 🏗️ ¿Cómo se construye y para qué sirve?
+
+```java
+@Procedure(
+    procedureName = "count_total_products_by_brand", 
+    outputParameterName = "response"
+)
+Integer countTotalProductsByBrandStoredProcedure(@Param("brand") String brand);
+```
+
+- **@Procedure**: Indica que este método ejecuta un procedimiento almacenado de la base de datos.
+  - `procedureName`: nombre exacto del procedimiento en la BD (`count_total_products_by_brand`).
+  - `outputParameterName`: nombre del parámetro de salida definido en el procedimiento (`response`).
+
+- **@Param("brand")**:
+  - Asocia el parámetro del método Java (`brand`) con el parámetro de entrada del procedimiento almacenado (`IN brand VARCHAR`).
+  - Es obligatorio para que Spring Data JPA sepa qué valor pasar al procedimiento.
+
+- **Retorno**:
+  - Devuelve el valor del parámetro de salida (`OUT response INTEGER`), es decir, el total de productos de la marca indicada.
+
+---
+
+### 📝 ¿Para qué sirve?
+
+- Permite llamar desde Java a un procedimiento almacenado en PostgreSQL que cuenta cuántos productos hay de una marca específica.
+- El método es parte de un `Repository` de Spring Data JPA y se usa como cualquier otro método del repositorio.
+
+---
+
+### 📦 Resumen del flujo
+
+1. Llamas al método en Java pasando la marca.
+2. Spring ejecuta el procedimiento almacenado en la BD.
+3. El procedimiento cuenta los productos y retorna el resultado.
+4. El método Java devuelve ese número.
+
+---
+
+### 📌 ¿Por qué se usa @Param?
+
+- Para mapear el nombre del parámetro Java (`brand`) con el nombre del parámetro SQL (`brand`).
+- Es necesario cuando el procedimiento espera parámetros con nombre.
+
+---
+
+### 🧩 Ejemplo de uso
+
+```java
+Integer total = repository.countTotalProductsByBrandStoredProcedure("Samsung");
+// total tendrá la cantidad de productos Samsung
+```
+
+---
+
+**En resumen:**  
+Esta anotación permite ejecutar procedimientos almacenados desde Java, pasando parámetros y recibiendo resultados, todo de forma tipada y sencilla.
+
+
+fin 75
+---
+# 📚 Clase 76:  PROBANDO STORED PROCEDURES⚠️⚠️
+> ### ️⚠️ ️⚠️ Probando el stored procedure desde el controlador y postman
+
+
+fin 76
 </details>

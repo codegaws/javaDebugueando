@@ -24,6 +24,11 @@ public interface ProductCatalogService {
 
     List<ProductCatalogEntity> findByCategory(Long id);
 
+    //-> prueba usando JPQL y nombre personalizado de mi metodo CLASE 65
+    List<ProductCatalogEntity> buscarAnterioresA(LocalDate fecha);
+    List<ProductCatalogEntity> buscarDespuesDe(LocalDate fecha);
+    //******************************************************************
+
     List<ProductCatalogEntity> findByLauchingDate(LocalDate date, DateEval key);
 
     List<ProductCatalogEntity> findByBrandAndRating(String brand, Short rating);
