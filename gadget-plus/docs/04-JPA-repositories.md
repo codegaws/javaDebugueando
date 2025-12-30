@@ -1,5 +1,4 @@
-<details>
-<summary><strong>🎯SECCION 4 JPA REPOSITORIOS</strong></summary>
+### <strong>🎯SECCION 4 JPA REPOSITORIOS</strong>
 
 ## #️ ⃣📚**Clase 50: EXPLICACION DE LOS REPOSITORIOS JPA`**
 
@@ -3633,4 +3632,3 @@ fin 75
 
 
 fin 76
-</details>

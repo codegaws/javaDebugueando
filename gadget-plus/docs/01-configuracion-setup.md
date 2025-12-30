@@ -1,5 +1,5 @@
-<details>
-<summary><strong>🚀DETALLE DE LA BASE DE DATOS</strong></summary>
+
+### <strong>🚀DETALLE DE LA BASE DE DATOS</strong>
 ¡Excelente pregunta! **NO, es al revés.** El `CASCADE` funciona en la **dirección de la relación**.
 
 ## 🤓**¿Cómo funciona realmente?**
@@ -242,5 +242,3 @@ private List<ChildEntity> children;
 **No FK = INVERSO = PADRE = mappedBy**
 
 **Esta regla técnica nunca falla. ** 🎯✨
-
-</details>

@@ -224,3 +224,12 @@ GROUP BY brand_name;
 --**************************************************
 SELECT *
 FROM products_catalog;
+
+-- clase 81 read2
+select *
+from orders;
+
+SELECT *
+FROM orders
+         join products p on orders.id = p.id_order
+where orders.id = 1

@@ -1,5 +1,5 @@
-<details>
-    <summary><strong>🎯SESSION 3 MAPEO DE ENTIDADES</strong></summary>
+
+### <strong>🎯SESSION 3 MAPEO DE ENTIDADES</strong>
 
 ## ⚠️ CLASE 17 -> MAPEO DE ENTIDADES
 
@@ -6574,4 +6574,3 @@ public class RejectProductId implements Serializable {
 RejectProductEntity(productName=Galazy S24 Plus, productBrand=Samsung, quantity=5)
 
 ```
-</details>

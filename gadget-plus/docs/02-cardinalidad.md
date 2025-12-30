@@ -1,5 +1,5 @@
-<details>
-<summary><strong>🚀 CARDINALIDAD ENTRE LAS TABLAS </strong></summary>
+
+### <strong>🚀 CARDINALIDAD ENTRE LAS TABLAS </strong>
 
 ![img](/images/diagrama.png)
 
@@ -1215,5 +1215,3 @@ No, porque el campo `id_bill` en **orders** es **UNIQUE**, lo que impide que var
 **🎨 Documentación creada por @codegaws**  
 *📅 Última actualización: 2025-11-22 02:15:47 UTC*
 </div>
-
-</details>
