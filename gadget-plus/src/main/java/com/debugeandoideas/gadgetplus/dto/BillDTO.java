@@ -17,7 +17,9 @@ public class BillDTO {
     private String id;
     private String clientRfc;
     private BigDecimal amount;
-    @JsonIgnore//con est
-    // a anotacion evitamos la referencia circular
+    @JsonIgnore//con esta anotacion evitamos la referencia circular
     private OrderDTO order;
 }
+
+
+

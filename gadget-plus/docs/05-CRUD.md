@@ -1,9 +1,9 @@
-
 ## <strong>🎯SECCION 5 CRUD</strong>
 
 ## #️ ⃣📚**Clase 77:MODELANDO CON DTOS**
 
 > - Se crea OrderDTO
+
 ```java
 public class OrderDTO {
 
@@ -35,49 +35,143 @@ Permite que al enviar o recibir datos en JSON, el campo `orderDate` tenga siempr
 
 > - Se crea ProductsDTO
 > - Se crea BillDTO
----
 
-##  ⃣📚**Clase 78:CREANDO SERVICIOS*
+## 📝📝 IMPORTANTE Y POR QUE USAMOS UNA LISTA EN ORDER Y NO EN BILL
 
-### ¿QUE ES UN DTO PARA QUE SIRVE?
-✅ **Sí, los DTO (Data Transfer Object) son objetos diseñados para transportar datos entre procesos o capas de una aplicación.**
+### 📝📝 RESPUESTA -> ✅
 
----
+- ✅ En tu código, la diferencia en el uso de `List` vs objeto simple se debe a la relación entre las entidades:
 
-### 📦 **¿Para qué sirven los DTO?**
-- Permiten **personalizar** la información que envías o recibes, mostrando solo los campos necesarios.
-- Ayudan a **proteger** la estructura interna de tus entidades.
-- Facilitan la **interoperabilidad** entre diferentes capas (por ejemplo, entre el backend y el frontend).
+**✅En `BillDTO`:**
 
----
-
-### 🛠️ **¿Cómo funcionan?**
-- Puedes crear diferentes DTOs según lo que necesites mostrar u ocultar en cada caso.
-- No tienen lógica de negocio, solo contienen datos.
-
----
-
-### 🧩 **Ejemplo visual**
 ```java
-// Entidad
-public class OrderEntity {
+private OrderDTO order; // Una factura pertenece a UNA sola orden
+```
+
+**✅En `OrderDTO`:**
+
+```java
+private List<ProductsDTO> products; // Una orden puede tener MÚLTIPLES productos
+```
+
+### ✅✅Esto representa diferentes tipos de relaciones:
+
+- **Bill → Order**: Relación **uno a uno** (1:1). Una factura está asociada a una única orden.
+- **Order → Products**: Relación **uno a muchos** (1:N). Una orden puede contener múltiples productos.
+
+Si cambiaras `OrderDTO order` a `List<OrderDTO>` significaría que una factura puede estar asociada a múltiples órdenes,
+lo cual generalmente no es el caso en un modelo de negocio típico donde cada factura corresponde a una sola orden.
+
+La estructura actual es correcta según las reglas de negocio habituales:
+
+- Una orden puede tener múltiples productos
+- Una factura pertenece a una sola orden
+
+## 🎯🎯¿ DEBE HABER MISMOS ATRIBUTOS QUE HAY EN UNA ENTIDAD EN MI DTO POR EJEMPLO BILLDTO Y BILLENTITY?
+
+> En tu caso, `OrderDTO order` no es una lista porque una factura (`BillDTO`) tiene una relación
+> **uno a uno** con una orden. Una factura se genera para una sola orden específica.
+
+> La diferencia con productos es que una orden puede contener **múltiples productos**, por eso necesitas
+`List<ProductsDTO> products`.
+
+### 🎯 **Relaciones en tu modelo:**
+
+> - `Bill` → `Order`: 1:1 (una factura para una orden)
+> - `Order` → `Products`: 1:N (una orden puede tener varios productos)
+
+### Respecto a tu segunda pregunta sobre los atributos del DTO vs Entity:
+
+**No, no necesitas los mismos atributos.** Los DTOs son para transferencia de datos y deben contener solo lo que
+necesites exponer:
+
+```java
+// Ejemplo de diferencias comunes
+public class BillEntity {
     private Long id;
-    private LocalDateTime orderDate;
-    private Double total;
-    // ...otros campos
+    private String clientRfc;
+    private BigDecimal amount;
+    private LocalDateTime createdAt;    // No necesario en DTO
+    private LocalDateTime updatedAt;    // No necesario en DTO
+    private String internalNotes;       // Campo interno, no exponer
+    private OrderEntity order;
 }
 
-// DTO personalizado
-public class OrderDTO {
-    private LocalDateTime orderDate;
-    private Double total;
-    // Solo los campos que necesitas
+public class BillDTO {
+    private String id;                 
+    private String clientRfc;
+    private BigDecimal amount;
+    private OrderDTO order;            // Sin campos internos de la orden
 }
 ```
 
+🎯🎯**Principios para DTOs:**
+
+- Solo incluye datos que el cliente necesite
+- Omite campos sensibles o internos
+- Puede tener diferentes tipos de datos (Long → String)
+- Evita dependencias circulares con `@JsonIgnore`
+- Incluir menos campos (omitir campos internos)
+- Cambiar nombres (rfc → clientRfc para mayor claridad)
+- Transformar tipos (aunque en tu caso el String id ya está bien)
+- Aplanar estructuras o anidar datos según la necesidad del frontend
+
+### ¿Podria no incluir OrderDTO order en mi BILLDTO?
+
+--Sí, **podrías no incluir `private OrderDTO order;`** en tu `BillDTO` si no necesitas esa información en el frontend o
+en las respuestas de tu API.
+
+**Depende de tu caso de uso:**
+
+**Opción 1: Sin OrderDTO (más simple)**
+
+```java
+@Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+public class BillDTO {
+    private String id;
+    private String clientRfc;
+    private BigDecimal amount;
+    // Sin OrderDTO - solo datos básicos de la factura
+}
+```
+
+**Opción 2: Con OrderDTO (más información)**
+
+```java
+@Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+public class BillDTO {
+    private String id;
+    private String clientRfc;
+    private BigDecimal amount;
+    @JsonIgnore
+    private OrderDTO order;  // Incluyes la orden relacionada
+}
+```
+
+**¿Cuándo incluir OrderDTO?**
+
+- Si necesitas mostrar **detalles de la orden** junto con la factura
+- Si el frontend requiere **navegar** entre factura y orden
+- Si necesitas **validaciones** que requieren datos de la orden
+
+**¿Cuándo NO incluirlo?**
+
+- Si solo necesitas **datos básicos** de la factura
+- Para **simplificar** las respuestas de la API
+- Para **evitar problemas** de serialización/deserialización
+
+En muchos casos, especialmente para listados de facturas, es común **omitir
+** relaciones complejas y solo incluir lo esencial.
 ---
 
 ### 📝 **Resumen**
+
 - Los DTO **varían** según lo que necesitas transferir.
 - Te devuelven **solo los datos necesarios** para cada caso de uso.
 
@@ -86,29 +180,34 @@ public class OrderDTO {
 🔗 **Ideal para APIs REST y separación de capas.**
 
 ---
-### Resumen que pasa con los atributos de DTO ¿Se usan todos?: 
+
+### Resumen que pasa con los atributos de DTO ¿Se usan todos?:
 
 > Se puede usar solo algunos datos cuando es necesario no todos los de DTO
 
+
+---
+
+## ⃣📚**Clase 78:CREANDO SERVICIOS*
+
+### ⚠️⚠️PASOS A SEGUIR⚠️⚠️ :
+
+### 🔧Se crea en services OrdersCrudService ->
+
 ```java
-public class OrderDTO {
+public interface OrdersCrudService {
 
-    private Long id;
-    @JsonFormat(shape =  JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")// nos brinda un formato JsonFormat
-    private LocalDateTime orderDate;
-    private String clientName;
-    private BillDTO bill;
-    private List<ProductsDTO> products;
-
-
+    String create(OrderDTO order);
+    OrderDTO read(Long id);
+    OrderDTO update(OrderDTO order, Long id);
+    void delete(Long id);
 }
+
 ```
 
-### ⚠️⚠️PASOS A SEGUIR⚠️⚠️ : 
+### 🔧Se crea en repositories public interface OrderRepository extends CrudRepository<OrderEntity, Long> { }
 
-> - Se crea en repositories public interface OrderRepository extends CrudRepository<OrderEntity, Long> { }
-> - Se crea en services OrdersCrudService
-> - Se crea en services ProductsCrudService
+### 🔧Se crea en services ProductsCrudService
 
 ---
 
@@ -117,10 +216,10 @@ public class OrderDTO {
 visitar : https://modelmapper.org/ es mas usado en spring boot
 visitar -> esto es una libreria de jackson : https://mapstruct.org/documentation/installation/
 
-
-
 #### 🤖 **¿Qué es ModelMapper?**
-ModelMapper es una librería de Java que facilita la conversión automática entre objetos de diferentes clases, por ejemplo, de entidades a DTOs y viceversa. Es útil cuando los objetos tienen estructuras similares.
+
+ModelMapper es una librería de Java que facilita la conversión automática entre objetos de diferentes clases, por
+ejemplo, de entidades a DTOs y viceversa. Es útil cuando los objetos tienen estructuras similares.
 
 - 🔄 **Ventajas:** Reduce el código manual de mapeo, es fácil de configurar y usar.
 - ⚡ **Uso típico:** `modelMapper.map(source, Destination.class);`
@@ -128,7 +227,9 @@ ModelMapper es una librería de Java que facilita la conversión automática ent
 ---
 
 #### 🧩 **¿Qué es ObjectMapper?**
-ObjectMapper es una clase de la librería Jackson que permite convertir objetos Java a JSON y viceversa. Es fundamental para la serialización y deserialización en aplicaciones Spring Boot.
+
+ObjectMapper es una clase de la librería Jackson que permite convertir objetos Java a JSON y viceversa. Es fundamental
+para la serialización y deserialización en aplicaciones Spring Boot.
 
 - 📦 **Ventajas:** Permite personalizar el formato de salida, soporta anotaciones como `@JsonFormat`.
 - ⚡ **Uso típico:**
@@ -138,12 +239,14 @@ ObjectMapper es una clase de la librería Jackson que permite convertir objetos 
 ---
 
 #### 🆚 **Diferencias clave**
+
 - ModelMapper se usa para transformar objetos entre clases Java.
 - ObjectMapper se usa para transformar objetos Java a JSON y viceversa.
 
 ---
 
 #### 💡 **¿Cuándo usar cada uno?**
+
 - Usa **ModelMapper** para convertir entre entidades y DTOs.
 - Usa **ObjectMapper** para trabajar con JSON en APIs REST.
 
@@ -165,12 +268,14 @@ OrderDTO dto = objectMapper.readValue(json, OrderDTO.class);
 ---
 
 #### 📝 **Resumen**
-| Herramienta      | Propósito                  | Uso principal         |
-|------------------|---------------------------|----------------------|
-| 🤖 ModelMapper   | Mapear entre clases Java   | Entidad ↔ DTO        |
-| 🧩 ObjectMapper  | JSON ↔ Objeto Java         | API REST, serializar |
+
+| Herramienta     | Propósito                | Uso principal        |
+|-----------------|--------------------------|----------------------|
+| 🤖 ModelMapper  | Mapear entre clases Java | Entidad ↔ DTO        |
+| 🧩 ObjectMapper | JSON ↔ Objeto Java       | API REST, serializar |
 
 ---
+
 ### 📚 Clase 80: MODEL MAPPER READ PARTEI
 
 ```java
@@ -182,7 +287,8 @@ private OrderDTO mapOrderFromEntity(OrderEntity order) {
 ```
 
 - Mediante java Reflexion agarra las propiedades de un objeto y las mapea a otro objeto similar
-- sin el nombre coincide por ejemplo si tenemos un objeto OrderEntity y otro OrderDTO y ambos tienen una propiedad llamada createdAt
+- sin el nombre coincide por ejemplo si tenemos un objeto OrderEntity y otro OrderDTO y ambos tienen una propiedad
+  llamada createdAt
 - si son iguales las va a mapear automaticamente.
 
 > Agregamos al pomxml
@@ -194,20 +300,25 @@ private OrderDTO mapOrderFromEntity(OrderEntity order) {
             <version>3.2.0</version>
         </dependency>
 ```
+
 ### 🧩 ¿Para qué sirve este método?
 
-El método `mapOrderFromEntity` convierte un objeto de tipo `OrderEntity` (entidad de base de datos) a un objeto `OrderDTO` (Data Transfer Object).
+El método `mapOrderFromEntity` convierte un objeto de tipo `OrderEntity` (entidad de base de datos) a un objeto
+`OrderDTO` (Data Transfer Object).
 
 - **¿Por qué es útil?**  
-  Permite separar la lógica de la base de datos de la lógica de transferencia de datos, facilitando el envío de información al frontend o a otras capas de la aplicación.
+  Permite separar la lógica de la base de datos de la lógica de transferencia de datos, facilitando el envío de
+  información al frontend o a otras capas de la aplicación.
 
 - **¿Cómo lo hace?**  
-  Utiliza la librería `ModelMapper` para copiar automáticamente los datos de la entidad al DTO, evitando hacerlo manualmente.
+  Utiliza la librería `ModelMapper` para copiar automáticamente los datos de la entidad al DTO, evitando hacerlo
+  manualmente.
 
 🔹 **Resumen:**  
 Este método ayuda a transformar datos entre capas de la aplicación de forma sencilla y automática.
 
 ---
+
 ### 📚 Clase 81: MODEL MAPPER READ PARTEII
 
 > #### - Si no pongo final en el atributo orderRepository no me va a funcionar la inyeccion de dependencias con @RequiredArgsConstructor
@@ -219,7 +330,8 @@ Este método ayuda a transformar datos entre capas de la aplicación de forma se
 
 ### 🏗️ ¿Qué hace `@RequiredArgsConstructor`?
 
-- `@RequiredArgsConstructor` (de Lombok) genera automáticamente un **constructor** que recibe como parámetros todos los campos `final` (y los que son `@NonNull`).
+- `@RequiredArgsConstructor` (de Lombok) genera automáticamente un **constructor** que recibe como parámetros todos los
+  campos `final` (y los que son `@NonNull`).
 - Así, Spring puede **inyectar** automáticamente la dependencia `OrderRepository` al crear el servicio.
 
 ---
@@ -235,5 +347,6 @@ public class OrdersCrudServiceImpl implements OrdersCrudService {
 ---
 
 🔹 **Resumen:**  
-Si no usas `final`, `@RequiredArgsConstructor` no incluirá ese campo en el constructor, y Spring no podrá inyectar la dependencia, causando errores al iniciar la aplicación.
+Si no usas `final`, `@RequiredArgsConstructor` no incluirá ese campo en el constructor, y Spring no podrá inyectar la
+dependencia, causando errores al iniciar la aplicación.
 
