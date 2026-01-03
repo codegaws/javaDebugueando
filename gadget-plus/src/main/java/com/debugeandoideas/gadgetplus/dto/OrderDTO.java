@@ -16,8 +16,10 @@ import java.util.List;
 public class OrderDTO {
 
     private Long id;
-    @JsonFormat(shape =  JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")// nos brinda un formato JsonFormat
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")// nos brinda un formato JsonFormat
     private LocalDateTime createdAt;
+
     private String clientName;
     private BillDTO bill;
     private List<ProductsDTO> products;

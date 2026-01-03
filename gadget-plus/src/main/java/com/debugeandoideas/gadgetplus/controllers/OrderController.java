@@ -16,7 +16,6 @@ public class OrderController {
 
     private final OrdersCrudService ordersCrudService;
 
-
     @GetMapping(path = "{id}")
     public ResponseEntity<OrderDTO> get(@PathVariable Long id) {
         return ResponseEntity.ok(ordersCrudService.read(id));

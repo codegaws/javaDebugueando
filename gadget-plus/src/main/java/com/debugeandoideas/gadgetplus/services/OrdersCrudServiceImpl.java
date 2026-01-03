@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
+@RequiredArgsConstructor// -> CREAR CONSTRUCTORES CON LOS ATRIBUTOS DE LA CLASE QUE SON FINAL
 public class OrdersCrudServiceImpl implements OrdersCrudService {
 
     private final OrderRepository orderRepository;
@@ -23,7 +23,7 @@ public class OrdersCrudServiceImpl implements OrdersCrudService {
 
     @Override
     public OrderDTO read(Long id) {
-        return this.mapOrderFromEntity(this.orderRepository.findById(id).orElseThrow());
+        return this.mapOrderFromEntity(this.orderRepository.findById(id).orElseThrow());//aqui le paso como argumento el orderEntity
     }
 
     @Override
@@ -36,10 +36,9 @@ public class OrdersCrudServiceImpl implements OrdersCrudService {
 
     }
 
-    //CLASE 80 READ PARTE1
+    //CLASE 80 READ PARTE1 CREAMOS EL METODO PARA MAPEAR DE ENTITY A DTO
     private OrderDTO mapOrderFromEntity(OrderEntity orderEntity) {
         final var mapper = new ModelMapper();
-
         return mapper.map(orderEntity, OrderDTO.class);
     }
 }

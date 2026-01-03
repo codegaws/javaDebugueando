@@ -350,6 +350,46 @@ El método `mapOrderFromEntity` convierte un objeto de tipo `OrderEntity` (entid
 🔹 **Resumen:**  
 Este método ayuda a transformar datos entre capas de la aplicación de forma sencilla y automática.
 
+#### ➡️ Implementando el metodo read 
+```java
+    @Override
+    public OrderDTO read(Long id) {
+        return this.mapOrderFromEntity(this.orderRepository.findById(id).orElseThrow());//aqui le paso como argumento el orderEntity
+    }
+
+```
+#### ➡️ Pide que lo castees con mapOrderFromEntity por que en si el metodo findById retorna un Optional<OrderEntity>
+
+```java
+
+@NoRepositoryBean
+public interface CrudRepository<T, ID> extends Repository<T, ID> {
+    Optional<T> findById(ID id);
+```
+#### ➡️➡Este metodo esta en OrdersCrudServiceImpl
+
+```java
+
+private OrderDTO mapOrderFromEntity(OrderEntity order) {
+    final var mapper = new ModelMapper();
+    return mapper.map(order, OrderDTO.class);
+}
+```
+#### ➡️ OrderController -> 
+```java
+@RestController
+@RequestMapping(path = "order")
+@RequiredArgsConstructor
+public class OrderController {
+
+    private final OrdersCrudService ordersCrudService;
+    
+    @GetMapping(path = "{id}")
+    public ResponseEntity<OrderDTO> get(@PathVariable Long id) {
+        return ResponseEntity.ok(ordersCrudService.read(id));
+    }
+}
+```
 ---
 
 ### 📚 Clase 81: MODEL MAPPER READ PARTEII
@@ -382,4 +422,17 @@ public class OrdersCrudServiceImpl implements OrdersCrudService {
 🔹 **Resumen:**  
 Si no usas `final`, `@RequiredArgsConstructor` no incluirá ese campo en el constructor, y Spring no podrá inyectar la
 dependencia, causando errores al iniciar la aplicación.
+
+#### ➡️ ABRIMOS EN POSTMAN : pero en postman en name no sale el nombre del producto vamos a solucionarlo.
+
+![img](images/64.png)
+
+- Aqui viene nulo el nombre
+
+
+![img](images/65.png)
+
+```java
+
+```
 
