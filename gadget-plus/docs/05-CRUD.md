@@ -197,7 +197,7 @@ En muchos casos, especialmente para listados de facturas, es común **omitir
 ```java
 public interface OrdersCrudService {
 
-    String create(OrderDTO order);
+    String create(OrderDTO order);//retornar el ID de la orden creada como String
     OrderDTO read(Long id);
     OrderDTO update(OrderDTO order, Long id);
     void delete(Long id);
@@ -205,21 +205,51 @@ public interface OrdersCrudService {
 
 ```
 
-### 🔧Se crea en repositories public interface OrderRepository extends CrudRepository<OrderEntity, Long> { }
+### 🔧Se crea la implementacion-> OrdersCrudServiceImpl
 
-### 🔧Se crea en services ProductsCrudService
+```java
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class OrdersCrudServiceImpl implements OrdersCrudService {
+
+    private final OrderRepository orderRepository;
+    .
+    ..
+    ...
+}
+```
 
 ---
 
 ### 📚 Clase 79: MODEL MAPPER VS OBJECT MAPPER
 
-visitar : https://modelmapper.org/ es mas usado en spring boot
-visitar -> esto es una libreria de jackson : https://mapstruct.org/documentation/installation/
+#### 🔒 ¿Por qué no enviamos entidades al front end y preferimos usar DTO?
+
+> OrderEntity es un mapeo a la tabla de datos es una buena practica que no enviemos estas entidades al front end
+> por eso creamos los DTOs (Data Transfer Object) que son objetos que solo tienen los atributos que queremos enviar al
+> front end
+> y no toda la informacion de la entidad.
+> Para mapear de una entidad a un DTO y viceversa podemos hacerlo manualmente o usar librerias que nos facilitan esta
+> tarea
+> como ModelMapper y ObjectMapper.
+>
+> Ademas usar DTOS evita que usemos muchos getters y setters en las entidades y tambien nos permite tener un mejor
+> control sobre
+> que datos enviamos al front end, asi no caemos en un antipatron llamado Anemic Domain Model.
+
+#### 🔗 Para esto usamos estas librerias: ->
+
+![build](https://img.shields.io/badge/build-passing-brightgreen)
+
+#### ✅visitar -> https://modelmapper.org/ es mas usado en spring boot
+
+#### ✅visitar -> esto es una libreria de jackson : https://mapstruct.org/documentation/installation/
 
 #### 🤖 **¿Qué es ModelMapper?**
 
-ModelMapper es una librería de Java que facilita la conversión automática entre objetos de diferentes clases, por
-ejemplo, de entidades a DTOs y viceversa. Es útil cuando los objetos tienen estructuras similares.
+> ModelMapper es una librería de Java que facilita la conversión automática entre objetos de diferentes clases, por
+> ejemplo, de entidades a DTOs y viceversa. Es útil cuando los objetos tienen estructuras similares.
 
 - 🔄 **Ventajas:** Reduce el código manual de mapeo, es fácil de configurar y usar.
 - ⚡ **Uso típico:** `modelMapper.map(source, Destination.class);`
@@ -278,20 +308,7 @@ OrderDTO dto = objectMapper.readValue(json, OrderDTO.class);
 
 ### 📚 Clase 80: MODEL MAPPER READ PARTEI
 
-```java
-// Java
-private OrderDTO mapOrderFromEntity(OrderEntity order) {
-    final var mapper = new ModelMapper();
-    return mapper.map(order, OrderDTO.class);
-}
-```
-
-- Mediante java Reflexion agarra las propiedades de un objeto y las mapea a otro objeto similar
-- sin el nombre coincide por ejemplo si tenemos un objeto OrderEntity y otro OrderDTO y ambos tienen una propiedad
-  llamada createdAt
-- si son iguales las va a mapear automaticamente.
-
-> Agregamos al pomxml
+#### ➡️ Agregamos al pomxml
 
 ```xml
         <dependency>
@@ -300,6 +317,22 @@ private OrderDTO mapOrderFromEntity(OrderEntity order) {
             <version>3.2.0</version>
         </dependency>
 ```
+
+#### ➡️ Agregamos en OrdersCrudServiceImpl el siguiente metodo:
+
+```java
+
+private OrderDTO mapOrderFromEntity(OrderEntity order) {
+    final var mapper = new ModelMapper();
+    return mapper.map(order, OrderDTO.class);
+}
+```
+
+#### 📍 **IMPORTANTE**
+
+- Mediante java Reflexion agarra las propiedades de un objeto y las mapea a otro objeto similar
+- sin el nombre coincide por ejemplo si tenemos un objeto OrderEntity y otro OrderDTO y ambos tienen una propiedad
+  llamada createdAt si son iguales las va a mapear automaticamente.
 
 ### 🧩 ¿Para qué sirve este método?
 
