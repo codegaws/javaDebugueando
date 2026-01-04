@@ -14,7 +14,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 public class BillDTO {
 
-    private String id;
+    private String idBill;
     private String clientRfc;
     private BigDecimal amount;
     @JsonIgnore//con esta anotacion evitamos la referencia circular

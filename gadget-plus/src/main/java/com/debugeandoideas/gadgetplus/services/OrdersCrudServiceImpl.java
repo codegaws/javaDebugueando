@@ -1,12 +1,19 @@
 package com.debugeandoideas.gadgetplus.services;
 
+import com.debugeandoideas.gadgetplus.dto.BillDTO;
 import com.debugeandoideas.gadgetplus.dto.OrderDTO;
+import com.debugeandoideas.gadgetplus.dto.ProductsDTO;
+import com.debugeandoideas.gadgetplus.entities.BillEntity;
 import com.debugeandoideas.gadgetplus.entities.OrderEntity;
+import com.debugeandoideas.gadgetplus.entities.ProductEntity;
 import com.debugeandoideas.gadgetplus.repositories.OrderRepository;
+import com.debugeandoideas.gadgetplus.repositories.ProductCatalogRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 
 @Slf4j
@@ -15,10 +22,12 @@ import org.springframework.stereotype.Service;
 public class OrdersCrudServiceImpl implements OrdersCrudService {
 
     private final OrderRepository orderRepository;
+    private final ProductCatalogRepository productCatalogRepository;
 
     @Override
     public String create(OrderDTO order) {
-        return "";
+        final var toInsert = this.mapOrderFromDto(order);//mapear de DTO a ENTITY
+        return this.orderRepository.save(toInsert).getId().toString();
     }
 
     @Override
@@ -36,9 +45,77 @@ public class OrdersCrudServiceImpl implements OrdersCrudService {
 
     }
 
-    //CLASE 80 READ PARTE1 CREAMOS EL METODO PARA MAPEAR DE ENTITY A DTO
+/*    //CLASE 80 READ PARTE1 CREAMOS EL METODO PARA MAPEAR DE ENTITY A DTO
     private OrderDTO mapOrderFromEntity(OrderEntity orderEntity) {
         final var mapper = new ModelMapper();
         return mapper.map(orderEntity, OrderDTO.class);
+    }*/
+
+    //CLASE 83 MODELMAPPER MAP CUSTOM
+    private OrderDTO mapOrderFromEntity(OrderEntity orderEntity) {
+        final var modelMapper = new ModelMapper();
+
+        modelMapper
+                .typeMap(ProductEntity.class, ProductsDTO.class)
+                .addMappings(mapper -> mapper.map(
+                        entity -> entity.getCatalog().getName(), ProductsDTO::setName
+                ));
+
+        return modelMapper.map(orderEntity, OrderDTO.class);
+    }
+
+
+    //CLASE 84 MAPEO DE ENTIDADES PARTE I DE DTO A ENTITY
+    private void getAndSetProducts(List<ProductsDTO> productsDto, OrderEntity orderEntity) {
+
+        productsDto.forEach(product -> {
+            final var productFromCatalog =
+                    this.productCatalogRepository.findByName(product.getName()).orElseThrow();
+
+            final var productEntity = ProductEntity
+                    .builder()
+                    .quantity(product.getQuantity())
+                    .catalog(productFromCatalog)
+                    .build();
+            orderEntity.addProduct(productEntity);
+            productEntity.setOrder(orderEntity);
+        });
+    }
+
+    //CLASE 85 MAPEO DE ENTIDADES PARTE II Convierte el DTO a Entity para JPA
+    private OrderEntity mapOrderFromDto(OrderDTO orderDTO) {
+
+        final var orderResponse = new OrderEntity();
+        final var modelMapper = new ModelMapper();
+
+        //mapeo personalizado
+        modelMapper
+                .typeMap(BillDTO.class, BillEntity.class)
+                .addMappings(mapper -> mapper.map(
+                        BillDTO::getIdBill, BillEntity::setId));
+
+        log.info("Before{}", orderResponse);
+        modelMapper.map(orderDTO, orderResponse);
+        log.info("After{}", orderResponse);
+
+        //seteamos los productos a la orden
+        this.getAndSetProducts(orderDTO.getProducts(), orderResponse);
+        log.info("After with products{}", orderResponse);
+
+        return orderResponse;
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+

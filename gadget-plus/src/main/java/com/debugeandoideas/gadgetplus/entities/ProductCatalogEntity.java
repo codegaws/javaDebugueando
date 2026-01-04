@@ -57,6 +57,6 @@ public class ProductCatalogEntity {
 
     //NO OLVIDES QUE DEBES EVITAR RECURSIVIDAD INFINITA AL SERIALIZAR A JSON EN CategoryEntity ->@JsonIgnore
     //UN producto puede tener muchas categorias, una categoria puede tener muchos productos
-    // osea cuando se llame y se cree a caterogias se va a crear un bucle infinito llamando a entidad producto catalogo
+    // osea cuando se llame y se cree a categorias se va a crear un bucle infinito llamando a entidad producto catalogo
     // y de ahi a categoria y asi sucesivamente...
 }

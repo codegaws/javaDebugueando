@@ -11,7 +11,7 @@ import java.util.Objects;
 @Table(name = "bill")
 @Getter
 @Setter
-@ToString
+@ToString(exclude = {"order"})
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
@@ -28,8 +28,6 @@ public class BillEntity {
     private String clientRfc;
 
     //RELACION ONETOONE
-
-    @ToString.Exclude
     @OneToOne(mappedBy = "bill", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private OrderEntity order;
 

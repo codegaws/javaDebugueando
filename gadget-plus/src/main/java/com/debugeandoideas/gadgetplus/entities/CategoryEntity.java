@@ -28,7 +28,7 @@ public class CategoryEntity {
 
     @ManyToMany(fetch = FetchType.LAZY, mappedBy = "categories")
     @ToString.Exclude
-    @JsonIgnore// se evita que sea una recursividad infinita al serializar a JSON
+    @JsonIgnore    // ← Necesario porque ProductCatalogController devuelve entidades// ← Necesario porque ProductCatalogController devuelve entidades,se evita que sea una recursividad infinita al serializar a JSON
     private List<ProductCatalogEntity> productCatalog;
 
 }

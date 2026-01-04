@@ -12,7 +12,7 @@ import java.util.Objects;
 @Table(name = "orders")
 @Getter
 @Setter
-@ToString
+@ToString(exclude = {"bill", "products"})
 @AllArgsConstructor
 @NoArgsConstructor// crea constructor sin parametros
 @Builder // Patron de diseño builder
@@ -21,9 +21,38 @@ public class OrderEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // no es necesario por que debajo lo mapea como created_at a pesar que se llama createdA
     @Column(name = "created_at", nullable = false)
-// no es necesario por que debajo lo mapea como created_at a pesar que se llama createdAt
     private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {//aqui JPA llama este metodo antes de persistir el objeto automaticamente
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+    }
+
+    /**
+     * ALTERNATIVAS PARA SETEAR createdAt
+     * // Opción 1: @PrePersist (la que usas)
+     * @PrePersist
+     * protected void onCreate() {
+     *     if (createdAt == null) {
+     *         createdAt = LocalDateTime.now();
+     *     }
+     * }
+     *
+     * // Opción 2: Valor directo en el campo
+     * @Column(name = "created_at", nullable = false)
+     * private LocalDateTime createdAt = LocalDateTime.now();
+     *
+     * // Opción 3: Usar @CreationTimestamp de Hibernate
+     * @CreationTimestamp
+     * @Column(name = "created_at", nullable = false)
+     * private LocalDateTime createdAt;
+     */
+
+
 
     @Column(name = "client_name", length = 32, nullable = false)
     private String clientName;//no es necesario mapear el guion bajo

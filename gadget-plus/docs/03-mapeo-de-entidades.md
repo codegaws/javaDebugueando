@@ -752,6 +752,92 @@ Si además trabajas con APIs REST, también necesitas evitar la recursividad al 
 @OneToOne(mappedBy = "bill", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 private OrderEntity order;
 ```
+---
+## 🎯 OTRA CONSULA POR QUE NECESITAS JSONIGNORE SOLO EN METODO productCatalog
+
+### 🎯 **Confirmación: Análisis de tus Controllers**
+
+### ✅ **Tu observación es CORRECTA**
+
+---
+
+## 📊 **Comparación de Controllers**
+
+| Controller | ¿Qué devuelve? | ¿Necesita `@JsonIgnore`? |
+|------------|----------------|-------------------------|
+| `ProductCatalogController` | `ProductCatalogEntity` | ✅ **SÍ** (en entidades relacionadas) |
+| `OrderController` | `OrderDTO` | ❌ **NO** |
+
+---
+
+## 🔍 **Evidencia en tu código**
+
+### **ProductCatalogController.java**
+```java
+@GetMapping(path = "{id}")
+public ResponseEntity<ProductCatalogEntity> getById(@PathVariable String id) {
+    return ResponseEntity.ok(this.productCatalogService.findById(...));
+    // ↑ Devuelve ENTIDAD directamente → Necesita @JsonIgnore en relaciones
+}
+```
+
+### **OrderController.java**
+```java
+@GetMapping(path = "{id}")
+public ResponseEntity<OrderDTO> get(@PathVariable Long id) {
+    return ResponseEntity.ok(ordersCrudService.read(id));
+    // ↑ Devuelve DTO → NO necesita @JsonIgnore
+}
+```
+
+---
+
+## 💡 **Por eso `CategoryEntity` tiene `@JsonIgnore`**
+
+```java
+// CategoryEntity.java
+@ManyToMany(mappedBy = "categories")
+@ToString.Exclude
+@JsonIgnore  // ← Necesario porque ProductCatalogController devuelve entidades
+private List<ProductCatalogEntity> productCatalog;
+```
+
+**Flujo:**
+```
+ProductCatalogController.getById()
+    ↓
+ProductCatalogEntity (serializa a JSON)
+    ↓
+categories → CategoryEntity (serializa)
+    ↓
+productCatalog → @JsonIgnore DETIENE EL CICLO ✅
+```
+
+---
+
+## ✅ **Por eso `OrderEntity` NO necesita `@JsonIgnore`**
+
+```java
+// OrderController devuelve OrderDTO, NO OrderEntity
+// El mapeo a DTO se hace en el servicio
+// → No hay serialización directa de la entidad
+// → No hay ciclo posible
+```
+
+---
+
+## 📋 **Resumen final**
+
+| Pregunta | Respuesta |
+|----------|-----------|
+| ¿`OrderEntity` necesita `@JsonIgnore`? | ❌ **NO**, porque usas DTOs |
+| ¿`ProductCatalogEntity` necesita `@JsonIgnore`? | ✅ **SÍ**, porque expones la entidad directamente |
+| ¿Tu código está correcto? | ✅ **SÍ** |
+
+> 🎯 **Regla confirmada**: `@JsonIgnore` solo es necesario cuando **expones entidades directamente** en controllers, no cuando usas **DTOs**.
+
+
+---
 
 ## 🎯 Análisis de tu esquema SQL
 

@@ -11,7 +11,7 @@ import java.util.List;
 @Table(name = "products")
 @Getter
 @Setter
-@ToString
+@ToString(exclude = {"order"})
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
@@ -27,10 +27,9 @@ public class ProductEntity {
     @JoinColumn(name = "id_order")//LLAVE FORANEA HACIA ORDER
     private OrderEntity order;
 
-
     // CREAMOS OTRA INSTANCIA DE PRODUCTCATALOGENTITY PARA HACER LA RELACION UNO A UNO
     // ESTA MAL DEBERIA SER MANYTOONE Y CASCADE PERSIST
-    @OneToOne(cascade = CascadeType.ALL)
+    @ManyToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name = "id_product_catalog")
     private ProductCatalogEntity catalog;
 

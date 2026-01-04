@@ -233,3 +233,22 @@ SELECT *
 FROM orders
          join products p on orders.id = p.id_order
 where orders.id = 1
+
+--clase 86 create
+SELECT *
+FROM orders o
+         JOIN bill b ON o.id_bill = b.id
+         JOIN products p ON o.id = p.id_order
+WHERE o.id = 21;
+
+SELECT *
+FROM bill;
+
+-- revisar estructura de la tabla products_catalog
+SELECT column_name,
+       data_type,
+       character_maximum_length,
+       is_nullable,
+       column_default
+FROM information_schema.columns
+WHERE table_name = 'products_catalog';
