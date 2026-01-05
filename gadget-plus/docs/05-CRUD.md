@@ -2221,4 +2221,515 @@ private OrderDTO order;  // ← ¿Para qué lo usas?
 
 ---
 
+# OTRA CONSULTA SOBRE EL TOTAL
+# 📚 **Explicación detallada de `AtomicReference` y `updateAndGet`**
 
+---
+
+## 🤔 **¿Por qué necesitas `AtomicReference`?**
+
+El problema es que **no puedes modificar una variable local dentro de un lambda**:
+
+```java
+// ❌ ESTO NO COMPILA
+BigDecimal total = BigDecimal.ZERO;
+productsDto.forEach(product -> {
+    total = total.add(price);  // Error: variable must be final or effectively final
+});
+```
+
+---
+
+## 🎯 **¿Qué es `AtomicReference`?**
+
+Es un **contenedor** que envuelve un objeto y permite modificar su contenido:
+
+```java
+┌─────────────────────────────────────┐
+│  AtomicReference<BigDecimal>        │
+│  ┌─────────────────────────────┐    │
+│  │  valor interno: BigDecimal  │ ←─── Puedes cambiar ESTO
+│  └─────────────────────────────┘    │
+└─────────────────────────────────────┘
+      ↑
+      │
+La referencia al contenedor es FINAL (no cambia)
+Pero el contenido SÍ puede cambiar
+```
+
+---
+
+## 🔍 **Flujo paso a paso con tu código**
+
+Supongamos estos productos:
+
+| Producto | Precio |
+|----------|--------|
+| Alexa large | $100 |
+| Pc office | $500 |
+| TV 75 | $200 |
+
+```
+┌──────────────────────────────────────────────────────────────────────────┐
+│ PASO 1: Inicialización                                                   │
+│                                                                          │
+│   var total = new AtomicReference<>(BigDecimal.ZERO);                   │
+│                                                                          │
+│   ┌─────────────────────┐                                               │
+│   │ AtomicReference     │                                               │
+│   │   valor: 0.00       │                                               │
+│   └─────────────────────┘                                               │
+└──────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│ PASO 2: Primer producto (Alexa large - $100)                            │
+│                                                                          │
+│   total.updateAndGet(bigDecimal -> bigDecimal.add(100))                 │
+│                                                                          │
+│   1. Obtiene valor actual: 0.00                                         │
+│   2. Ejecuta lambda: 0.00 + 100 = 100.00                                │
+│   3. Guarda nuevo valor: 100.00                                         │
+│   4. Retorna: 100.00                                                    │
+│                                                                          │
+│   ┌─────────────────────┐                                               │
+│   │ AtomicReference     │                                               │
+│   │   valor: 100.00     │                                               │
+│   └─────────────────────┘                                               │
+└──────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│ PASO 3: Segundo producto (Pc office - $500)                             │
+│                                                                          │
+│   total.updateAndGet(bigDecimal -> bigDecimal.add(500))                 │
+│                                                                          │
+│   1. Obtiene valor actual: 100.00                                       │
+│   2. Ejecuta lambda: 100.00 + 500 = 600.00                              │
+│   3. Guarda nuevo valor: 600.00                                         │
+│                                                                          │
+│   ┌─────────────────────┐                                               │
+│   │ AtomicReference     │                                               │
+│   │   valor: 600.00     │                                               │
+│   └─────────────────────┘                                               │
+└──────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│ PASO 4: Tercer producto (TV 75 - $200)                                  │
+│                                                                          │
+│   total.updateAndGet(bigDecimal -> bigDecimal.add(200))                 │
+│                                                                          │
+│   1. Obtiene valor actual: 600.00                                       │
+│   2. Ejecuta lambda: 600.00 + 200 = 800.00                              │
+│   3. Guarda nuevo valor: 800.00                                         │
+│                                                                          │
+│   ┌─────────────────────┐                                               │
+│   │ AtomicReference     │                                               │
+│   │   valor: 800.00     │                                               │
+│   └─────────────────────┘                                               │
+└──────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│ PASO 5: Obtener el total                                                │
+│                                                                          │
+│   return total.get();  // Retorna 800.00                                │
+└──────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 📊 **Métodos de `AtomicReference`**
+
+| Método | ¿Qué hace? |
+|--------|------------|
+| `new AtomicReference<>(valor)` | Crea el contenedor con valor inicial |
+| `get()` | Obtiene el valor actual |
+| `set(nuevoValor)` | Reemplaza el valor |
+| `updateAndGet(función)` | Aplica función y retorna el **nuevo** valor |
+| `getAndUpdate(función)` | Aplica función y retorna el valor **anterior** |
+
+---
+
+## ⚠️ **Nota: Tu código no multiplica por cantidad**
+
+```java
+// Tu código actual suma solo el precio unitario
+total.updateAndGet(bigDecimal -> bigDecimal.add(productFromCatalog.getPrice()));
+
+// Probablemente deberías multiplicar por cantidad:
+total.updateAndGet(bigDecimal -> bigDecimal.add(
+    productFromCatalog.getPrice().multiply(BigDecimal.valueOf(product.getQuantity()))
+));
+```
+
+---
+
+## 💡 **Alternativa sin AtomicReference (usando Stream)**
+
+```java
+private BigDecimal getAndSetProductsAndTotal(List<ProductsDTO> productsDto, OrderEntity orderEntity) {
+    
+    return productsDto.stream()
+        .map(product -> {
+            final var productFromCatalog = 
+                this.productCatalogRepository.findByName(product.getName()).orElseThrow();
+            
+            final var productEntity = ProductEntity.builder()
+                .quantity(product.getQuantity())
+                .catalog(productFromCatalog)
+                .build();
+            
+            orderEntity.addProduct(productEntity);
+            productEntity.setOrder(orderEntity);
+            
+            return productFromCatalog.getPrice()
+                .multiply(BigDecimal.valueOf(product.getQuantity()));
+        })
+        .reduce(BigDecimal.ZERO, BigDecimal::add);
+}
+```
+## 📚 Clase 88: UPDATE PARTE I 🚀✅✅
+
+### 📚 **Explicación del `return` en el método `update`**
+
+---
+
+## 🔍 **Flujo completo paso a paso**
+
+```
+┌──────────────────────────────────────────────────────────────────────────┐
+│ PASO 1: Cliente envía PUT /order/21                                      │
+│                                                                          │
+│   {                                                                      │
+│     "clientName": "Nuevo Nombre",                                        │
+│     "bill": { "clientRfc": "NUEVO123RFC" }                              │
+│   }                                                                      │
+└──────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│ PASO 2: orderRepository.findById(21)                                     │
+│                                                                          │
+│   SELECT * FROM orders WHERE id = 21                                     │
+│   → Retorna OrderEntity con datos ANTIGUOS                              │
+└──────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│ PASO 3: Modificar el Entity                                              │
+│                                                                          │
+│   toUpdate.setClientName("Nuevo Nombre");                               │
+│   toUpdate.getBill().setClientRfc("NUEVO123RFC");                       │
+└──────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│ PASO 4: orderRepository.save(toUpdate)                                   │
+│                                                                          │
+│   UPDATE orders SET client_name = 'Nuevo Nombre' WHERE id = 21          │
+│   UPDATE bills SET client_rfc = 'NUEVO123RFC' WHERE order_id = 21       │
+│                                                                          │
+│   → Retorna el OrderEntity ACTUALIZADO y guardado                       │
+└──────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│ PASO 5: mapOrderFromEntity(...)                                          │
+│                                                                          │
+│   Convierte OrderEntity → OrderDTO                                       │
+│   (Para devolver al cliente en formato JSON)                            │
+└──────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│ PASO 6: ResponseEntity.ok(orderDTO)                                      │
+│                                                                          │
+│   HTTP 200 OK                                                            │
+│   {                                                                      │
+│     "clientName": "Nuevo Nombre",                                        │
+│     "bill": { "clientRfc": "NUEVO123RFC", ... }                         │
+│   }                                                                      │
+└──────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 🎯 **¿Por qué retornar el objeto actualizado?**
+
+| Razón | Explicación |
+|-------|-------------|
+| **Confirmación** | El cliente sabe exactamente qué se guardó |
+| **Datos generados** | Puede incluir campos calculados (timestamps, totales) |
+| **Patrón REST** | Es una práctica estándar en APIs RESTful |
+| **Evitar segunda llamada** | El cliente no necesita hacer un GET después |
+
+---
+
+## 📊 **Desglose de la línea**
+
+```java
+return this.mapOrderFromEntity(this.orderRepository.save(toUpdate));
+//     │                       │                        │
+//     │                       │                        └─ 1. Entity modificado
+//     │                       │
+//     │                       └─ 2. save() guarda y retorna Entity actualizado
+//     │
+//     └─ 3. Convierte Entity → DTO para la respuesta JSON
+```
+
+---
+
+## 💡 **Alternativa: No retornar nada**
+
+Podrías hacerlo así, pero es **menos informativo**:
+
+```java
+// Opción sin retorno
+@Override
+public void update(OrderDTO order, Long id) {
+    final var toUpdate = this.orderRepository.findById(id).orElseThrow();
+    toUpdate.setClientName(order.getClientName());
+    this.orderRepository.save(toUpdate);
+    // No retorna nada
+}
+
+// Controller retornaría 204 No Content
+@PutMapping(path = "{id}")
+public ResponseEntity<Void> update(@PathVariable Long id, @RequestBody OrderDTO orderDTO) {
+    this.ordersCrudService.update(orderDTO, id);
+    return ResponseEntity.noContent().build();
+}
+```
+
+Tu implementación actual es **mejor práctica** porque confirma los datos guardados.
+
+# 📚 **Análisis del comportamiento inesperado en el UPDATE**
+
+---
+
+## 🔍 **El problema identificado**
+
+Estás enviando:
+```json
+{
+    "clientName": "Brandon Moreno",
+    "bill": { "id": "b-9", "clientRfc": "UPDATERFC000" },
+    "products": [{ "quantity": 3, "name": "Pc gamer" }]
+}
+```
+
+Pero recibes productos **que no enviaste**:
+```json
+"products": [
+    { "quantity": 3, "name": "Pc gamer" },
+    { "quantity": 3, "name": "backpack A" },        // ← ¿De dónde salió?
+    { "quantity": 3, "name": "Piano digital - home" } // ← ¿De dónde salió?
+]
+```
+
+---
+
+## 🎯 **Causa raíz: Tu método `update` NO actualiza los productos**
+
+```java
+@Override
+public OrderDTO update(OrderDTO order, Long id) {
+    final var toUpdate = this.orderRepository.findById(id).orElseThrow();
+
+    toUpdate.setClientName(order.getClientName());
+    toUpdate.getBill().setClientRfc(order.getBill().getClientRfc());
+    // ❌ FALTA: Actualizar los productos
+
+    return this.mapOrderFromEntity(this.orderRepository.save(toUpdate));
+}
+```
+
+---
+
+## 📊 **Flujo visual del problema**
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│ BD ANTES del UPDATE (Order id=1)                                    │
+│   products: [backpack A, Piano digital - home]  ← YA EXISTÍAN      │
+└─────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│ Tu JSON envía:                                                      │
+│   products: [Pc gamer]  ← QUIERES SOLO ESTE                        │
+└─────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│ Tu método update() IGNORA los productos del JSON                   │
+│ Solo actualiza: clientName y clientRfc                             │
+└─────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│ Resultado: Los productos ORIGINALES se mantienen                    │
+│   products: [backpack A, Piano digital - home, ???]                │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## ⚠️ **También el `idBill` no se actualiza**
+
+Enviaste `"id": "b-9"` pero se mantiene `"idBill": "b-1"`:
+
+```java
+// Tu código solo actualiza el RFC, NO el idBill
+toUpdate.getBill().setClientRfc(order.getBill().getClientRfc());
+// ❌ FALTA: toUpdate.getBill().setBillId(order.getBill().getIdBill());
+```
+
+---
+
+## ✅ **Solución: Actualizar productos correctamente**
+
+```java
+@Override
+public OrderDTO update(OrderDTO order, Long id) {
+    final var toUpdate = this.orderRepository.findById(id).orElseThrow();
+
+    // Actualizar datos básicos
+    toUpdate.setClientName(order.getClientName());
+    toUpdate.getBill().setClientRfc(order.getBill().getClientRfc());
+    toUpdate.getBill().setBillId(order.getBill().getIdBill()); // ← Agregar
+
+    // ✅ LIMPIAR productos existentes y agregar los nuevos
+    toUpdate.getProducts().clear();
+    
+    // Reutilizar tu método existente
+    final var total = this.getAndSetProductsAndTotal(order.getProducts(), toUpdate);
+    toUpdate.getBill().setTotalAmount(total);
+
+    return this.mapOrderFromEntity(this.orderRepository.save(toUpdate));
+}
+```
+
+---
+
+## 📋 **Resumen de lo que falta en tu UPDATE**
+
+| Campo | ¿Se actualiza? | ¿Debería? |
+|-------|---------------|-----------|
+| `clientName` | ✅ SÍ | ✅ |
+| `clientRfc` | ✅ SÍ | ✅ |
+| `idBill` | ❌ NO | ✅ Agregar |
+| `products` | ❌ NO | ✅ Agregar |
+| `totalAmount` | ❌ NO | ✅ Recalcular |
+
+---
+
+## 💡 **¿Por qué aparece "Pc gamer" en la respuesta?**
+
+Probablemente hiciste un **POST antes** que agregó ese producto. El UPDATE solo modificó `clientName` y `clientRfc`, dejando los productos intactos.
+
+## 🎯 **Respuesta: ¿Por qué aparecen `id` y `createdAt` en la respuesta?**
+
+---
+
+### 📊 **Flujo del UPDATE**
+
+```
+┌────────────────────────────────────────────────────────────────────┐
+│ 1. findById(1) → Carga OrderEntity COMPLETO desde BD              │
+│    (incluye: id, createdAt, clientName, bill, products)           │
+└────────────────────────────────────────────────────────────────────┘
+                                    ↓
+┌────────────────────────────────────────────────────────────────────┐
+│ 2. Modificas SOLO algunos campos:                                  │
+│    - setClientName("Brandon Moreno")                               │
+│    - setBill().setClientRfc("UPDATERFC000")                        │
+│    ❌ id y createdAt NO se tocan (se mantienen)                   │
+└────────────────────────────────────────────────────────────────────┘
+                                    ↓
+┌────────────────────────────────────────────────────────────────────┐
+│ 3. save(toUpdate) → Guarda y retorna Entity COMPLETO              │
+└────────────────────────────────────────────────────────────────────┘
+                                    ↓
+┌────────────────────────────────────────────────────────────────────┐
+│ 4. mapOrderFromEntity() → Convierte TODOS los campos a DTO        │
+│    (incluye: id, createdAt, clientName, bill, products)           │
+└────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### 🔍 **¿De dónde vienen?**
+
+| Campo | Origen | ¿Por qué aparece? |
+|-------|--------|-------------------|
+| `id: 1` | Base de datos | Se cargó con `findById(1)`, nunca se modificó |
+| `createdAt: "2025-12-09 00:48:44"` | Base de datos | Se cargó con `findById`, es inmutable |
+
+---
+
+### 💡 **Es comportamiento CORRECTO**
+
+```java
+// Tu mapOrderFromEntity probablemente hace:
+orderDTO.setId(entity.getId());           // ← Viene del entity cargado
+orderDTO.setCreatedAt(entity.getCreatedAt()); // ← Viene del entity cargado
+orderDTO.setClientName(entity.getClientName());
+// ... etc
+```
+
+Cuando haces **UPDATE**, JPA:
+1. **Carga** la entidad existente (con todos sus campos)
+2. **Modifica** solo lo que tú cambias
+3. **Guarda** y retorna la entidad **completa**
+
+> 🎯 El `id` y `createdAt` **nunca deberían cambiar** en un UPDATE \- es el comportamiento esperado.
+>
+# ✅ **Exacto, lo entendiste correctamente**
+
+---
+
+## 📊 **Resumen visual**
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│ OrderDTO tiene TODOS estos campos:                                  │
+│                                                                     │
+│   - id              ← Viene del Entity cargado de BD               │
+│   - createdAt       ← Viene del Entity cargado de BD               │
+│   - clientName      ← Modificado por tu UPDATE                     │
+│   - bill            ← Parcialmente modificado (solo clientRfc)     │
+│   - products        ← Vienen del Entity (NO los modificaste)       │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 🎯 **El mapeo convierte TODO**
+
+```java
+// mapOrderFromEntity hace algo como:
+OrderDTO dto = new OrderDTO();
+dto.setId(entity.getId());              // ← Se mapea
+dto.setCreatedAt(entity.getCreatedAt()); // ← Se mapea
+dto.setClientName(entity.getClientName());
+dto.setBill(mapBill(entity.getBill()));
+dto.setProducts(mapProducts(entity.getProducts()));
+return dto;  // ← Retorna DTO COMPLETO
+```
+
+---
+
+## 💡 **Por eso Jackson serializa todos los campos a JSON**
+
+| Campo DTO | ¿Tiene valor? | ¿Aparece en JSON? |
+|-----------|---------------|-------------------|
+| `id` | ✅ Sí (de BD) | ✅ Sí |
+| `createdAt` | ✅ Sí (de BD) | ✅ Sí |
+| `clientName` | ✅ Sí (actualizado) | ✅ Sí |
+| `bill` | ✅ Sí | ✅ Sí |
+| `products` | ✅ Sí (de BD) | ✅ Sí |
+
+> 🎯 Jackson serializa **todo lo que no sea `null`** (a menos que uses `@JsonIgnore`).

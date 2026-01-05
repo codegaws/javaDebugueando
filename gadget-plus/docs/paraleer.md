@@ -1247,3 +1247,288 @@ public class BillDTO {
 | ¿Mejor solución? | Eliminar el campo `order` del DTO |
 
 ---
+# OTRA CONSULTA SOBRE EL TOTAL
+# 📚 **Explicación detallada de `AtomicReference` y `updateAndGet`**
+
+---
+
+## 🤔 **¿Por qué necesitas `AtomicReference`?**
+
+El problema es que **no puedes modificar una variable local dentro de un lambda**:
+
+```java
+// ❌ ESTO NO COMPILA
+BigDecimal total = BigDecimal.ZERO;
+productsDto.forEach(product -> {
+    total = total.add(price);  // Error: variable must be final or effectively final
+});
+```
+
+---
+
+## 🎯 **¿Qué es `AtomicReference`?**
+
+Es un **contenedor** que envuelve un objeto y permite modificar su contenido:
+
+```java
+┌─────────────────────────────────────┐
+│  AtomicReference<BigDecimal>        │
+│  ┌─────────────────────────────┐    │
+│  │  valor interno: BigDecimal  │ ←─── Puedes cambiar ESTO
+│  └─────────────────────────────┘    │
+└─────────────────────────────────────┘
+      ↑
+      │
+La referencia al contenedor es FINAL (no cambia)
+Pero el contenido SÍ puede cambiar
+```
+
+---
+
+## 🔍 **Flujo paso a paso con tu código**
+
+Supongamos estos productos:
+
+| Producto | Precio |
+|----------|--------|
+| Alexa large | $100 |
+| Pc office | $500 |
+| TV 75 | $200 |
+
+```
+┌──────────────────────────────────────────────────────────────────────────┐
+│ PASO 1: Inicialización                                                   │
+│                                                                          │
+│   var total = new AtomicReference<>(BigDecimal.ZERO);                   │
+│                                                                          │
+│   ┌─────────────────────┐                                               │
+│   │ AtomicReference     │                                               │
+│   │   valor: 0.00       │                                               │
+│   └─────────────────────┘                                               │
+└──────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│ PASO 2: Primer producto (Alexa large - $100)                            │
+│                                                                          │
+│   total.updateAndGet(bigDecimal -> bigDecimal.add(100))                 │
+│                                                                          │
+│   1. Obtiene valor actual: 0.00                                         │
+│   2. Ejecuta lambda: 0.00 + 100 = 100.00                                │
+│   3. Guarda nuevo valor: 100.00                                         │
+│   4. Retorna: 100.00                                                    │
+│                                                                          │
+│   ┌─────────────────────┐                                               │
+│   │ AtomicReference     │                                               │
+│   │   valor: 100.00     │                                               │
+│   └─────────────────────┘                                               │
+└──────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│ PASO 3: Segundo producto (Pc office - $500)                             │
+│                                                                          │
+│   total.updateAndGet(bigDecimal -> bigDecimal.add(500))                 │
+│                                                                          │
+│   1. Obtiene valor actual: 100.00                                       │
+│   2. Ejecuta lambda: 100.00 + 500 = 600.00                              │
+│   3. Guarda nuevo valor: 600.00                                         │
+│                                                                          │
+│   ┌─────────────────────┐                                               │
+│   │ AtomicReference     │                                               │
+│   │   valor: 600.00     │                                               │
+│   └─────────────────────┘                                               │
+└──────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│ PASO 4: Tercer producto (TV 75 - $200)                                  │
+│                                                                          │
+│   total.updateAndGet(bigDecimal -> bigDecimal.add(200))                 │
+│                                                                          │
+│   1. Obtiene valor actual: 600.00                                       │
+│   2. Ejecuta lambda: 600.00 + 200 = 800.00                              │
+│   3. Guarda nuevo valor: 800.00                                         │
+│                                                                          │
+│   ┌─────────────────────┐                                               │
+│   │ AtomicReference     │                                               │
+│   │   valor: 800.00     │                                               │
+│   └─────────────────────┘                                               │
+└──────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│ PASO 5: Obtener el total                                                │
+│                                                                          │
+│   return total.get();  // Retorna 800.00                                │
+└──────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 📊 **Métodos de `AtomicReference`**
+
+| Método | ¿Qué hace? |
+|--------|------------|
+| `new AtomicReference<>(valor)` | Crea el contenedor con valor inicial |
+| `get()` | Obtiene el valor actual |
+| `set(nuevoValor)` | Reemplaza el valor |
+| `updateAndGet(función)` | Aplica función y retorna el **nuevo** valor |
+| `getAndUpdate(función)` | Aplica función y retorna el valor **anterior** |
+
+---
+
+## ⚠️ **Nota: Tu código no multiplica por cantidad**
+
+```java
+// Tu código actual suma solo el precio unitario
+total.updateAndGet(bigDecimal -> bigDecimal.add(productFromCatalog.getPrice()));
+
+// Probablemente deberías multiplicar por cantidad:
+total.updateAndGet(bigDecimal -> bigDecimal.add(
+    productFromCatalog.getPrice().multiply(BigDecimal.valueOf(product.getQuantity()))
+));
+```
+
+---
+
+## 💡 **Alternativa sin AtomicReference (usando Stream)**
+
+```java
+private BigDecimal getAndSetProductsAndTotal(List<ProductsDTO> productsDto, OrderEntity orderEntity) {
+    
+    return productsDto.stream()
+        .map(product -> {
+            final var productFromCatalog = 
+                this.productCatalogRepository.findByName(product.getName()).orElseThrow();
+            
+            final var productEntity = ProductEntity.builder()
+                .quantity(product.getQuantity())
+                .catalog(productFromCatalog)
+                .build();
+            
+            orderEntity.addProduct(productEntity);
+            productEntity.setOrder(orderEntity);
+            
+            return productFromCatalog.getPrice()
+                .multiply(BigDecimal.valueOf(product.getQuantity()));
+        })
+        .reduce(BigDecimal.ZERO, BigDecimal::add);
+}
+```
+
+---
+
+# OTRA CONSULTA SOBRE UPDATE
+# 📚 **Explicación del `return` en el método `update`**
+
+---
+
+## 🔍 **Flujo completo paso a paso**
+
+```
+┌──────────────────────────────────────────────────────────────────────────┐
+│ PASO 1: Cliente envía PUT /order/21                                      │
+│                                                                          │
+│   {                                                                      │
+│     "clientName": "Nuevo Nombre",                                        │
+│     "bill": { "clientRfc": "NUEVO123RFC" }                              │
+│   }                                                                      │
+└──────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│ PASO 2: orderRepository.findById(21)                                     │
+│                                                                          │
+│   SELECT * FROM orders WHERE id = 21                                     │
+│   → Retorna OrderEntity con datos ANTIGUOS                              │
+└──────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│ PASO 3: Modificar el Entity                                              │
+│                                                                          │
+│   toUpdate.setClientName("Nuevo Nombre");                               │
+│   toUpdate.getBill().setClientRfc("NUEVO123RFC");                       │
+└──────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│ PASO 4: orderRepository.save(toUpdate)                                   │
+│                                                                          │
+│   UPDATE orders SET client_name = 'Nuevo Nombre' WHERE id = 21          │
+│   UPDATE bills SET client_rfc = 'NUEVO123RFC' WHERE order_id = 21       │
+│                                                                          │
+│   → Retorna el OrderEntity ACTUALIZADO y guardado                       │
+└──────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│ PASO 5: mapOrderFromEntity(...)                                          │
+│                                                                          │
+│   Convierte OrderEntity → OrderDTO                                       │
+│   (Para devolver al cliente en formato JSON)                            │
+└──────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│ PASO 6: ResponseEntity.ok(orderDTO)                                      │
+│                                                                          │
+│   HTTP 200 OK                                                            │
+│   {                                                                      │
+│     "clientName": "Nuevo Nombre",                                        │
+│     "bill": { "clientRfc": "NUEVO123RFC", ... }                         │
+│   }                                                                      │
+└──────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 🎯 **¿Por qué retornar el objeto actualizado?**
+
+| Razón | Explicación |
+|-------|-------------|
+| **Confirmación** | El cliente sabe exactamente qué se guardó |
+| **Datos generados** | Puede incluir campos calculados (timestamps, totales) |
+| **Patrón REST** | Es una práctica estándar en APIs RESTful |
+| **Evitar segunda llamada** | El cliente no necesita hacer un GET después |
+
+---
+
+## 📊 **Desglose de la línea**
+
+```java
+return this.mapOrderFromEntity(this.orderRepository.save(toUpdate));
+//     │                       │                        │
+//     │                       │                        └─ 1. Entity modificado
+//     │                       │
+//     │                       └─ 2. save() guarda y retorna Entity actualizado
+//     │
+//     └─ 3. Convierte Entity → DTO para la respuesta JSON
+```
+
+---
+
+## 💡 **Alternativa: No retornar nada**
+
+Podrías hacerlo así, pero es **menos informativo**:
+
+```java
+// Opción sin retorno
+@Override
+public void update(OrderDTO order, Long id) {
+    final var toUpdate = this.orderRepository.findById(id).orElseThrow();
+    toUpdate.setClientName(order.getClientName());
+    this.orderRepository.save(toUpdate);
+    // No retorna nada
+}
+
+// Controller retornaría 204 No Content
+@PutMapping(path = "{id}")
+public ResponseEntity<Void> update(@PathVariable Long id, @RequestBody OrderDTO orderDTO) {
+    this.ordersCrudService.update(orderDTO, id);
+    return ResponseEntity.noContent().build();
+}
+```
+
+Tu implementación actual es **mejor práctica** porque confirma los datos guardados.

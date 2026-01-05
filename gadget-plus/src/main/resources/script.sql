@@ -239,7 +239,8 @@ SELECT *
 FROM orders o
          JOIN bill b ON o.id_bill = b.id
          JOIN products p ON o.id = p.id_order
-WHERE o.id = 21;
+         JOIN products_catalog pc ON p.id_product_catalog = pc.id
+WHERE o.id = 23;
 
 SELECT *
 FROM bill;
@@ -252,3 +253,23 @@ SELECT column_name,
        column_default
 FROM information_schema.columns
 WHERE table_name = 'products_catalog';
+
+-- clase 87 calculando
+SELECT b.total_amount
+FROM orders o
+         JOIN bill b ON o.id_bill = b.id
+         JOIN products p ON o.id = p.id_order
+WHERE o.id = 23;
+
+-- CLASE 88 UPDATES
+
+select *
+from orders o
+         join bill b on o.id_bill = b.id
+WHERE o.id = 1;
+
+
+UPDATE orders
+SET client_name = 'Alexa Graso'
+WHERE id = 1;
+
