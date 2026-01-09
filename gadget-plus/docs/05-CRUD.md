@@ -2733,3 +2733,5 @@ return dto;  // ← Retorna DTO COMPLETO
 | `products` | ✅ Sí (de BD) | ✅ Sí |
 
 > 🎯 Jackson serializa **todo lo que no sea `null`** (a menos que uses `@JsonIgnore`).
+
+
