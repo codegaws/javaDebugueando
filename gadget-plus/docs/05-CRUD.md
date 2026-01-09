@@ -2733,5 +2733,169 @@ return dto;  // ← Retorna DTO COMPLETO
 | `products` | ✅ Sí (de BD) | ✅ Sí |
 
 > 🎯 Jackson serializa **todo lo que no sea `null`** (a menos que uses `@JsonIgnore`).
+<<<<<<< HEAD
 
 
+=======
+---
+### ⃣📚**Clase 90:DELETE PARTE I**
+
+> - 📚 **Explicacion**
+> - Delete con Find son muy parecidos cuando usamos un Api Restful estan muy relacionados con el ID
+
+- ### En OrderRepository  ➡️ 
+
+La anotación `@Modifying` y el método que has seleccionado tienen un problema de sintaxis. Te explico qué significa y cómo corregirlo:
+
+## ¿Qué significa @Modifying?
+
+La anotación `@Modifying` se usa en Spring Data JPA para indicar que el método realizará una **operación de modificación** 
+(INSERT, UPDATE o DELETE) en la base de datos, no una consulta de solo lectura.
+
+
+```java
+@Modifying
+void deleteAllByClientName(String clientName);
+```
+
+## ¿Qué hace este método?
+
+- **Elimina** todas las órdenes (`OrderEntity`) que tengan el `clientName` especificado
+- Es un **Query Method** de Spring Data JPA que se genera automáticamente
+- La convención `deleteAllBy` + `ClientName` le dice a Spring que:
+  - `deleteAllBy`: eliminar todos los registros que coincidan esto se usa mayormente cuando hay varias coincidencias
+  - `ClientName`: filtrar por el campo `clientName` de la entidad
+
+## Uso recomendado
+
+Para operaciones de eliminación también necesitas `@Transactional`:
+
+```java
+@Modifying
+@Transactional
+void deleteAllByClientName(String clientName);
+```
+
+Sin `@Transactional`, podrías obtener errores al ejecutar la operación de eliminación.
+
+#### En OrderRepository -> 
+- Vamos a usar sin ALL por que el nombre es unico ➡️
+- Ademas vamos a crear un metodo para validar si existe un nombre de cliente ya registrado ➡️ de tipo Boolean.
+
+```java
+public interface OrderRepository extends CrudRepository<OrderEntity, Long> {
+
+    // haciendo un Query Method que borre por el nombre
+    @Modifying
+    void deleteByClientName(String clientName);// sin ALL por que el nombre es unico solo habra una sola coincidencia no varias para eso es mejor ALL
+
+    Boolean existsByClientName(String clientName);// este metodo me sirve para validar si existe un nombre de cliente ya registrado
+}
+```
+
+- ### En OrdersCrudService ➡️ 
+
+```java
+    void delete(Long id);
+    void delete(String clientName);
+```
+
+- ### En OrdersCrudServiceImpl ➡️
+- Implementacion del metodo delete ➡️
+
+```java
+ @Override
+    public void delete(String clientName) {
+
+        if (orderRepository.existsByClientName(clientName)) {
+            orderRepository.deleteByClientName(clientName);
+        } else {
+            throw new IllegalArgumentException("Client name not found");
+        }
+    }
+```
+- ### En OrderController ➡️
+
+```java
+    @DeleteMapping
+    public ResponseEntity<Void> deleteByName(@RequestParam String name) {
+        this.ordersCrudService.delete(name);
+        return ResponseEntity.noContent().build();//retornamos un 204 cuando borramos
+    }
+```
+
+La línea `ResponseEntity.noContent().build()` crea una respuesta HTTP con código de estado **204 No Content**.
+
+## ¿Qué significa esto?
+
+- **204 No Content**: Es un código de estado HTTP que indica que la operación fue exitosa, pero no hay contenido que devolver en el cuerpo de la respuesta
+- Es el código estándar para operaciones DELETE exitosas
+- Le dice al cliente que la eliminación se completó correctamente
+
+## Desglose del código:
+
+```java
+ResponseEntity.noContent()  // Establece el código 204
+              .build();     // Construye la respuesta sin cuerpo
+```
+
+## ¿Por qué se usa en DELETE?
+
+Cuando eliminas un recurso:
+1. **Éxito**: El recurso fue eliminado → código 204
+2. **Sin contenido**: No necesitas devolver datos después de eliminar
+3. **Estándar REST**: Es la práctica recomendada para operaciones DELETE
+
+La respuesta HTTP que recibe el cliente será:
+- **Status**: `204 No Content`
+- **Body**: Vacío
+- **Headers**: Los headers básicos de Spring Boot
+
+Esto confirma al cliente que la eliminación fue exitosa sin necesidad de datos adicionales.
+
+### ⃣📚**Clase 91:DELETE PARTE II Probando el codigo**
+
+###  - 📚 **Explicacion**
+
+La anotación `@Transactional(propagation = Propagation.REQUIRES_NEW)` a nivel de clase define el comportamiento transaccional para todos los métodos del controlador.
+
+## ¿Qué hace `REQUIRES_NEW`?
+
+**Siempre crea una nueva transacción**, independientemente de si ya existe una transacción activa en el contexto actual.
+
+## Comportamiento detallado:
+
+```java
+@Transactional(propagation = Propagation.REQUIRES_NEW)
+```
+
+- **Nueva transacción**: Cada método del controlador ejecuta en su propia transacción
+- **Suspende existentes**: Si ya hay una transacción activa, la suspende temporalmente
+- **Independencia**: La nueva transacción puede hacer commit/rollback sin afectar la transacción padre
+- **Aislamiento**: Los cambios son independientes de otras operaciones
+
+## ¿Por qué en un controlador?
+
+En tu caso específico puede ser para:
+
+1. **Operaciones críticas**: Cada request debe tener su propia transacción
+2. **Rollback independiente**: Si falla una operación, no afecta otras transacciones
+3. **Control granular**: Cada endpoint maneja su propia consistencia de datos
+
+## Ejemplo práctico:
+
+Si tienes una transacción activa y llamas a un método del controlador:
+- Se suspende la transacción actual
+- Se crea una nueva transacción para el método
+- Al finalizar, se restaura la transacción original
+
+## Consideraciones:
+
+- **Performance**: Crear nuevas transacciones tiene overhead
+- **Conexiones BD**: Puede requerir múltiples conexiones simultáneas
+- **Deadlocks**: Mayor riesgo con transacciones concurrentes
+
+Es una estrategia para garantizar que cada operación del controlador sea completamente independiente a nivel transaccional.
+
+### ⃣📚**Clase 92:DELETE PARTE III Probando el codigo**
+>>>>>>> 49921df3ecdd22f937a0aa7b31cac5d4bc7c90b1

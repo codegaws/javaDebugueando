@@ -266,7 +266,7 @@ WHERE o.id = 23;
 select *
 from orders o
          join bill b on o.id_bill = b.id
-WHERE o.id = 1;
+WHERE o.id = 3;
 
 
 UPDATE orders

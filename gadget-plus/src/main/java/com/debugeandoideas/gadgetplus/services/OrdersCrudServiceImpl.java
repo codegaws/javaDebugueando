@@ -12,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -49,10 +51,27 @@ public class OrdersCrudServiceImpl implements OrdersCrudService {
 
     @Override
     public void delete(Long id) {
-
+        if (orderRepository.existsById(id)) {// existsById - deleteById estos metodos ya vienen por defecto en JPA REPOSITORY
+            orderRepository.deleteById(id);
+        } else {
+            throw new IllegalArgumentException("Client name not found");
+        }
     }
 
-/*    //CLASE 80 READ PARTE1 CREAMOS EL METODO PARA MAPEAR DE ENTITY A DTO
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Override
+    public void delete(String clientName) {
+
+        if (orderRepository.existsByClientName(clientName)) {
+            orderRepository.deleteByClientName(clientName);
+        } else {
+            throw new IllegalArgumentException("Client name not found");
+        }
+    }
+
+
+//*********************************************************************************************************************
+    /*    //CLASE 80 READ PARTE1 CREAMOS EL METODO PARA MAPEAR DE ENTITY A DTO
     private OrderDTO mapOrderFromEntity(OrderEntity orderEntity) {
         final var mapper = new ModelMapper();
         return mapper.map(orderEntity, OrderDTO.class);
