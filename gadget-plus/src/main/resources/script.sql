@@ -266,10 +266,32 @@ WHERE o.id = 23;
 select *
 from orders o
          join bill b on o.id_bill = b.id
-WHERE o.id = 3;
+WHERE o.id = 2;
 
 
 UPDATE orders
 SET client_name = 'Alexa Graso'
 WHERE id = 1;
 
+-- CLASE 98 EXPLICANDO QUERYS
+
+select *
+from products;
+
+SELECT o.client_name, o.created_at, b.client_rfc
+FROM orders o
+         JOIN bill b ON o.id_bill = b.id
+WHERE o.id = 5;
+
+SELECT o.client_name, o.created_at, o.id AS id_order, p.id AS id_product, p.id_product_catalog id_catalog
+FROM orders o
+         JOIN products p ON o.id = p.id_order
+WHERE o.id = 5;
+
+UPDATE products
+set id_order = null
+WHERE id = 37;
+
+UPDATE products
+set id_order = 5
+WHERE id = 37;

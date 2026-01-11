@@ -2898,4 +2898,286 @@ Si tienes una transacción activa y llamas a un método del controlador:
 Es una estrategia para garantizar que cada operación del controlador sea completamente independiente a nivel transaccional.
 
 ### ⃣📚**Clase 92:DELETE PARTE III Probando el codigo**
->>>>>>> 49921df3ecdd22f937a0aa7b31cac5d4bc7c90b1
+> 49921df3ecdd22f937a0aa7b31cac5d4bc7c90b1
+
+### ⃣📚**Clase 93:DINSERTS Y DELETES EN BACH PARTE I**
+
+El método `saveAllAndFlush()` sirve para **insertar múltiples entidades en una sola operación y forzar la escritura inmediata** a la base de datos.
+
+## ¿Qué hace específicamente?
+
+1. **`saveAll()`**: Guarda todas las entidades de la lista en una sola transacción (más eficiente que guardar una por una)
+
+2. **`flush()`**: Fuerza la **sincronización inmediata** con la base de datos, ejecutando todas las operaciones SQL pendientes
+
+## ¿Por qué usar `flush()` aquí?
+
+En tu código necesitas el `flush()` porque estás **midiendo el tiempo real** de inserción:
+
+```java
+final var start = System.currentTimeMillis();
+this.productCatalogRepository.saveAllAndFlush(products);
+final var end = System.currentTimeMillis();
+```
+
+Sin `flush()`:
+- Los datos se quedarían en el contexto de persistencia (caché)
+- Las operaciones SQL se ejecutarían después (lazy)
+- **El tiempo medido sería incorrecto** (no incluiría la escritura real a BD)
+
+Con `saveAllAndFlush()`:
+- Se ejecutan inmediatamente las operaciones SQL
+- **El tiempo medido es real** (incluye la escritura a BD)
+- Obtienes métricas precisas de rendimiento
+
+## Alternativas:
+
+- `saveAll()` - Guarda pero no sincroniza inmediatamente
+- `save()` individual - Menos eficiente para lotes grandes
+- `flush()` manual después de `saveAll()`
+
+En operaciones batch como la tuya, `saveAllAndFlush()` es ideal para medición de rendimiento y garantizar persistencia inmediata.
+
+# 🗑️ Método `delteBatch()` - Eliminación en Lote
+
+## 📋 ¿Qué hace este código?
+
+Este método implementa **eliminación masiva** de productos del catálogo con medición de rendimiento.
+
+## 🔍 Desglose paso a paso:
+
+### 1️⃣ **Obtener todos los IDs**
+```java
+var ids = this.productCatalogRepository.findAll()
+        .stream()
+        .map(ProductCatalogEntity::getId)
+        .toList();
+```
+
+- 📥 `findAll()` - Obtiene **todas** las entidades de la BD
+- 🔄 `.stream()` - Convierte la lista en un stream para procesamiento
+- 🏷️ `.map(ProductCatalogEntity::getId)` - **Extrae solo el ID** de cada entidad
+- 📝 `.toList()` - Convierte el stream de IDs en una lista
+
+### 2️⃣ **Medición de tiempo**
+```java
+final var start = System.currentTimeMillis();
+// ... operación de eliminación ...
+final var end = System.currentTimeMillis();
+```
+
+- ⏱️ Captura el tiempo **antes y después** de la eliminación
+- 📊 Permite medir el **rendimiento** de la operación
+
+### 3️⃣ **Eliminación en lote**
+```java
+this.productCatalogRepository.deleteAllById(ids);
+```
+
+- 🚀 **Elimina múltiples registros** en una sola operación SQL
+- ⚡ Más eficiente que eliminar uno por uno
+
+## 🎯 ¿Para qué sirve?
+
+- **🧹 Limpieza masiva**: Elimina todos los productos del catálogo
+- **📈 Medición de rendimiento**: Evalúa qué tan rápido se ejecuta la eliminación
+- **⚡ Optimización**: Usa eliminación en lote (más eficiente)
+- **📝 Logging**: Registra el proceso y tiempo de ejecución
+
+## ⚠️ Consideraciones importantes:
+
+- **🔴 Peligroso**: Elimina **TODOS** los productos
+- **💾 Sin transacción explícita**: Podría necesitar `@Transactional`
+- **🐌 Ineficiente**: Primero carga todas las entidades solo para obtener IDs
+
+## 🚀 Alternativa más eficiente:
+
+```java
+this.productCatalogRepository.deleteAll(); // Elimina todo directamente
+```
+
+---
+### Notas con respecto a la lista que se agregara:
+El patrón Builder está disponible gracias a **Lombok**. Cuando usas la anotación `@Builder` en tu entidad `ProductCatalogEntity`, Lombok genera automáticamente en tiempo de compilación:
+
+1. **El método estático `builder()`** que retorna una instancia del builder
+2. **La clase Builder interna** con métodos para cada campo
+3. **El método `build()`** que construye el objeto final
+
+## Cómo funciona:
+
+```java
+@Entity
+@Builder  // Esta anotación genera el patrón Builder
+@Data     // Genera getters, setters, etc.
+public class ProductCatalogEntity {
+    private String name;
+    private String brand;
+    private BigDecimal price;
+    // ... otros campos
+}
+```
+
+## Lo que Lombok genera internamente:
+
+```java
+// Lombok genera algo similar a esto:
+public static ProductCatalogEntityBuilder builder() {
+    return new ProductCatalogEntityBuilder();
+}
+
+public static class ProductCatalogEntityBuilder {
+    private String name;
+    private String brand;
+    
+    public ProductCatalogEntityBuilder name(String name) {
+        this.name = name;
+        return this;
+    }
+    
+    public ProductCatalogEntityBuilder brand(String brand) {
+        this.brand = brand;
+        return this;
+    }
+    
+    public ProductCatalogEntity build() {
+        return new ProductCatalogEntity(name, brand, ...);
+    }
+}
+```
+
+## Respecto a `List.of()`:
+
+Sí es perfectamente viable usar `List.of()` con múltiples objetos creados con builder. `List.of()` acepta elementos separados por comas y crea una lista inmutable con esos elementos.
+
+El código funciona porque:
+1. Cada `ProductCatalogEntity.builder()...build()` crea un objeto completo
+2. `List.of()` toma esos objetos como argumentos separados
+3. Se crea una lista inmutable con todos los productos
+
+---
+El método `.builder()` **NO está declarado en tu clase actual** `CatalogBatchImpl`. Está declarado en la **clase `ProductCatalogEntity`**.
+
+## Lo que sucede:
+
+1. **En `ProductCatalogEntity`** (que importas con `import com.debugeandoideas.gadgetplus.entities.ProductCatalogEntity;`) debe tener la anotación `@Builder`
+
+2. **Lombok genera automáticamente** el método estático `builder()` en esa entidad
+
+3. **En tu clase actual** simplemente **usas** ese método que ya existe en `ProductCatalogEntity`
+
+## Ejemplo de cómo debe estar `ProductCatalogEntity`:
+
+```java
+@Entity
+@Builder  // Esta anotación genera el método builder()
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class ProductCatalogEntity {
+    private String name;
+    private String brand;
+    private BigDecimal price;
+    private LocalDate launchingDate;
+    private Boolean isDiscount;
+    private String description;
+    private Short rating;
+}
+```
+
+## Por eso funciona:
+
+- `ProductCatalogEntity.builder()` - Llama al método estático generado por Lombok en la entidad
+- No necesitas declararlo en `CatalogBatchImpl` porque **usas** el método de otra clase
+- Es como usar `String.valueOf()` o `LocalDate.now()` - métodos que existen en otras clases
+
+La clave está en que **Lombok genera el builder en la clase de la entidad**, no en donde lo usas.
+
+### ⃣📚**Clase 94:DINSERTS Y DELETES EN BACH PARTE II**
+
+> No se realizo por que habria que ejecutar todo denuevo
+
+- Con esto ejecutamos el borrado en lote y las inserciones
+
+```java
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class GadgetPlusApplication_Batch {//implements CommandLineRunner {
+
+    public static void main(String[] args) {
+        SpringApplication.run(GadgetPlusApplication_Batch.class, args);
+    }
+
+ /*   @Autowired
+    private CatalogBatch catalogBatch;
+
+    @Override
+    public void run(String... args) throws Exception {
+        this.catalogBatch.insertBatch();
+
+        Thread.sleep(1000);
+
+        this.catalogBatch.delteBatch();
+
+    }*/
+}
+
+```
+# 🗑️ Método `delteBatch()` - Eliminación en Lote
+
+## 📋 ¿Qué hace este código?
+
+Este método implementa **eliminación masiva** de productos del catálogo con medición de rendimiento.
+
+## 🔍 Desglose paso a paso:
+
+### 1️⃣ **Obtener todos los IDs**
+```java
+var ids = this.productCatalogRepository.findAll()
+        .stream()
+        .map(ProductCatalogEntity::getId)
+        .toList();
+```
+
+- 📥 `findAll()` - Obtiene **todas** las entidades de la BD
+- 🔄 `.stream()` - Convierte la lista en un stream para procesamiento
+- 🏷️ `.map(ProductCatalogEntity::getId)` - **Extrae solo el ID** de cada entidad
+- 📝 `.toList()` - Convierte el stream de IDs en una lista
+
+### 2️⃣ **Medición de tiempo**
+```java
+final var start = System.currentTimeMillis();
+// ... operación de eliminación ...
+final var end = System.currentTimeMillis();
+```
+
+- ⏱️ Captura el tiempo **antes y después** de la eliminación
+- 📊 Permite medir el **rendimiento** de la operación
+
+### 3️⃣ **Eliminación en lote**
+```java
+this.productCatalogRepository.deleteAllById(ids);
+```
+
+- 🚀 **Elimina múltiples registros** en una sola operación SQL
+- ⚡ Más eficiente que eliminar uno por uno
+
+## 🎯 ¿Para qué sirve?
+
+- **🧹 Limpieza masiva**: Elimina todos los productos del catálogo
+- **📈 Medición de rendimiento**: Evalúa qué tan rápido se ejecuta la eliminación
+- **⚡ Optimización**: Usa eliminación en lote (más eficiente)
+- **📝 Logging**: Registra el proceso y tiempo de ejecución
+
+## ⚠️ Consideraciones importantes:
+
+- **🔴 Peligroso**: Elimina **TODOS** los productos
+- **💾 Sin transacción explícita**: Podría necesitar `@Transactional`
+- **🐌 Ineficiente**: Primero carga todas las entidades solo para obtener IDs
+
+## 🚀 Alternativa más eficiente:
+
+```java
+this.productCatalogRepository.deleteAll(); // Elimina todo directamente
+```

@@ -4,6 +4,7 @@ import com.debugeandoideas.gadgetplus.entities.BillEntity;
 import com.debugeandoideas.gadgetplus.entities.OrderEntity;
 import com.debugeandoideas.gadgetplus.entities.ProductEntity;
 import com.debugeandoideas.gadgetplus.repositories.*;
+import com.debugeandoideas.gadgetplus.services.CatalogBatch;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -156,6 +157,7 @@ public class GadgetPlusApplication implements CommandLineRunner {
 
         //***************************CLASE 44 probando @ManyToMany**************
 /*
+
         final var HOME = this.categoryRepository.findById(1L).orElseThrow();//traemos el home
         final var OFFICE = this.categoryRepository.findById(2L).orElseThrow();//traemos el office
 
@@ -173,6 +175,7 @@ public class GadgetPlusApplication implements CommandLineRunner {
             this.productCatalogRepository.save(product);
         });
 */
+
         //***************************CLASE 46-47 Insertando Registros Aleatorios**************
 /*
         //1. CREAMOS UN OBJETO RANDOM
@@ -201,6 +204,8 @@ public class GadgetPlusApplication implements CommandLineRunner {
         //***************************CLASE 49 MAPEANDO LLAVE PRIMARIA COMPUESTA **************
 
         //this.rejectProductRepository.findAll().forEach(System.out::println);
+
+        // ***************************CLASE 94 Inserts y deltes en batch  probando**************
 
     }
 }
