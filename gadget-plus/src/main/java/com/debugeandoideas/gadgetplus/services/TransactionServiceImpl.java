@@ -26,10 +26,13 @@ public class TransactionServiceImpl implements TransactionService {
     public void executeTransaction(Long id) {
         log.info("TRANSACTION ACTIVE 1{}", TransactionSynchronizationManager.isActualTransactionActive());
         log.info("TRANSACTION NAME 1{}", TransactionSynchronizationManager.getCurrentTransactionName());
+
         this.updateOrder(id);
+
+        // this.updateBill("b-5");//lo metemos de manera harcodeada para ver el comportamiento de la transaccion
     }
 
-    @Transactional(propagation = Propagation.REQUIRED)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     @Override
     public void updateOrder(Long id) {
         log.info("TRANSACTION ACTIVE 2{}", TransactionSynchronizationManager.isActualTransactionActive());
@@ -48,19 +51,19 @@ public class TransactionServiceImpl implements TransactionService {
         log.info("TRANSACTION ACTIVE 4{}", TransactionSynchronizationManager.isActualTransactionActive());
         log.info("TRANSACTION NAME 4{}", TransactionSynchronizationManager.getCurrentTransactionName());
         final var bill = billRepository.findById(id).orElseThrow();
-        bill.setClientRfc("trc34");
+        bill.setClientRfc("123");
         billRepository.save(bill);
     }
 
-    @PersistenceContext
-    private EntityManager entityManager;
+   /* @PersistenceContext
+    private EntityManager entityManager;*/
 
-    @Transactional(propagation = Propagation.REQUIRED)
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)//LO MEJOR ES NOT SUPPORTED PARA ESTOS METODOS DE VALIDACION - IGUAL SE HARA EL ROLLBACK CUANDO HAYA UN ERROR
     @Override
     public void validProducts(Long id) {
         log.info("TRANSACTION ACTIVE 3{}", TransactionSynchronizationManager.isActualTransactionActive());
         log.info("TRANSACTION NAME 3{}", TransactionSynchronizationManager.getCurrentTransactionName());
-        entityManager.clear();
+        // entityManager.clear();
         final var order = orderRepository.findById(id).orElseThrow();
         if (order.getProducts().isEmpty()) {
             throw new IllegalArgumentException("there are no products in the order");

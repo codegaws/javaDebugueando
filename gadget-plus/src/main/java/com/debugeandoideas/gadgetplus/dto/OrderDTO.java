@@ -17,8 +17,8 @@ public class OrderDTO {
 
     private Long id;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")// nos brinda un formato JsonFormat
-    private LocalDateTime createdAt;
+   /* @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")// nos brinda un formato JsonFormat
+    private LocalDateTime createdAt;*/
 
     private String clientName;
     private BillDTO bill;

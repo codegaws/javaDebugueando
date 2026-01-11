@@ -2,6 +2,7 @@ package com.debugeandoideas.gadgetplus.entities;
 
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -16,6 +17,7 @@ import java.util.Objects;
 @AllArgsConstructor
 @NoArgsConstructor// crea constructor sin parametros
 @Builder // Patron de diseño builder
+@Slf4j
 public class OrderEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,33 +27,35 @@ public class OrderEntity {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    @PrePersist
+/*    @PrePersist
     protected void onCreate() {//aqui JPA llama este metodo antes de persistir el objeto automaticamente
         if (createdAt == null) {
             createdAt = LocalDateTime.now();
         }
-    }
+    }*/
+
+    @Column(name = "last_updated", nullable = true)
+    private LocalDateTime lastUpdated;
 
     /**
      * ALTERNATIVAS PARA SETEAR createdAt
      * // Opción 1: @PrePersist (la que usas)
-     * @PrePersist
-     * protected void onCreate() {
-     *     if (createdAt == null) {
-     *         createdAt = LocalDateTime.now();
-     *     }
-     * }
      *
+     * @PrePersist protected void onCreate() {
+     * if (createdAt == null) {
+     * createdAt = LocalDateTime.now();
+     * }
+     * }
+     * <p>
      * // Opción 2: Valor directo en el campo
      * @Column(name = "created_at", nullable = false)
      * private LocalDateTime createdAt = LocalDateTime.now();
-     *
+     * <p>
      * // Opción 3: Usar @CreationTimestamp de Hibernate
      * @CreationTimestamp
      * @Column(name = "created_at", nullable = false)
      * private LocalDateTime createdAt;
      */
-
 
 
     @Column(name = "client_name", length = 32, nullable = false)
@@ -67,9 +71,13 @@ public class OrderEntity {
     // Relación uno a muchos con ProductEntity ONETOMANY es la relacion inversa - aplicando ORPHAN REMOVAL
     @OneToMany(mappedBy = "order",
             fetch = FetchType.EAGER,
-            cascade = CascadeType.ALL, orphanRemoval = true)
+            cascade = CascadeType.ALL,
+            orphanRemoval = true)
     @OrderBy("id ASC") // ← Ordena por ID ascendente
     private List<ProductEntity> products = new ArrayList<>();
+
+    @Transient //  ▶️ No se persiste en la base de datos la ignora este campo
+    private Boolean isSaved = false;
 
     public void addProduct(ProductEntity product) {
         products.add(product);
@@ -123,6 +131,47 @@ public class OrderEntity {
     @Override
     public int hashCode() {
         return Objects.hashCode(id);
+    }
+
+    // AGREGAMOS CICLO DE VIDAS SIEMPRE SON VOID
+    @PrePersist
+    private void prePersist() {
+        this.setCreatedAt(LocalDateTime.now());
+        log.info("Pre-persisting {}", this.getCreatedAt().toString());
+
+    }
+
+    @PostPersist
+    private void postPersist() {
+        log.info("Post-persisting {}", this.getIsSaved());
+        this.setIsSaved(true);
+        log.info("Post-persisting {}", this.getIsSaved());
+    }
+
+    @PreUpdate
+    private void preUpdate() {
+        this.setLastUpdated(LocalDateTime.now());
+        log.info("pre-updating {}", this.getLastUpdated().toString());
+    }
+
+    @PostUpdate
+    private void postUpdate() {
+        this.setLastUpdated(LocalDateTime.now());
+        log.info("post-updating {}", this.getLastUpdated().toString());
+    }
+
+
+    @PreRemove
+    private void PreRemove() {
+        log.warn("Entity will be Removed");
+        this.products = new ArrayList<>();//podemos hacer que devuelva una lista vacia antes de eliminarla
+
+    }
+
+    @PostRemove
+    private void PostRemove() {
+        log.warn("Entity was Removed");
+
     }
 
 }

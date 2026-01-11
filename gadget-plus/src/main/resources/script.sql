@@ -278,7 +278,7 @@ WHERE id = 1;
 select *
 from products;
 
-SELECT o.client_name, o.created_at, b.client_rfc
+SELECT o.client_name, o.created_at, b.client_rfc, b.id AS id_bill
 FROM orders o
          JOIN bill b ON o.id_bill = b.id
 WHERE o.id = 5;
@@ -295,3 +295,29 @@ WHERE id = 37;
 UPDATE products
 set id_order = 5
 WHERE id = 37;
+
+-- ISOLATION CLASE 104
+SELECT *
+FROM products_catalog pc
+WHERE pc.rating > 9;
+
+-- Transaction 1 -> 9 ROWS
+
+-- Transaction 2 -> UPDATE
+
+-- Transaction 3 -> 34 ROWS
+
+UPDATE products_catalog
+SET rating = 10
+WHERE rating < 9;
+
+-- CLASE 106 ACTUALIZANDO BASE DE DATOS
+
+ALTER TABLE orders
+    ADD COLUMN last_updated TIMESTAMP;
+
+-- CLASE 107 PREPERSIST
+
+SELECT *
+FROM orders
+WHERE id = 22;
