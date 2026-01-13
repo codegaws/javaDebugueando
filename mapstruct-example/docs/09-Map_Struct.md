@@ -1,6 +1,7 @@
 ## ⃣📚**Clase 115:INTRODUCCION A JAVA MAPPERS FRAMEWORKS⏭️⏭️ ****
 
 ![images](images/img_23.png)
+
 > - > Los mappers son frameworks que nos permiten mapear objetos de Java a tablas de bases de datos relacionales y viceversa, facilitando la interacción entre el código Java y la base de datos.
 > - Algunos de los mappers más populares en el ecosistema Java son:
 > ObjectMapper (Jackson) : Se utiliza principalmente para convertir objetos Java a JSON y viceversa. Es ampliamente utilizado en aplicaciones web para manejar datos en formato JSON.
