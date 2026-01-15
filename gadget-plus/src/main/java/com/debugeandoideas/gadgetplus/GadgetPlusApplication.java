@@ -174,10 +174,10 @@ public class GadgetPlusApplication implements CommandLineRunner {
             }
             this.productCatalogRepository.save(product);
         });
-*/
+
 
         //***************************CLASE 46-47 Insertando Registros Aleatorios**************
-/*
+
         //1. CREAMOS UN OBJETO RANDOM
         var random = new Random();
 

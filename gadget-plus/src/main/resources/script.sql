@@ -334,3 +334,30 @@ LIMIT 20 OFFSET 0;
 -- Resultado esperado: 2 productos
 -- • Alexa super (200.89, rating: 4)
 -- • Alexa small (500.89, rating: 1)
+
+
+-- clase 127 probando
+SELECT DISTINCT pc.*
+FROM products_catalog pc
+WHERE pc.brand_name = 'Samsung'
+  AND pc.price >= 50
+  AND pc.price <= 1500
+  AND pc.rating >= 9
+  AND pc.is_discount = false
+  AND pc.id IN (SELECT pjc.id_product
+                FROM product_join_category pjc
+                         JOIN categories c ON pjc.id_category = c.id
+                WHERE c.code = 'HOME')
+  AND pc.launching_date > '2022-01-01'
+ORDER BY pc.rating DESC, pc.price ASC
+LIMIT 20 OFFSET 0;
+-- Resultado esperado: Productos Samsung premium sin descuento
+-- • Samsung Monitor 27 (200.89, rating: 9)
+-- • Samsung TV QLED 55" (1200.99, rating: 9)
+
+select *
+from products_catalog;
+
+SELECT 1, id
+FROM products_catalog
+WHERE product_name = 'Guitarra electrica - home';
