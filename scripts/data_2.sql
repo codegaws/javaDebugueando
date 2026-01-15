@@ -34,6 +34,11 @@ INSERT INTO orders (created_at, client_name, id_bill) VALUES
     (NOW(), 'Robert Whittaker', 'b-15'),
     (NOW(), 'Tony Ferguson', 'b-16');
 
+/**
+El valor 3000 en la función random_date(3000) indica el rango de días 
+hacia atrás desde la fecha actual para generar una fecha aleatoria.
+*/
+
 INSERT INTO products_catalog (launching_date, brand_name, product_name, description, price, rating, is_discount) VALUES
     (random_date(3000), 'ESP', 'Guitarra electrica - home', 'Is a guitar for home', 3400.99, 10, FALSE),
     (random_date(3000), 'Fender', 'Bajo electrico  - home', 'Is a bass for home', 3200.99, 6, TRUE),
@@ -82,71 +87,3 @@ INSERT INTO products_catalog (launching_date, brand_name, product_name, descript
 INSERT INTO categories (code, description) VALUES
     ('HOME', 'for home'),
     ('OFFICE', 'for office');
-
-
-INSERT INTO product_join_category (id_category, id_product)
-SELECT 1, id FROM products_catalog WHERE product_name = 'Guitarra electrica - home';
-INSERT INTO product_join_category (id_category, id_product)
-SELECT 1, id FROM products_catalog WHERE product_name = 'Bajo electrico  - home';
-INSERT INTO product_join_category (id_category, id_product)
-SELECT 1, id FROM products_catalog WHERE product_name = 'Bateria - home';
-INSERT INTO product_join_category (id_category, id_product)
-SELECT 1, id FROM products_catalog WHERE product_name = 'Macbook air';
-INSERT INTO product_join_category (id_category, id_product)
-SELECT 1, id FROM products_catalog WHERE product_name = 'TV 65';
-INSERT INTO product_join_category (id_category, id_product)
-SELECT 1, id FROM products_catalog WHERE product_name = 'TV 75';
-INSERT INTO product_join_category (id_category, id_product)
-SELECT 1, id FROM products_catalog WHERE product_name = 'Monitor 27';
-INSERT INTO product_join_category (id_category, id_product)
-SELECT 1, id FROM products_catalog WHERE product_name = 'Monitor 24';
-INSERT INTO product_join_category (id_category, id_product)
-SELECT 1, id FROM products_catalog WHERE product_name = 'Alexa small';
-INSERT INTO product_join_category (id_category, id_product)
-SELECT 1, id FROM products_catalog WHERE product_name = 'Alexa medium';
-INSERT INTO product_join_category (id_category, id_product)
-SELECT 1, id FROM products_catalog WHERE product_name = 'Alexa large';
-INSERT INTO product_join_category (id_category, id_product)
-SELECT 1, id FROM products_catalog WHERE product_name = 'Pc gamer';
-INSERT INTO product_join_category (id_category, id_product)
-SELECT 1, id FROM products_catalog WHERE product_name = 'Pc student';
-INSERT INTO product_join_category (id_category, id_product)
-SELECT 1, id FROM products_catalog WHERE product_name = 'xbox series s';
-INSERT INTO product_join_category (id_category, id_product)
-SELECT 1, id FROM products_catalog WHERE product_name = 'xbox series x';
-INSERT INTO product_join_category (id_category, id_product)
-SELECT 1, id FROM products_catalog WHERE product_name = 'PS-5';
-INSERT INTO product_join_category (id_category, id_product)
-SELECT 1, id FROM products_catalog WHERE product_name = 'Switch';
-INSERT INTO product_join_category (id_category, id_product)
-SELECT 1, id FROM products_catalog WHERE product_name = 'office home';
-
-
-INSERT INTO product_join_category (id_category, id_product)
-SELECT 2, id FROM products_catalog WHERE product_name = 'Macbook pro';
-INSERT INTO product_join_category (id_category, id_product)
-SELECT 2, id FROM products_catalog WHERE product_name = 'Desktop for pc';
-INSERT INTO product_join_category (id_category, id_product)
-SELECT 2, id FROM products_catalog WHERE product_name = 'Monitor 27';  
-INSERT INTO product_join_category (id_category, id_product)
-SELECT 2, id FROM products_catalog WHERE product_name = 'Monitor 24';  
-INSERT INTO product_join_category (id_category, id_product)
-SELECT 2, id FROM products_catalog WHERE product_name = 'Alexa small';
-INSERT INTO product_join_category (id_category, id_product)
-SELECT 2, id FROM products_catalog WHERE product_name = 'Pc office';
-INSERT INTO product_join_category (id_category, id_product)
-SELECT 2, id FROM products_catalog WHERE product_name = 'Pc office max';
-INSERT INTO product_join_category (id_category, id_product)
-SELECT 2, id FROM products_catalog WHERE product_name = 'office pro';
-INSERT INTO product_join_category (id_category, id_product)
-SELECT 2, id FROM products_catalog WHERE product_name = 'backpack N';
-INSERT INTO product_join_category (id_category, id_product)
-SELECT 2, id FROM products_catalog WHERE product_name = 'backpack P';
-INSERT INTO product_join_category (id_category, id_product)
-SELECT 2, id FROM products_catalog WHERE product_name = 'backpack A';
-INSERT INTO product_join_category (id_category, id_product)
-SELECT 2, id FROM products_catalog WHERE product_name = 'backpack c';
-INSERT INTO product_join_category (id_category, id_product)
-SELECT 2, id FROM products_catalog WHERE product_name = 'Laptop Pavilion';
-INSERT INTO product_join_category (id_category, id_product)
-SELECT 2, id FROM products_catalog WHERE product_name = 'PC de escritorio';

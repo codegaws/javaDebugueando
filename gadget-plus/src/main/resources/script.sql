@@ -321,3 +321,16 @@ ALTER TABLE orders
 SELECT *
 FROM orders
 WHERE id = 22;
+
+--CLASE 123 PDF CRITERIA
+
+-- Parámetros: brand = 'Amazon', hasDiscount = true
+SELECT DISTINCT pc.*
+FROM products_catalog pc
+WHERE pc.brand_name = 'Amazon'
+  AND pc.is_discount = true
+ORDER BY pc.rating DESC, pc.price ASC
+LIMIT 20 OFFSET 0;
+-- Resultado esperado: 2 productos
+-- • Alexa super (200.89, rating: 4)
+-- • Alexa small (500.89, rating: 1)
