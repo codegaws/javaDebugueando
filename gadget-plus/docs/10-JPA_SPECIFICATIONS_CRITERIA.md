@@ -592,3 +592,40 @@ Pageable pageable = PageRequest.of(0, 20); // desde page=0&size=20
 ```
 
 **¡Es una forma muy elegante de manejar múltiples parámetros de búsqueda!**
+
+## ⃣📚**Clase 127 : PROBANDO ⏭️⏭️ ****
+
+El operador `IN` no indica un rango, sino **pertenencia a un conjunto**. Te explico:
+
+## ¿Qué hace el IN?
+
+```sql
+AND pc.id IN (SELECT pjc.id_product
+              FROM product_join_category pjc
+              JOIN categories c ON pjc.id_category = c.id
+              WHERE c.code = 'HOME')
+```
+
+Esta condición verifica si el `id` del producto (`pc.id`) **existe** en la lista de IDs que devuelve la subconsulta.
+
+## Funcionamiento paso a paso:
+
+1. **La subconsulta** busca todos los productos que pertenecen a la categoría 'HOME'
+2. **Devuelve una lista** de IDs como: `['id1', 'id2', 'id3', ...]`
+3. **El IN verifica** si `pc.id` está en esa lista
+
+## Equivalencias:
+
+```sql
+-- Estas dos consultas son equivalentes:
+
+-- Usando IN (subconsulta)
+WHERE pc.id IN (SELECT pjc.id_product FROM ...)
+
+-- Usando JOIN
+WHERE EXISTS (SELECT 1 FROM product_join_category pjc 
+              JOIN categories c ON pjc.id_category = c.id 
+              WHERE c.code = 'HOME' AND pjc.id_product = pc.id)
+```
+
+**Resumen:** El `IN` filtra solo los productos que están categorizados como 'HOME', no es un rango sino una **lista de pertenencia**.

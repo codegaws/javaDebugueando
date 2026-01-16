@@ -358,6 +358,9 @@ LIMIT 20 OFFSET 0;
 select *
 from products_catalog;
 
-SELECT 1, id
-FROM products_catalog
-WHERE product_name = 'Guitarra electrica - home';
+
+
+SELECT pjc.id_product
+FROM product_join_category pjc
+         JOIN categories c ON pjc.id_category = c.id
+WHERE c.code = 'HOME'
